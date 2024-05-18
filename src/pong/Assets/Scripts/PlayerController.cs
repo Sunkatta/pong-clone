@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public float speed = 2f;
+    public float speed;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
