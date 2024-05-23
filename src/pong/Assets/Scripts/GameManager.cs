@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
         lowerEdge.points = colliderpoints;
 
         var leftEdgeGameObject = new GameObject("LeftEdge");
+        leftEdgeGameObject.tag = Constants.LeftGoal;
         EdgeCollider2D leftEdge = leftEdgeGameObject.AddComponent<EdgeCollider2D>();
         colliderpoints = leftEdge.points;
         colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
@@ -39,6 +40,7 @@ public class GameManager : MonoBehaviour
         leftEdge.points = colliderpoints;
 
         var rightEdgeGameObject = new GameObject("RightEdge");
+        rightEdgeGameObject.tag = Constants.RightGoal;
         EdgeCollider2D rightEdge = rightEdgeGameObject.AddComponent<EdgeCollider2D>();
         colliderpoints = rightEdge.points;
         colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);

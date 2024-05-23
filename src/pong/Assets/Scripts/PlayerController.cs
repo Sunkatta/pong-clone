@@ -3,20 +3,20 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed;
+    public bool isPlayer1;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
-
     private void Update()
     {
-        var verticalAxis = Input.GetAxis("Vertical");
+        var playerAxis = this.isPlayer1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
 
-        if (verticalAxis > 0 && this.canMoveUp)
+        if (playerAxis > 0 && this.canMoveUp)
         {
             this.transform.position += speed * Time.deltaTime * Vector3.up;
             this.canMoveDown = true;
         }
-        else if (verticalAxis < 0 && this.canMoveDown)
+        else if (playerAxis < 0 && this.canMoveDown)
         {
             this.transform.position -= speed * Time.deltaTime * Vector3.up;
             this.canMoveUp = true;
