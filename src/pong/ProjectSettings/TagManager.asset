@@ -6,6 +6,8 @@ TagManager:
   tags:
   - UpperEdge
   - LowerEdge
+  - LeftGoal
+  - RightGoal
   layers:
   - Default
   - TransparentFX
