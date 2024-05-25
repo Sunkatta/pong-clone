@@ -1,12 +1,53 @@
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public new Camera camera;
+    public GameObject ball;
+    public GameObject player1;
+    public GameObject player2;
+    public TMP_Text player1ScoreText;
+    public TMP_Text player2ScoreText;
+    public float ballSpeed;
+
+    private int player1Score = 0;
+    private int player2Score = 0;
+    private Rigidbody2D ballRigidbody;
 
     private void Start()
     {
+        this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
+        var ballController = this.ball.GetComponent<BallController>();
+        ballController.playerScored += this.OnPlayerScored;
+
         this.GenerateCollidersAcrossScreen();
+        this.SetInitialGameState();
+    }
+
+    private void SetInitialGameState()
+    {
+        this.ball.transform.position = Vector3.zero;
+        this.ballRigidbody.velocity = this.ballSpeed * new Vector2(1f, 0f);
+
+        this.player1.transform.position = new Vector3(this.player1.transform.position.x, 0);
+        this.player2.transform.position = new Vector3(this.player2.transform.position.x, 0);
+    }
+
+    private void OnPlayerScored(PlayerType playerType)
+    {
+        if (playerType == PlayerType.Player1)
+        {
+            this.player1Score++;
+            this.player1ScoreText.text = this.player1Score.ToString();
+        }
+        else
+        {
+            this.player2Score++;
+            this.player2ScoreText.text = this.player2Score.ToString();
+        }
+
+        this.SetInitialGameState();
     }
 
     private void GenerateCollidersAcrossScreen()
@@ -31,20 +72,20 @@ public class GameManager : MonoBehaviour
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
         lowerEdge.points = colliderpoints;
 
-        var leftEdgeGameObject = new GameObject("LeftEdge");
-        leftEdgeGameObject.tag = Constants.LeftGoal;
-        EdgeCollider2D leftEdge = leftEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = leftEdge.points;
+        var leftGoalGameObject = new GameObject(Constants.LeftGoal);
+        leftGoalGameObject.tag = Constants.LeftGoal;
+        EdgeCollider2D leftGoalCollider = leftGoalGameObject.AddComponent<EdgeCollider2D>();
+        colliderpoints = leftGoalCollider.points;
         colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
         colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
-        leftEdge.points = colliderpoints;
+        leftGoalCollider.points = colliderpoints;
 
-        var rightEdgeGameObject = new GameObject("RightEdge");
-        rightEdgeGameObject.tag = Constants.RightGoal;
-        EdgeCollider2D rightEdge = rightEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = rightEdge.points;
+        var rightGoalGameObject = new GameObject(Constants.RightGoal);
+        rightGoalGameObject.tag = Constants.RightGoal;
+        EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
+        colliderpoints = rightGoalCollider.points;
         colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        rightEdge.points = colliderpoints;
+        rightGoalCollider.points = colliderpoints;
     }
 }

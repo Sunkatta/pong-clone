@@ -3,13 +3,13 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed;
-    public bool isPlayer1;
+    public PlayerType playerType;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
     private void Update()
     {
-        var playerAxis = this.isPlayer1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
+        var playerAxis = this.playerType == PlayerType.Player1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
 
         if (playerAxis > 0 && this.canMoveUp)
         {
