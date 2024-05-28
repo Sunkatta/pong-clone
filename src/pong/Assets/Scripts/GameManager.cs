@@ -19,7 +19,7 @@ public class GameManager : MonoBehaviour
     {
         this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
         var ballController = this.ball.GetComponent<BallController>();
-        ballController.playerScored += this.OnPlayerScored;
+        ballController.PlayerScored += this.OnPlayerScored;
 
         this.GenerateCollidersAcrossScreen();
         this.SetInitialGameState();
