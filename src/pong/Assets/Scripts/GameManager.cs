@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 
@@ -10,10 +11,23 @@ public class GameManager : MonoBehaviour
     public TMP_Text player1ScoreText;
     public TMP_Text player2ScoreText;
     public float ballSpeed;
+    public int targetScore;
+
+    public event Action<PlayerType> GameEnded;
 
     private int player1Score = 0;
     private int player2Score = 0;
     private Rigidbody2D ballRigidbody;
+
+    public void NewGame()
+    {
+        this.player1Score = 0;
+        this.player2Score = 0;
+        this.player1ScoreText.text = "0";
+        this.player2ScoreText.text = "0";
+
+        this.SetInitialGameState();
+    }
 
     private void Start()
     {
@@ -45,6 +59,15 @@ public class GameManager : MonoBehaviour
         {
             this.player2Score++;
             this.player2ScoreText.text = this.player2Score.ToString();
+        }
+
+        if (this.player1Score == targetScore || this.player2Score == targetScore)
+        {
+            var winner = this.player1Score == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+
+            this.GameEnded(winner);
+
+            return;
         }
 
         this.SetInitialGameState();
