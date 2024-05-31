@@ -4,6 +4,7 @@ using UnityEngine;
 public class BallController : MonoBehaviour
 {
     public event Action<PlayerType> PlayerScored;
+    public event Action BallHit;
 
     private new Rigidbody2D rigidbody;
 
@@ -32,5 +33,18 @@ public class BallController : MonoBehaviour
         Vector2 newVelocity = this.rigidbody.velocity - 2 * Vector2.Dot(this.rigidbody.velocity, contact.normal) * contact.normal;
         
         this.rigidbody.velocity = newVelocity;
+
+        if (collision.gameObject.CompareTag(Constants.Player))
+        {
+            this.BallHit();
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawLine(this.transform.position, new Vector2(1f, 1f));
+        Gizmos.DrawLine(this.transform.position, new Vector2(1f, -1f));
+        Gizmos.DrawLine(this.transform.position, new Vector2(-1f, -1f));
+        Gizmos.DrawLine(this.transform.position, new Vector2(-1f, 1f));
     }
 }

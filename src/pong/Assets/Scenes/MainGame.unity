@@ -823,7 +823,7 @@ GameObject:
   - component: {fileID: 864334464}
   m_Layer: 0
   m_Name: Player2
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1162,7 +1162,7 @@ GameObject:
   - component: {fileID: 1009048122}
   m_Layer: 0
   m_Name: Player1
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1704,7 +1704,8 @@ MonoBehaviour:
   player2: {fileID: 864334463}
   player1ScoreText: {fileID: 15710805}
   player2ScoreText: {fileID: 795447038}
-  ballSpeed: 5
+  initialBallSpeed: 6
+  maxBallSpeed: 15
   targetScore: 11
 --- !u!4 &1666267180
 Transform:
@@ -1715,7 +1716,7 @@ Transform:
   m_GameObject: {fileID: 1666267178}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.765486, y: 0.65279293, z: -0.0594754}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

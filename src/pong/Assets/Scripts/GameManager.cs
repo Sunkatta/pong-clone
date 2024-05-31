@@ -10,13 +10,15 @@ public class GameManager : MonoBehaviour
     public GameObject player2;
     public TMP_Text player1ScoreText;
     public TMP_Text player2ScoreText;
-    public float ballSpeed;
+    public float initialBallSpeed;
+    public float maxBallSpeed;
     public int targetScore;
 
     public event Action<PlayerType> GameEnded;
 
     private int player1Score = 0;
     private int player2Score = 0;
+    private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
 
     public void NewGame()
@@ -34,6 +36,7 @@ public class GameManager : MonoBehaviour
         this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
         var ballController = this.ball.GetComponent<BallController>();
         ballController.PlayerScored += this.OnPlayerScored;
+        ballController.BallHit += this.OnBallHit;
 
         this.GenerateCollidersAcrossScreen();
         this.SetInitialGameState();
@@ -41,8 +44,9 @@ public class GameManager : MonoBehaviour
 
     private void SetInitialGameState()
     {
+        this.currentBallSpeed = this.initialBallSpeed;
         this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = this.ballSpeed * new Vector2(1f, 0f);
+        this.ballRigidbody.velocity = this.currentBallSpeed * new Vector2(1f, 1f);
 
         this.player1.transform.position = new Vector3(this.player1.transform.position.x, 0);
         this.player2.transform.position = new Vector3(this.player2.transform.position.x, 0);
@@ -71,6 +75,19 @@ public class GameManager : MonoBehaviour
         }
 
         this.SetInitialGameState();
+    }
+
+    private void OnBallHit()
+    {
+        if (this.currentBallSpeed >= this.maxBallSpeed)
+        {
+            return;
+        }
+
+        var oldSpeed = this.currentBallSpeed;
+        this.currentBallSpeed++;
+
+        this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
     }
 
     private void GenerateCollidersAcrossScreen()
