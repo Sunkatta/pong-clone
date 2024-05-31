@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
     private int player2Score = 0;
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
+    private PlayerType? latestScorer;
 
     public void NewGame()
     {
@@ -46,15 +47,31 @@ public class GameManager : MonoBehaviour
     {
         this.currentBallSpeed = this.initialBallSpeed;
         this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = this.currentBallSpeed * new Vector2(1f, 1f);
+        this.ballRigidbody.velocity = this.currentBallSpeed * GetBallDirection();
 
         this.player1.transform.position = new Vector3(this.player1.transform.position.x, 0);
         this.player2.transform.position = new Vector3(this.player2.transform.position.x, 0);
     }
 
-    private void OnPlayerScored(PlayerType playerType)
+    private Vector2 GetBallDirection()
     {
-        if (playerType == PlayerType.Player1)
+        if (this.latestScorer != null)
+        {
+            var isPlayer1 = this.latestScorer == PlayerType.Player1;
+
+            return new Vector2(isPlayer1 ? UnityEngine.Random.Range(0f, 1f) : UnityEngine.Random.Range(-1f, 0f), UnityEngine.Random.Range(-1f, 1f));
+        }
+        else
+        {
+            return new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f));
+        }
+    }
+
+    private void OnPlayerScored(PlayerType scorer)
+    {
+        this.latestScorer = scorer;
+
+        if (scorer == PlayerType.Player1)
         {
             this.player1Score++;
             this.player1ScoreText.text = this.player1Score.ToString();
