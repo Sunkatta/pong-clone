@@ -63,7 +63,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            return new Vector2(UnityEngine.Random.Range(-1f, 1f), UnityEngine.Random.Range(-1f, 1f));
+            return new Vector2(UnityEngine.Random.value < 0.5 ? -1 : 1, UnityEngine.Random.Range(-1f, 1f));
         }
     }
 
