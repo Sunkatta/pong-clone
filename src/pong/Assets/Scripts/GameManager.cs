@@ -59,7 +59,7 @@ public class GameManager : MonoBehaviour
         {
             var isPlayer1 = this.latestScorer == PlayerType.Player1;
 
-            return new Vector2(isPlayer1 ? UnityEngine.Random.Range(0f, 1f) : UnityEngine.Random.Range(-1f, 0f), UnityEngine.Random.Range(-1f, 1f));
+            return new Vector2(isPlayer1 ? 1 : -1, UnityEngine.Random.Range(-1f, 1f));
         }
         else
         {
