@@ -49,8 +49,11 @@ public class GameManager : MonoBehaviour
         this.ball.transform.position = Vector3.zero;
         this.ballRigidbody.velocity = this.currentBallSpeed * GetBallDirection();
 
-        this.player1.transform.position = new Vector3(this.player1.transform.position.x, 0);
-        this.player2.transform.position = new Vector3(this.player2.transform.position.x, 0);
+        Vector3 screenLeftSide = this.camera.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
+        Vector3 screenRightSide = this.camera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
+
+        this.player1.transform.position = new Vector3(screenLeftSide.x + .5f, 0);
+        this.player2.transform.position = new Vector3(screenRightSide.x - .5f, 0);
     }
 
     private Vector2 GetBallDirection()
