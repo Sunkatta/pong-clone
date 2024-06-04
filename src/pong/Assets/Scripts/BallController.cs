@@ -7,10 +7,12 @@ public class BallController : MonoBehaviour
     public event Action BallHit;
 
     private new Rigidbody2D rigidbody;
+    private AudioSource bounceSound;
 
-    void Start()
+    private void Start()
     {
         this.rigidbody = this.GetComponent<Rigidbody2D>();
+        this.bounceSound = this.GetComponent<AudioSource>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -26,6 +28,8 @@ public class BallController : MonoBehaviour
             this.PlayerScored(PlayerType.Player2);
             return;
         }
+
+        this.bounceSound.Play();
 
         ContactPoint2D contact = collision.GetContact(0);
 

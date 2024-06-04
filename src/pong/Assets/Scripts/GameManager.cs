@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
     private PlayerType? latestScorer;
+    private AudioSource goalSound;
 
     public void NewGame()
     {
@@ -34,6 +35,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        this.goalSound = GetComponent<AudioSource>();
         this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
         var ballController = this.ball.GetComponent<BallController>();
         ballController.PlayerScored += this.OnPlayerScored;
@@ -72,6 +74,7 @@ public class GameManager : MonoBehaviour
 
     private void OnPlayerScored(PlayerType scorer)
     {
+        this.goalSound.Play();
         this.latestScorer = scorer;
 
         if (scorer == PlayerType.Player1)
