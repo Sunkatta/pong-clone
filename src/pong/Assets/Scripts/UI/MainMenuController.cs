@@ -31,7 +31,7 @@ public class MainMenuController : MonoBehaviour
     private IEnumerator QuitGameCoroutine()
     {
         this.btnClickSound.Play();
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(0.2f);
         Application.Quit();
     }
 }
