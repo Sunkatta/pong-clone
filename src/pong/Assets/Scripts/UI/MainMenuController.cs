@@ -1,24 +1,31 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
+    [SerializeField]
+    private Button localCoOpBtn;
+
+    [SerializeField]
+    private Button quitGameBtn;
+
     private AudioSource btnClickSound;
 
     private void Start()
     {
         this.btnClickSound = GetComponent<AudioSource>();
-    }
 
-    public void OnStartLocalCoOpClicked()
-    {
-        this.StartCoroutine(this.StartLocalCoOpCoroutine());
-    }
+        this.localCoOpBtn.onClick.AddListener(() =>
+        {
+            this.StartCoroutine(this.StartLocalCoOpCoroutine());
+        });
 
-    public void OnQuitGameClicked()
-    {
-        this.StartCoroutine(this.QuitGameCoroutine());
+        this.quitGameBtn.onClick.AddListener(() =>
+        {
+            this.StartCoroutine(this.QuitGameCoroutine());
+        });
     }
 
     private IEnumerator StartLocalCoOpCoroutine()

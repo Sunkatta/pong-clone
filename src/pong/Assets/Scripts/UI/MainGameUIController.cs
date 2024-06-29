@@ -2,6 +2,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainGameUIController : MonoBehaviour
 {
@@ -23,12 +24,44 @@ public class MainGameUIController : MonoBehaviour
     [SerializeField]
     private AudioClip gameWonSound;
 
+    [SerializeField]
+    private Button endGamePanelBackToMainMenuBtn;
+
+    [SerializeField]
+    private Button pauseGamePanelBackToMainMenuBtn;
+
+    [SerializeField]
+    private Button resumeGameBtn;
+
+    [SerializeField]
+    private Button playAgainBtn;
+
     private AudioSource endGameAudio;
 
     private void Start()
     {
         this.endGameAudio = GetComponent<AudioSource>();
         this.gameManager.GameEnded += this.OnGameEnded;
+
+        this.endGamePanelBackToMainMenuBtn.onClick.AddListener(() =>
+        {
+            this.StartCoroutine(this.GoToMainMenuCoroutine());
+        });
+
+        this.pauseGamePanelBackToMainMenuBtn.onClick.AddListener(() =>
+        {
+            this.StartCoroutine(this.GoToMainMenuCoroutine());
+        });
+
+        this.resumeGameBtn.onClick.AddListener(() =>
+        {
+            this.ResumeGame();
+        });
+
+        this.playAgainBtn.onClick.AddListener(() =>
+        {
+            this.PlayAgain();
+        });
     }
 
     private void Update()
@@ -45,11 +78,6 @@ public class MainGameUIController : MonoBehaviour
         this.endGameAudio.PlayOneShot(this.btnClickSound);
         this.endGamePanel.gameObject.SetActive(false);
         this.gameManager.NewGame();
-    }
-
-    public void OnGoToMainMenuClicked()
-    {
-        this.StartCoroutine(this.GoToMainMenuCoroutine());
     }
 
     public void ResumeGame()
