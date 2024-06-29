@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class EndGameController : MonoBehaviour
+public class MainGameUIController : MonoBehaviour
 {
     public GameManager gameManager;
     public RectTransform endGamePanel;
