@@ -4,17 +4,34 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public new Camera camera;
-    public GameObject ball;
-    public GameObject player1;
-    public GameObject player2;
-    public TMP_Text player1ScoreText;
-    public TMP_Text player2ScoreText;
-    public float initialBallSpeed;
-    public float maxBallSpeed;
-    public int targetScore;
-
     public event Action<PlayerType> GameEnded;
+
+    [SerializeField]
+    private new Camera camera;
+
+    [SerializeField]
+    private GameObject ball;
+
+    [SerializeField]
+    private GameObject player1;
+
+    [SerializeField]
+    private GameObject player2;
+
+    [SerializeField]
+    private TMP_Text player1ScoreText;
+
+    [SerializeField]
+    private TMP_Text player2ScoreText;
+
+    [SerializeField]
+    private float initialBallSpeed;
+
+    [SerializeField]
+    private float maxBallSpeed;
+
+    [SerializeField]
+    private int targetScore;
 
     private int player1Score = 0;
     private int player2Score = 0;

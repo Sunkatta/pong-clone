@@ -5,12 +5,23 @@ using UnityEngine.SceneManagement;
 
 public class MainGameUIController : MonoBehaviour
 {
-    public GameManager gameManager;
-    public RectTransform endGamePanel;
-    public RectTransform pauseGamePanel;
-    public TMP_Text endGameText;
-    public AudioClip btnClickSound;
-    public AudioClip gameWonSound;
+    [SerializeField]
+    private GameManager gameManager;
+
+    [SerializeField]
+    private RectTransform endGamePanel;
+
+    [SerializeField]
+    private RectTransform pauseGamePanel;
+
+    [SerializeField]
+    private TMP_Text endGameText;
+
+    [SerializeField]
+    private AudioClip btnClickSound;
+
+    [SerializeField]
+    private AudioClip gameWonSound;
 
     private AudioSource endGameAudio;
 
