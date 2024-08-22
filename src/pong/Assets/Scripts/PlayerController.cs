@@ -1,19 +1,50 @@
+using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : NetworkBehaviour
 {
+    public static Action<PlayerController> PlayerJoined;
+
+    public PlayerType Type { get; private set; }
+
+    public NetworkVariable<int> Score { get; set; } = new NetworkVariable<int>();
+
     [SerializeField]
     private float speed;
 
     [SerializeField]
-    private PlayerType playerType;
+    private GameObject ball;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
-    
+
+    public override void OnNetworkSpawn()
+    {
+        this.Type = PlayerType.Player1;
+
+        if (NetworkManager.Singleton.ConnectedClients.Count > 1)
+        {
+            this.Type = PlayerType.Player2;
+        }
+
+        PlayerJoined(this);
+    }
+
+    private void Start()
+    {
+        var ballController = this.ball.GetComponent<BallController>();
+        ballController.PlayerScored += this.OnPlayerScored;
+    }
+
     private void Update()
     {
-        var playerAxis = this.playerType == PlayerType.Player1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
+        if (!this.IsOwner)
+        {
+            return;
+        }
+
+        var playerAxis = Input.GetAxis("Player1");
 
         if (playerAxis > 0 && this.canMoveUp)
         {
@@ -38,5 +69,10 @@ public class PlayerController : MonoBehaviour
         {
             this.canMoveDown = false;
         }
+    }
+
+    private void OnPlayerScored(PlayerType scorer)
+    {
+        this.Score.Value++;
     }
 }

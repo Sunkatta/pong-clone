@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -11,12 +12,6 @@ public class GameManager : MonoBehaviour
 
     [SerializeField]
     private GameObject ball;
-
-    [SerializeField]
-    private GameObject player1;
-
-    [SerializeField]
-    private GameObject player2;
 
     [SerializeField]
     private TMP_Text player1ScoreText;
@@ -33,17 +28,18 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private int targetScore;
 
-    private int player1Score = 0;
-    private int player2Score = 0;
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
     private PlayerType? latestScorer;
     private AudioSource goalSound;
 
+    private PlayerController player1;
+    private PlayerController player2;
+
     public void NewGame()
     {
-        this.player1Score = 0;
-        this.player2Score = 0;
+        this.player1.Score.Value = 0;
+        this.player2.Score.Value = 0;
         this.player1ScoreText.text = "0";
         this.player2ScoreText.text = "0";
 
@@ -57,9 +53,9 @@ public class GameManager : MonoBehaviour
         var ballController = this.ball.GetComponent<BallController>();
         ballController.PlayerScored += this.OnPlayerScored;
         ballController.BallHit += this.OnBallHit;
+        PlayerController.PlayerJoined += this.OnPlayerJoined;
 
         this.GenerateCollidersAcrossScreen();
-        this.SetInitialGameState();
     }
 
     private void SetInitialGameState()
@@ -67,12 +63,6 @@ public class GameManager : MonoBehaviour
         this.currentBallSpeed = this.initialBallSpeed;
         this.ball.transform.position = Vector3.zero;
         this.ballRigidbody.velocity = this.currentBallSpeed * GetBallDirection();
-
-        Vector3 screenLeftSide = this.camera.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
-        Vector3 screenRightSide = this.camera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
-
-        this.player1.transform.position = new Vector3(screenLeftSide.x + .5f, 0);
-        this.player2.transform.position = new Vector3(screenRightSide.x - .5f, 0);
     }
 
     private Vector2 GetBallDirection()
@@ -96,18 +86,16 @@ public class GameManager : MonoBehaviour
 
         if (scorer == PlayerType.Player1)
         {
-            this.player1Score++;
-            this.player1ScoreText.text = this.player1Score.ToString();
+            this.player1ScoreText.text = this.player1.Score.Value.ToString();
         }
         else
         {
-            this.player2Score++;
-            this.player2ScoreText.text = this.player2Score.ToString();
+            this.player2ScoreText.text = this.player2.Score.Value.ToString();
         }
 
-        if (this.player1Score == targetScore || this.player2Score == targetScore)
+        if (this.player1.Score.Value == targetScore || this.player2.Score.Value == targetScore)
         {
-            var winner = this.player1Score == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+            var winner = this.player1.Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
 
             this.GameEnded(winner);
 
@@ -128,6 +116,42 @@ public class GameManager : MonoBehaviour
         this.currentBallSpeed++;
 
         this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
+    }
+
+    private void OnPlayerJoined(PlayerController player)
+    {
+        if (this.player1 == null)
+        {
+            this.player1 = player;
+            this.SetPlayerPosition(this.player1);
+        }
+        else
+        {
+            this.player2 = player;
+            this.SetPlayerPosition(this.player2);
+            this.StartCoroutine(this.BeginGame());
+        }
+    }
+
+    private void SetPlayerPosition(PlayerController player)
+    {
+        Vector3 screenLeftSide = this.camera.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
+        Vector3 screenRightSide = this.camera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
+
+        if (player.Type == PlayerType.Player1)
+        {
+            player.transform.position = new Vector3(screenLeftSide.x + .5f, 0);
+        }
+        else
+        {
+            player.transform.position = new Vector3(screenRightSide.x - .5f, 0);
+        }
+    }
+
+    private IEnumerator BeginGame()
+    {
+        yield return new WaitForSeconds(5);
+        this.SetInitialGameState();
     }
 
     private void GenerateCollidersAcrossScreen()

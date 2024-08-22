@@ -1,5 +1,6 @@
 using System.Collections;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -36,6 +37,12 @@ public class MainGameUIController : MonoBehaviour
     [SerializeField]
     private Button playAgainBtn;
 
+    [SerializeField]
+    private Button hostBtn;
+
+    [SerializeField]
+    private Button joinBtn;
+
     private AudioSource endGameAudio;
 
     private void Start()
@@ -61,6 +68,16 @@ public class MainGameUIController : MonoBehaviour
         this.playAgainBtn.onClick.AddListener(() =>
         {
             this.PlayAgain();
+        });
+
+        this.hostBtn.onClick.AddListener(() =>
+        {
+            NetworkManager.Singleton.StartHost();
+        });
+
+        this.joinBtn.onClick.AddListener(() =>
+        {
+            NetworkManager.Singleton.StartClient();
         });
     }
 

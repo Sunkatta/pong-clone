@@ -8,7 +8,33 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    public string LobbyCode { get; private set; }
+    private Lobby hostLobby;
+    private bool shouldPing = false;
+    private float heartbeatTimer;
+
+    public string LobbyCode
+    {
+        get
+        {
+            return this.hostLobby.LobbyCode;
+        }
+    }
+
+    public int JoinedPlayers
+    {
+        get
+        {
+            return this.hostLobby.Players.Count;
+        }
+    }
+
+    public int MaxPlayers
+    {
+        get
+        {
+            return this.hostLobby.MaxPlayers;
+        }
+    }
 
     private async void Start()
     {
@@ -16,7 +42,15 @@ public class LobbyManager : MonoBehaviour
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
     }
 
-    public async Task InitPrivateMatch()
+    private void Update()
+    {
+        if (shouldPing)
+        {
+            HandleLobbyHearbeat();
+        }
+    }
+
+    public async Task HostPrivateMatch()
     {
         try
         {
@@ -28,11 +62,41 @@ public class LobbyManager : MonoBehaviour
             };
 
             Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers);
-            this.LobbyCode = lobby.LobbyCode;
+
+            this.hostLobby = lobby;
+            this.shouldPing = true;
         }
         catch (LobbyServiceException ex)
         {
-            Debug.LogError(ex.Message);
+            Debug.LogError(ex);
+        }
+    }
+
+    public async Task JoinPrivateMatchByCode(string lobbyCode)
+    {
+        try
+        {
+            await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode);
+        }
+        catch (LobbyServiceException ex)
+        {
+            Debug.Log(ex);
+        }
+    }
+
+    private async void HandleLobbyHearbeat()
+    {
+        if (this.hostLobby != null)
+        {
+            this.heartbeatTimer -= Time.deltaTime;
+
+            if (this.heartbeatTimer < 0f)
+            {
+                float heartbeatTimerMax = 15;
+                this.heartbeatTimer = heartbeatTimerMax;
+
+                await LobbyService.Instance.SendHeartbeatPingAsync(this.hostLobby.Id);
+            }
         }
     }
 }

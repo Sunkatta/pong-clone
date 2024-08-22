@@ -16,7 +16,7 @@ public class MainMenuController : MonoBehaviour
     private RectTransform onlinePvpPanel;
 
     [SerializeField]
-    private RectTransform privateMatchPanel;
+    private RectTransform hostPrivateMatchPanel;
 
     [SerializeField]
     private Button localPvpBtn;
@@ -28,7 +28,10 @@ public class MainMenuController : MonoBehaviour
     private Button playOnlineBtn;
 
     [SerializeField]
-    private Button privateMatchBtn;
+    private Button joinPrivateMatchBtn;
+
+    [SerializeField]
+    private Button hostPrivateMatchBtn;
 
     [SerializeField]
     private Button quitGameBtn;
@@ -42,11 +45,15 @@ public class MainMenuController : MonoBehaviour
     [SerializeField]
     private TMP_InputField joinCodeInput;
 
+    [SerializeField]
+    private TMP_Text numberOfPlayersTxt;
+
     private AudioSource btnClickSound;
 
     private void Start()
     {
         this.btnClickSound = GetComponent<AudioSource>();
+        this.mainMenuPanel.gameObject.SetActive(true);
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -65,13 +72,19 @@ public class MainMenuController : MonoBehaviour
 
         });
 
-        this.privateMatchBtn.onClick.AddListener(async () =>
+        this.joinPrivateMatchBtn.onClick.AddListener(async () =>
+        {
+            await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
+        });
+
+        this.hostPrivateMatchBtn.onClick.AddListener(async () =>
         {
             this.btnClickSound.Play();
-            await this.lobbyManager.InitPrivateMatch();
+            await this.lobbyManager.HostPrivateMatch();
             this.onlinePvpPanel.gameObject.SetActive(false);
-            this.privateMatchPanel.gameObject.SetActive(true);
+            this.hostPrivateMatchPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
+            this.numberOfPlayersTxt.text = $"{this.lobbyManager.JoinedPlayers}/{this.lobbyManager.MaxPlayers}";
         });
 
         this.backBtn.onClick.AddListener(() =>
