@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -65,6 +66,8 @@ public class LobbyManager : MonoBehaviour
 
             this.hostLobby = lobby;
             this.shouldPing = true;
+
+            NetworkManager.Singleton.StartHost();
         }
         catch (LobbyServiceException ex)
         {
@@ -76,7 +79,11 @@ public class LobbyManager : MonoBehaviour
     {
         try
         {
-            await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode);
+            Lobby lobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode);
+
+            this.hostLobby = lobby;
+
+            NetworkManager.Singleton.StartClient();
         }
         catch (LobbyServiceException ex)
         {

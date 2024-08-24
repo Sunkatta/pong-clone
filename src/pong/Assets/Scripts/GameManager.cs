@@ -28,6 +28,9 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private int targetScore;
 
+    [SerializeField]
+    private GameType gameType;
+
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
     private PlayerType? latestScorer;
@@ -51,11 +54,35 @@ public class GameManager : MonoBehaviour
         this.goalSound = GetComponent<AudioSource>();
         this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
         var ballController = this.ball.GetComponent<BallController>();
-        ballController.PlayerScored += this.OnPlayerScored;
         ballController.BallHit += this.OnBallHit;
         PlayerController.PlayerJoined += this.OnPlayerJoined;
 
         this.GenerateCollidersAcrossScreen();
+    }
+
+    private void OnPlayerJoined(PlayerController player)
+    {
+        if (this.player1 == null)
+        {
+            this.player1 = player;
+            this.SetPlayerPosition(this.player1);
+            this.player1.PlayerScored += this.OnPlayerScored;
+            this.player1.Score.OnValueChanged += (int previousValue, int newValue) =>
+            {
+                this.player1ScoreText.text = newValue.ToString();
+            };
+        }
+        else
+        {
+            this.player2 = player;
+            this.SetPlayerPosition(this.player2);
+            this.player2.PlayerScored += this.OnPlayerScored;
+            this.player2.Score.OnValueChanged += (int previousValue, int newValue) =>
+            {
+                this.player2ScoreText.text = newValue.ToString();
+            };
+            this.StartCoroutine(this.BeginGame());
+        }
     }
 
     private void SetInitialGameState()
@@ -84,15 +111,6 @@ public class GameManager : MonoBehaviour
         this.goalSound.Play();
         this.latestScorer = scorer;
 
-        if (scorer == PlayerType.Player1)
-        {
-            this.player1ScoreText.text = this.player1.Score.Value.ToString();
-        }
-        else
-        {
-            this.player2ScoreText.text = this.player2.Score.Value.ToString();
-        }
-
         if (this.player1.Score.Value == targetScore || this.player2.Score.Value == targetScore)
         {
             var winner = this.player1.Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
@@ -116,21 +134,6 @@ public class GameManager : MonoBehaviour
         this.currentBallSpeed++;
 
         this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
-    }
-
-    private void OnPlayerJoined(PlayerController player)
-    {
-        if (this.player1 == null)
-        {
-            this.player1 = player;
-            this.SetPlayerPosition(this.player1);
-        }
-        else
-        {
-            this.player2 = player;
-            this.SetPlayerPosition(this.player2);
-            this.StartCoroutine(this.BeginGame());
-        }
     }
 
     private void SetPlayerPosition(PlayerController player)

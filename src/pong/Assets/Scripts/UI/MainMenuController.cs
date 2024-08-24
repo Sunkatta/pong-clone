@@ -19,6 +19,9 @@ public class MainMenuController : MonoBehaviour
     private RectTransform hostPrivateMatchPanel;
 
     [SerializeField]
+    private RectTransform joinPrivateMatchPanel;
+
+    [SerializeField]
     private Button localPvpBtn;
 
     [SerializeField]
@@ -29,6 +32,9 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private Button joinPrivateMatchBtn;
+
+    [SerializeField]
+    private Button joinPrivateMatchByCodeBtn;
 
     [SerializeField]
     private Button hostPrivateMatchBtn;
@@ -72,9 +78,18 @@ public class MainMenuController : MonoBehaviour
 
         });
 
-        this.joinPrivateMatchBtn.onClick.AddListener(async () =>
+        this.joinPrivateMatchBtn.onClick.AddListener(() =>
         {
+            this.btnClickSound.Play();
+            this.onlinePvpPanel.gameObject.SetActive(false);
+            this.joinPrivateMatchPanel.gameObject.SetActive(true);
+        });
+
+        this.joinPrivateMatchByCodeBtn.onClick.AddListener(async () =>
+        {
+            this.btnClickSound.Play();
             await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
+            Debug.Log($"{this.lobbyManager.JoinedPlayers}/{this.lobbyManager.MaxPlayers}");
         });
 
         this.hostPrivateMatchBtn.onClick.AddListener(async () =>

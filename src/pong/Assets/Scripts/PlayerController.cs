@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
-    public static Action<PlayerController> PlayerJoined;
+    public static event Action<PlayerController> PlayerJoined;
+    public event Action<PlayerType> PlayerScored;
 
     public PlayerType Type { get; private set; }
 
@@ -34,7 +35,7 @@ public class PlayerController : NetworkBehaviour
     private void Start()
     {
         var ballController = this.ball.GetComponent<BallController>();
-        ballController.PlayerScored += this.OnPlayerScored;
+        ballController.GoalPassed += this.OnGoalPassed;
     }
 
     private void Update()
@@ -71,8 +72,9 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    private void OnPlayerScored(PlayerType scorer)
+    private void OnGoalPassed(PlayerType scorer)
     {
         this.Score.Value++;
+        this.PlayerScored(scorer);
     }
 }

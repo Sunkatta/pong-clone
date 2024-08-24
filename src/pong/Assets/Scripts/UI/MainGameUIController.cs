@@ -37,12 +37,6 @@ public class MainGameUIController : MonoBehaviour
     [SerializeField]
     private Button playAgainBtn;
 
-    [SerializeField]
-    private Button hostBtn;
-
-    [SerializeField]
-    private Button joinBtn;
-
     private AudioSource endGameAudio;
 
     private void Start()
@@ -68,16 +62,6 @@ public class MainGameUIController : MonoBehaviour
         this.playAgainBtn.onClick.AddListener(() =>
         {
             this.PlayAgain();
-        });
-
-        this.hostBtn.onClick.AddListener(() =>
-        {
-            NetworkManager.Singleton.StartHost();
-        });
-
-        this.joinBtn.onClick.AddListener(() =>
-        {
-            NetworkManager.Singleton.StartClient();
         });
     }
 

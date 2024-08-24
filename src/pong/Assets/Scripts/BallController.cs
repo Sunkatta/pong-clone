@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
-    public event Action<PlayerType> PlayerScored;
+    public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
 
     private new Rigidbody2D rigidbody;
@@ -19,13 +19,13 @@ public class BallController : MonoBehaviour
     {
         if (collision.gameObject.CompareTag(Constants.RightGoal))
         {
-            this.PlayerScored(PlayerType.Player1);
+            this.GoalPassed(PlayerType.Player1);
             return;
         }
 
         if (collision.gameObject.CompareTag(Constants.LeftGoal))
         {
-            this.PlayerScored(PlayerType.Player2);
+            this.GoalPassed(PlayerType.Player2);
             return;
         }
 
