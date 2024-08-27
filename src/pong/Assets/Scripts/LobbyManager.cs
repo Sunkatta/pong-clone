@@ -37,18 +37,25 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    private async void Start()
-    {
-        await UnityServices.InitializeAsync();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
-    }
-
     private void Update()
     {
         if (shouldPing)
         {
             HandleLobbyHearbeat();
         }
+    }
+
+    public async Task SignIn(string profileName)
+    {
+        var options = new InitializationOptions();
+        options.SetProfile(profileName);
+
+        Debug.Log($"Set profile with name {profileName}");
+
+        await UnityServices.InitializeAsync(options);
+        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+        Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
     }
 
     public async Task HostPrivateMatch()

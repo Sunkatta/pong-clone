@@ -22,6 +22,9 @@ public class MainMenuController : MonoBehaviour
     private RectTransform joinPrivateMatchPanel;
 
     [SerializeField]
+    private RectTransform authPanel;
+
+    [SerializeField]
     private Button localPvpBtn;
 
     [SerializeField]
@@ -44,6 +47,12 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private Button backBtn;
+
+    [SerializeField]
+    private Button setProfileBtn;
+
+    [SerializeField]
+    private TMP_InputField setProfileInput;
 
     [SerializeField]
     private TMP_InputField hostCodeInput;
@@ -70,6 +79,13 @@ public class MainMenuController : MonoBehaviour
         {
             this.btnClickSound.Play();
             this.mainMenuPanel.gameObject.SetActive(false);
+            this.authPanel.gameObject.SetActive(true);
+        });
+
+        this.setProfileBtn.onClick.AddListener(async () =>
+        {
+            await this.lobbyManager.SignIn(this.setProfileInput.text);
+            this.authPanel.gameObject.SetActive(false);
             this.onlinePvpPanel.gameObject.SetActive(true);
         });
 
