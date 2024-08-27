@@ -22,6 +22,11 @@ public class PlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        if (!this.IsServer)
+        {
+            return;
+        }
+
         this.Type = PlayerType.Player1;
 
         if (NetworkManager.Singleton.ConnectedClients.Count > 1)
