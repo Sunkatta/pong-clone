@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : NetworkBehaviour
 {
     public static event Action<PlayerController> PlayerJoined;
+    public static event Action PrepareInGameUi;
     public event Action<PlayerType> PlayerScored;
 
     public PlayerType Type { get; private set; }
@@ -41,6 +42,8 @@ public class PlayerController : NetworkBehaviour
     {
         var ballController = this.ball.GetComponent<BallController>();
         ballController.GoalPassed += this.OnGoalPassed;
+
+        GameManager.MatchBegan += OnMatchBegan;
     }
 
     private void Update()
@@ -81,5 +84,16 @@ public class PlayerController : NetworkBehaviour
     {
         this.Score.Value++;
         this.PlayerScored(scorer);
+    }
+
+    private void OnMatchBegan()
+    {
+        this.MatchBeginRpc();
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void MatchBeginRpc()
+    {
+        PrepareInGameUi();
     }
 }

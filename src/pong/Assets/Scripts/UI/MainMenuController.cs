@@ -25,6 +25,9 @@ public class MainMenuController : MonoBehaviour
     private RectTransform authPanel;
 
     [SerializeField]
+    private RectTransform inGameHudPanel;
+
+    [SerializeField]
     private Button localPvpBtn;
 
     [SerializeField]
@@ -69,6 +72,8 @@ public class MainMenuController : MonoBehaviour
     {
         this.btnClickSound = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
+        this.lobbyManager.PlayerJoined += OnPlayerJoined;
+        PlayerController.PrepareInGameUi += OnUiPrepared;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -84,6 +89,7 @@ public class MainMenuController : MonoBehaviour
 
         this.setProfileBtn.onClick.AddListener(async () =>
         {
+            this.btnClickSound.Play();
             await this.lobbyManager.SignIn(this.setProfileInput.text);
             this.authPanel.gameObject.SetActive(false);
             this.onlinePvpPanel.gameObject.SetActive(true);
@@ -105,7 +111,10 @@ public class MainMenuController : MonoBehaviour
         {
             this.btnClickSound.Play();
             await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
-            Debug.Log($"{this.lobbyManager.JoinedPlayers}/{this.lobbyManager.MaxPlayers}");
+            this.joinPrivateMatchPanel.gameObject.SetActive(false);
+            this.hostPrivateMatchPanel.gameObject.SetActive(true);
+            this.hostCodeInput.text = this.lobbyManager.LobbyCode;
+            this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
         });
 
         this.hostPrivateMatchBtn.onClick.AddListener(async () =>
@@ -115,7 +124,7 @@ public class MainMenuController : MonoBehaviour
             this.onlinePvpPanel.gameObject.SetActive(false);
             this.hostPrivateMatchPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
-            this.numberOfPlayersTxt.text = $"{this.lobbyManager.JoinedPlayers}/{this.lobbyManager.MaxPlayers}";
+            this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
         });
 
         this.backBtn.onClick.AddListener(() =>
@@ -143,5 +152,16 @@ public class MainMenuController : MonoBehaviour
         this.btnClickSound.Play();
         yield return new WaitForSeconds(0.2f);
         Application.Quit();
+    }
+
+    private void OnPlayerJoined()
+    {
+        this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
+    }
+
+    private void OnUiPrepared()
+    {
+        this.hostPrivateMatchPanel.gameObject.SetActive(false);
+        this.inGameHudPanel.gameObject.SetActive(true);
     }
 }

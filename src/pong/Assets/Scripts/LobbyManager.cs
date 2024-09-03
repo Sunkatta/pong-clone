@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Services.Authentication;
@@ -9,7 +10,11 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    private Lobby hostLobby;
+    public event Action PlayerJoined;
+
+    private const int MaxPlayersCount = 2;
+
+    private Lobby localLobby;
     private bool shouldPing = false;
     private float heartbeatTimer;
 
@@ -17,23 +22,22 @@ public class LobbyManager : MonoBehaviour
     {
         get
         {
-            return this.hostLobby.LobbyCode;
+            return this.localLobby.LobbyCode;
         }
     }
 
-    public int JoinedPlayers
+    public string LobbyStatusMessage
     {
         get
         {
-            return this.hostLobby.Players.Count;
-        }
-    }
-
-    public int MaxPlayers
-    {
-        get
-        {
-            return this.hostLobby.MaxPlayers;
+            if (this.localLobby.Players.Count < this.localLobby.MaxPlayers)
+            {
+                return $"{this.localLobby.Players.Count}/{this.localLobby.MaxPlayers} players joined...";
+            }
+            else
+            {
+                return "All players have joined! Match will begin shortly!";
+            }
         }
     }
 
@@ -63,18 +67,24 @@ public class LobbyManager : MonoBehaviour
         try
         {
             string lobbyName = Guid.NewGuid().ToString();
-            int maxPlayers = 2;
             CreateLobbyOptions createLobbyOptions = new CreateLobbyOptions
             {
                 IsPrivate = true,
+                Player = new Player
+                {
+                    Data = new Dictionary<string, PlayerDataObject>
+                    {
+                        { "playerType", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerType.Player1.ToString()) },
+                    }
+                }
             };
 
-            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers);
+            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MaxPlayersCount, createLobbyOptions);
 
-            this.hostLobby = lobby;
+            this.localLobby = lobby;
             this.shouldPing = true;
 
-            NetworkManager.Singleton.StartHost();
+            await this.SubscribeToLobbyEvents(this.localLobby);
         }
         catch (LobbyServiceException ex)
         {
@@ -86,9 +96,22 @@ public class LobbyManager : MonoBehaviour
     {
         try
         {
-            Lobby lobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode);
+            var lobbyOptions = new JoinLobbyByCodeOptions
+            {
+                Player = new Player
+                {
+                    Data = new Dictionary<string, PlayerDataObject>
+                    {
+                        { "playerType", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerType.Player2.ToString()) },
+                    }
+                }
+            };
 
-            this.hostLobby = lobby;
+            Lobby lobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
+
+            this.localLobby = lobby;
+
+            await this.SubscribeToLobbyEvents(this.localLobby);
 
             NetworkManager.Singleton.StartClient();
         }
@@ -100,7 +123,7 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleLobbyHearbeat()
     {
-        if (this.hostLobby != null)
+        if (this.localLobby != null)
         {
             this.heartbeatTimer -= Time.deltaTime;
 
@@ -109,8 +132,25 @@ public class LobbyManager : MonoBehaviour
                 float heartbeatTimerMax = 15;
                 this.heartbeatTimer = heartbeatTimerMax;
 
-                await LobbyService.Instance.SendHeartbeatPingAsync(this.hostLobby.Id);
+                await LobbyService.Instance.SendHeartbeatPingAsync(this.localLobby.Id);
             }
         }
+    }
+
+    private async Task SubscribeToLobbyEvents(Lobby lobby)
+    {
+        var callbacks = new LobbyEventCallbacks();
+        callbacks.PlayerJoined += playerChanges =>
+        {
+            foreach (var playerChange in playerChanges)
+            {
+                this.localLobby.Players.Add(playerChange.Player);
+                this.PlayerJoined();
+
+                NetworkManager.Singleton.StartHost();
+            }
+        };
+
+        await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
     }
 }

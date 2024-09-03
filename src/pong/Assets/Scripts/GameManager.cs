@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public static event Action MatchBegan;
     public event Action<PlayerType> GameEnded;
 
     [SerializeField]
@@ -153,6 +154,8 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator BeginGame()
     {
+        yield return new WaitForSeconds(3);
+        MatchBegan();
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
     }

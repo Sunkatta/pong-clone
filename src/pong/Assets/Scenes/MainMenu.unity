@@ -289,6 +289,7 @@ RectTransform:
   m_Children:
   - {fileID: 1135735016}
   - {fileID: 1835716989}
+  - {fileID: 1257860281}
   m_Father: {fileID: 1013082356}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1033,7 +1034,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1518,6 +1519,7 @@ MonoBehaviour:
   hostPrivateMatchPanel: {fileID: 128272415}
   joinPrivateMatchPanel: {fileID: 259487722}
   authPanel: {fileID: 1799427854}
+  inGameHudPanel: {fileID: 543297454}
   localPvpBtn: {fileID: 1562926454}
   onlinePvpBtn: {fileID: 782116246}
   playOnlineBtn: {fileID: 1073898370}
@@ -1962,8 +1964,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 423, y: 207}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: 0, y: -53.5}
+  m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1135735017
 MonoBehaviour:
@@ -1987,8 +1989,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 279de2d26284ed34fa853a88205e5e21, type: 2}
+  m_sharedMaterial: {fileID: -5694066115552895284, guid: 279de2d26284ed34fa853a88205e5e21, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2019,11 +2021,11 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
-  m_wordSpacing: 0
+  m_wordSpacing: 35
   m_lineSpacing: 0
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
@@ -2276,11 +2278,11 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1799427854}
+  m_Father: {fileID: 128272415}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 69}
+  m_AnchoredPosition: {x: 0, y: 87}
   m_SizeDelta: {x: 500, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1257860282
@@ -2303,7 +2305,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: WHO ARE YOU?
+  m_text: LOBBY CODE
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 279de2d26284ed34fa853a88205e5e21, type: 2}
   m_sharedMaterial: {fileID: -5694066115552895284, guid: 279de2d26284ed34fa853a88205e5e21, type: 2}
@@ -2330,15 +2332,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 20
   m_wordSpacing: 0
@@ -3399,7 +3401,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1257860281}
   - {fileID: 1113338517}
   - {fileID: 1818920927}
   m_Father: {fileID: 1013082356}
@@ -3695,6 +3696,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 128272415}
     m_Modifications:
+    - target: {fileID: 7253423774054997475, guid: 8e14ba4874f1ab443a09ae6002073561, type: 3}
+      propertyPath: m_ReadOnly
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7889375361665473289, guid: 8e14ba4874f1ab443a09ae6002073561, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -4045,6 +4050,10 @@ PrefabInstance:
     - target: {fileID: 7113986449473853533, guid: 8e14ba4874f1ab443a09ae6002073561, type: 3}
       propertyPath: m_text
       value: ENTER CODE HERE...
+      objectReference: {fileID: 0}
+    - target: {fileID: 7253423774054997475, guid: 8e14ba4874f1ab443a09ae6002073561, type: 3}
+      propertyPath: m_ReadOnly
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7889375361665473289, guid: 8e14ba4874f1ab443a09ae6002073561, type: 3}
       propertyPath: m_Pivot.x
