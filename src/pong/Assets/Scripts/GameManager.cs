@@ -1,18 +1,25 @@
 using System;
 using System.Collections;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 
-public class GameManager : MonoBehaviour
+public class GameManager : NetworkBehaviour
 {
-    public static event Action MatchBegan;
-    public event Action<PlayerType> GameEnded;
+    public static event Action PrepareInGameUi;
+    public event Action<PlayerType> MatchEnded;
 
     [SerializeField]
     private new Camera camera;
 
     [SerializeField]
-    private GameObject ball;
+    private LobbyManager lobbyManager;
+
+    [SerializeField]
+    private GameObject ballPrefab;
+
+    [SerializeField]
+    private GameObject playerPrefab;
 
     [SerializeField]
     private TMP_Text player1ScoreText;
@@ -40,6 +47,8 @@ public class GameManager : MonoBehaviour
     private PlayerController player1;
     private PlayerController player2;
 
+    private NetworkObject ball;
+
     public void NewGame()
     {
         this.player1.Score.Value = 0;
@@ -53,21 +62,109 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         this.goalSound = GetComponent<AudioSource>();
-        this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
-        var ballController = this.ball.GetComponent<BallController>();
-        ballController.BallHit += this.OnBallHit;
-        PlayerController.PlayerJoined += this.OnPlayerJoined;
+
+        this.lobbyManager.PlayerJoined += this.OnPlayerJoined;
+        this.lobbyManager.BeginGame += OnBeginGame;
+
+        PlayerController.PlayerInstantiated += this.OnPlayerInstantiated;
 
         this.GenerateCollidersAcrossScreen();
     }
 
-    private void OnPlayerJoined(PlayerController player)
+    private void OnPlayerJoined(PlayerType playerType)
+    {
+        switch (playerType)
+        {
+            case PlayerType.Player1:
+                NetworkManager.Singleton.StartHost();
+                break;
+            case PlayerType.Player2:
+                NetworkManager.Singleton.StartClient();
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void OnBeginGame(GameType gameType)
+    {
+        switch (gameType)
+        {
+            case GameType.LocalPvp:
+                break;
+            case GameType.OnlinePvp:
+                StartCoroutine(this.BeginGame());
+
+                break;
+            default:
+                break;
+        }
+    }
+    private IEnumerator BeginGame()
+    {
+        yield return new WaitForSeconds(3);
+
+        if (this.IsServer)
+        {
+            var ballInstance = Instantiate(this.ballPrefab);
+            var ballInstanceNetworkObject = ballInstance.GetComponent<NetworkObject>();
+            ballInstanceNetworkObject.Spawn();
+            yield return new WaitForSeconds(1);
+            this.BallSpawnedRpc(ballInstanceNetworkObject);
+        }
+
+        this.PrepareInGameUiRpc();
+
+        yield return new WaitForSeconds(5);
+
+        this.SetInitialGameState();
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void BallSpawnedRpc(NetworkObjectReference ballNetworkObject)
+    {
+        this.ball = ballNetworkObject;
+        this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
+        var ballController = this.ball.GetComponent<BallController>();
+        ballController.BallHit += this.OnBallHit;
+        ballController.GoalPassed += this.OnPlayerScored;
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void PrepareInGameUiRpc()
+    {
+        PrepareInGameUi();
+    }
+
+    private void OnPlayerInstantiated(PlayerController player)
+    {
+        this.SetupPlayer(player);
+
+        if (NetworkManager.Singleton.ConnectedClients.Count == Constants.MaxPlayersCount)
+        {
+            this.SyncPlayers(this.player1, this.player2);
+        }
+    }
+
+    private void SyncPlayers(PlayerController player1, PlayerController player2)
+    {
+        this.SyncPlayerRpc(player1.gameObject);
+        this.SyncPlayerRpc(player2.gameObject);
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void SyncPlayerRpc(NetworkObjectReference playerNetworkObjectReference)
+    {
+        NetworkObject playerNetworkObject = playerNetworkObjectReference;
+        this.SetupPlayer(playerNetworkObject.GetComponent<PlayerController>());
+    }
+
+    private void SetupPlayer(PlayerController player)
     {
         if (this.player1 == null)
         {
             this.player1 = player;
             this.SetPlayerPosition(this.player1);
-            this.player1.PlayerScored += this.OnPlayerScored;
             this.player1.Score.OnValueChanged += (int previousValue, int newValue) =>
             {
                 this.player1ScoreText.text = newValue.ToString();
@@ -77,12 +174,10 @@ public class GameManager : MonoBehaviour
         {
             this.player2 = player;
             this.SetPlayerPosition(this.player2);
-            this.player2.PlayerScored += this.OnPlayerScored;
             this.player2.Score.OnValueChanged += (int previousValue, int newValue) =>
             {
                 this.player2ScoreText.text = newValue.ToString();
             };
-            this.StartCoroutine(this.BeginGame());
         }
     }
 
@@ -112,11 +207,20 @@ public class GameManager : MonoBehaviour
         this.goalSound.Play();
         this.latestScorer = scorer;
 
+        if (this.player1.Type == scorer)
+        {
+            this.player1.Score.Value++;
+        }
+        else
+        {
+            this.player2.Score.Value++;
+        }
+
         if (this.player1.Score.Value == targetScore || this.player2.Score.Value == targetScore)
         {
             var winner = this.player1.Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
 
-            this.GameEnded(winner);
+            this.MatchEnded(winner);
 
             return;
         }
@@ -150,14 +254,6 @@ public class GameManager : MonoBehaviour
         {
             player.transform.position = new Vector3(screenRightSide.x - .5f, 0);
         }
-    }
-
-    private IEnumerator BeginGame()
-    {
-        yield return new WaitForSeconds(3);
-        MatchBegan();
-        yield return new WaitForSeconds(5);
-        this.SetInitialGameState();
     }
 
     private void GenerateCollidersAcrossScreen()

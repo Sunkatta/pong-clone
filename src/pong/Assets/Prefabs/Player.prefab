@@ -156,7 +156,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 7
-  ball: {fileID: 4954779921624782939, guid: 33135583ae3f5de489a6e2fd02daa293, type: 3}
+  ballPrefab: {fileID: 4954779921624782939, guid: 33135583ae3f5de489a6e2fd02daa293, type: 3}
 --- !u!50 &8637696464817250456
 Rigidbody2D:
   serializedVersion: 4

@@ -42,7 +42,7 @@ public class MainGameUIController : MonoBehaviour
     private void Start()
     {
         this.endGameAudio = GetComponent<AudioSource>();
-        this.gameManager.GameEnded += this.OnGameEnded;
+        this.gameManager.MatchEnded += this.OnGameEnded;
 
         this.endGamePanelBackToMainMenuBtn.onClick.AddListener(() =>
         {

@@ -4,9 +4,7 @@ using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
-    public static event Action<PlayerController> PlayerJoined;
-    public static event Action PrepareInGameUi;
-    public event Action<PlayerType> PlayerScored;
+    public static event Action<PlayerController> PlayerInstantiated;
 
     public PlayerType Type { get; private set; }
 
@@ -14,9 +12,6 @@ public class PlayerController : NetworkBehaviour
 
     [SerializeField]
     private float speed;
-
-    [SerializeField]
-    private GameObject ball;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
@@ -30,20 +25,12 @@ public class PlayerController : NetworkBehaviour
 
         this.Type = PlayerType.Player1;
 
-        if (NetworkManager.Singleton.ConnectedClients.Count > 1)
+        if (NetworkManager.Singleton.ConnectedClients.Count > Constants.MaxPlayersCount - 1)
         {
             this.Type = PlayerType.Player2;
         }
 
-        PlayerJoined(this);
-    }
-
-    private void Start()
-    {
-        var ballController = this.ball.GetComponent<BallController>();
-        ballController.GoalPassed += this.OnGoalPassed;
-
-        GameManager.MatchBegan += OnMatchBegan;
+        PlayerInstantiated(this);
     }
 
     private void Update()
@@ -78,22 +65,5 @@ public class PlayerController : NetworkBehaviour
         {
             this.canMoveDown = false;
         }
-    }
-
-    private void OnGoalPassed(PlayerType scorer)
-    {
-        this.Score.Value++;
-        this.PlayerScored(scorer);
-    }
-
-    private void OnMatchBegan()
-    {
-        this.MatchBeginRpc();
-    }
-
-    [Rpc(SendTo.ClientsAndHost)]
-    private void MatchBeginRpc()
-    {
-        PrepareInGameUi();
     }
 }

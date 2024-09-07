@@ -1,5 +1,7 @@
 public static class Constants
 {
+    public const int MaxPlayersCount = 2;
+
     public const string UpperEdge = "UpperEdge";
     public const string LowerEdge = "LowerEdge";
     public const string LeftGoal = "LeftGoal";

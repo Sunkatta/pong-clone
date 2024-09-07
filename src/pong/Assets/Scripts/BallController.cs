@@ -1,7 +1,8 @@
 using System;
+using Unity.Netcode;
 using UnityEngine;
 
-public class BallController : MonoBehaviour
+public class BallController : NetworkBehaviour
 {
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;

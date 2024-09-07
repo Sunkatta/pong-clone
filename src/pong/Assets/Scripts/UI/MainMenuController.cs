@@ -72,8 +72,8 @@ public class MainMenuController : MonoBehaviour
     {
         this.btnClickSound = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
-        this.lobbyManager.PlayerJoined += OnPlayerJoined;
-        PlayerController.PrepareInGameUi += OnUiPrepared;
+        this.lobbyManager.UpdateLobbyUiOnPlayerJoined += OnPlayerJoined;
+        GameManager.PrepareInGameUi += OnUiPrepared;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {

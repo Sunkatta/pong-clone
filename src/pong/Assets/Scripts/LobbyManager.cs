@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -10,9 +9,9 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    public event Action PlayerJoined;
-
-    private const int MaxPlayersCount = 2;
+    public event Action<PlayerType> PlayerJoined;
+    public event Action<GameType> BeginGame;
+    public event Action UpdateLobbyUiOnPlayerJoined;
 
     private Lobby localLobby;
     private bool shouldPing = false;
@@ -79,12 +78,14 @@ public class LobbyManager : MonoBehaviour
                 }
             };
 
-            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, MaxPlayersCount, createLobbyOptions);
+            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, Constants.MaxPlayersCount, createLobbyOptions);
 
             this.localLobby = lobby;
             this.shouldPing = true;
 
             await this.SubscribeToLobbyEvents(this.localLobby);
+
+            this.PlayerJoined(PlayerType.Player1);
         }
         catch (LobbyServiceException ex)
         {
@@ -113,7 +114,7 @@ public class LobbyManager : MonoBehaviour
 
             await this.SubscribeToLobbyEvents(this.localLobby);
 
-            NetworkManager.Singleton.StartClient();
+            this.PlayerJoined(PlayerType.Player2);
         }
         catch (LobbyServiceException ex)
         {
@@ -145,9 +146,12 @@ public class LobbyManager : MonoBehaviour
             foreach (var playerChange in playerChanges)
             {
                 this.localLobby.Players.Add(playerChange.Player);
-                this.PlayerJoined();
+                this.UpdateLobbyUiOnPlayerJoined();
 
-                NetworkManager.Singleton.StartHost();
+                if (this.localLobby.Players.Count == Constants.MaxPlayersCount)
+                {
+                    this.BeginGame(GameType.OnlinePvp);
+                }
             }
         };
 
