@@ -183,27 +183,32 @@ public class GameManager : NetworkBehaviour
     private void OnPlayerScored(PlayerType scorer)
     {
         this.goalSound.Play();
-        this.latestScorer = scorer;
 
-        if (scorer == PlayerType.Player1)
+        if (this.IsServer)
         {
-            this.Player1Score.Value++;
+            this.latestScorer = scorer;
+
+            if (scorer == PlayerType.Player1)
+            {
+                this.Player1Score.Value++;
+            }
+            else
+            {
+                this.Player2Score.Value++;
+            }
+
+            if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
+            {
+                var winner = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+
+                // Announce to all players that the match has ended.
+                this.MatchEnded(winner);
+
+                return;
+            }
+
+            this.SetInitialGameState();
         }
-        else
-        {
-            this.Player2Score.Value++;
-        }
-
-        if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
-        {
-            var winner = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
-
-            this.MatchEnded(winner);
-
-            return;
-        }
-
-        this.SetInitialGameState();
     }
 
     private void OnBallHit()
