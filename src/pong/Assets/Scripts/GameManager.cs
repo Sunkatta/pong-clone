@@ -1,13 +1,17 @@
 using System;
 using System.Collections;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
     public static event Action PrepareInGameUi;
+    public static Action<int, PlayerType> ScoreChanged;
     public event Action<PlayerType> MatchEnded;
+
+    public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
+
+    public NetworkVariable<int> Player2Score { get; set; } = new NetworkVariable<int>();
 
     [SerializeField]
     private new Camera camera;
@@ -19,13 +23,7 @@ public class GameManager : NetworkBehaviour
     private GameObject ballPrefab;
 
     [SerializeField]
-    private GameObject playerPrefab;
-
-    [SerializeField]
-    private TMP_Text player1ScoreText;
-
-    [SerializeField]
-    private TMP_Text player2ScoreText;
+    private NetworkObject playerPrefab;
 
     [SerializeField]
     private float initialBallSpeed;
@@ -44,19 +42,46 @@ public class GameManager : NetworkBehaviour
     private PlayerType? latestScorer;
     private AudioSource goalSound;
 
-    private PlayerController player1;
-    private PlayerController player2;
-
     private NetworkObject ball;
+
+    public override void OnNetworkSpawn()
+    {
+        this.ClientConnectedRpc();
+
+        this.Player1Score.OnValueChanged += (int previousValue, int newValue) =>
+        {
+            ScoreChanged(newValue, PlayerType.Player1);
+        };
+
+        this.Player2Score.OnValueChanged += (int previousValue, int newValue) =>
+        {
+            ScoreChanged(newValue, PlayerType.Player2);
+        };
+    }
 
     public void NewGame()
     {
-        this.player1.Score.Value = 0;
-        this.player2.Score.Value = 0;
-        this.player1ScoreText.text = "0";
-        this.player2ScoreText.text = "0";
+        this.Player1Score.Value = 0;
+        this.Player2Score.Value = 0;
 
         this.SetInitialGameState();
+    }
+
+    [Rpc(SendTo.Server)]
+    private void ClientConnectedRpc(RpcParams rpcParams = default)
+    {
+        var playerInstanceController = this.playerPrefab.GetComponent<PlayerController>();
+        playerInstanceController.Type = PlayerType.Player1;
+
+        if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
+        {
+            playerInstanceController.Type = PlayerType.Player2;
+        }
+
+        NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
+            ownerClientId: rpcParams.Receive.SenderClientId,
+            isPlayerObject: true,
+            position: this.GetPlayerPosition(playerInstanceController));
     }
 
     private void Start()
@@ -65,8 +90,6 @@ public class GameManager : NetworkBehaviour
 
         this.lobbyManager.PlayerJoined += this.OnPlayerJoined;
         this.lobbyManager.BeginGame += OnBeginGame;
-
-        PlayerController.PlayerInstantiated += this.OnPlayerInstantiated;
 
         this.GenerateCollidersAcrossScreen();
     }
@@ -136,51 +159,6 @@ public class GameManager : NetworkBehaviour
         PrepareInGameUi();
     }
 
-    private void OnPlayerInstantiated(PlayerController player)
-    {
-        this.SetupPlayer(player);
-
-        if (NetworkManager.Singleton.ConnectedClients.Count == Constants.MaxPlayersCount)
-        {
-            this.SyncPlayers(this.player1, this.player2);
-        }
-    }
-
-    private void SyncPlayers(PlayerController player1, PlayerController player2)
-    {
-        this.SyncPlayerRpc(player1.gameObject);
-        this.SyncPlayerRpc(player2.gameObject);
-    }
-
-    [Rpc(SendTo.NotServer)]
-    private void SyncPlayerRpc(NetworkObjectReference playerNetworkObjectReference)
-    {
-        NetworkObject playerNetworkObject = playerNetworkObjectReference;
-        this.SetupPlayer(playerNetworkObject.GetComponent<PlayerController>());
-    }
-
-    private void SetupPlayer(PlayerController player)
-    {
-        if (this.player1 == null)
-        {
-            this.player1 = player;
-            this.SetPlayerPosition(this.player1);
-            this.player1.Score.OnValueChanged += (int previousValue, int newValue) =>
-            {
-                this.player1ScoreText.text = newValue.ToString();
-            };
-        }
-        else
-        {
-            this.player2 = player;
-            this.SetPlayerPosition(this.player2);
-            this.player2.Score.OnValueChanged += (int previousValue, int newValue) =>
-            {
-                this.player2ScoreText.text = newValue.ToString();
-            };
-        }
-    }
-
     private void SetInitialGameState()
     {
         this.currentBallSpeed = this.initialBallSpeed;
@@ -207,18 +185,18 @@ public class GameManager : NetworkBehaviour
         this.goalSound.Play();
         this.latestScorer = scorer;
 
-        if (this.player1.Type == scorer)
+        if (scorer == PlayerType.Player1)
         {
-            this.player1.Score.Value++;
+            this.Player1Score.Value++;
         }
         else
         {
-            this.player2.Score.Value++;
+            this.Player2Score.Value++;
         }
 
-        if (this.player1.Score.Value == targetScore || this.player2.Score.Value == targetScore)
+        if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
         {
-            var winner = this.player1.Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+            var winner = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
 
             this.MatchEnded(winner);
 
@@ -241,19 +219,12 @@ public class GameManager : NetworkBehaviour
         this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
     }
 
-    private void SetPlayerPosition(PlayerController player)
+    private Vector3 GetPlayerPosition(PlayerController player)
     {
         Vector3 screenLeftSide = this.camera.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
         Vector3 screenRightSide = this.camera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
 
-        if (player.Type == PlayerType.Player1)
-        {
-            player.transform.position = new Vector3(screenLeftSide.x + .5f, 0);
-        }
-        else
-        {
-            player.transform.position = new Vector3(screenRightSide.x - .5f, 0);
-        }
+        return player.Type == PlayerType.Player1 ? new Vector3(screenLeftSide.x + .5f, 0) : new Vector3(screenRightSide.x - .5f, 0);
     }
 
     private void GenerateCollidersAcrossScreen()

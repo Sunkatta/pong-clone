@@ -1162,7 +1162,7 @@ MonoBehaviour:
   NetworkConfig:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 955768164}
-    PlayerPrefab: {fileID: 9164971107830190795, guid: 9302692166a205942975d27a1062bd0a, type: 3}
+    PlayerPrefab: {fileID: 0}
     Prefabs:
       NetworkPrefabsLists:
       - {fileID: 11400000, guid: 3574d0b0312844b42a9c38dd62c3a542, type: 2}
@@ -1459,6 +1459,8 @@ MonoBehaviour:
   hostCodeInput: {fileID: 1835716990}
   joinCodeInput: {fileID: 1046926955}
   numberOfPlayersTxt: {fileID: 1135735017}
+  player1ScoreText: {fileID: 476270326}
+  player2ScoreText: {fileID: 103997413}
 --- !u!82 &1013082358
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2657,9 +2659,7 @@ MonoBehaviour:
   camera: {fileID: 1415871176}
   lobbyManager: {fileID: 441164521}
   ballPrefab: {fileID: 4954779921624782939, guid: 33135583ae3f5de489a6e2fd02daa293, type: 3}
-  playerPrefab: {fileID: 9164971107830190795, guid: 9302692166a205942975d27a1062bd0a, type: 3}
-  player1ScoreText: {fileID: 476270326}
-  player2ScoreText: {fileID: 103997413}
+  playerPrefab: {fileID: 3301485981495198369, guid: 9302692166a205942975d27a1062bd0a, type: 3}
   initialBallSpeed: 6
   maxBallSpeed: 15
   targetScore: 11

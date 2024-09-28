@@ -66,14 +66,21 @@ public class MainMenuController : MonoBehaviour
     [SerializeField]
     private TMP_Text numberOfPlayersTxt;
 
+    [SerializeField]
+    private TMP_Text player1ScoreText;
+
+    [SerializeField]
+    private TMP_Text player2ScoreText;
+
     private AudioSource btnClickSound;
 
     private void Start()
     {
         this.btnClickSound = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
-        this.lobbyManager.UpdateLobbyUiOnPlayerJoined += OnPlayerJoined;
-        GameManager.PrepareInGameUi += OnUiPrepared;
+        this.lobbyManager.UpdateLobbyUiOnPlayerJoined += this.OnPlayerJoined;
+        GameManager.PrepareInGameUi += this.OnUiPrepared;
+        GameManager.ScoreChanged += this.OnScoreChanged;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -163,5 +170,17 @@ public class MainMenuController : MonoBehaviour
     {
         this.hostPrivateMatchPanel.gameObject.SetActive(false);
         this.inGameHudPanel.gameObject.SetActive(true);
+    }
+
+    private void OnScoreChanged(int score, PlayerType playerType)
+    {
+        if (playerType == PlayerType.Player1)
+        {
+            this.player1ScoreText.text = score.ToString();
+        }
+        else
+        {
+            this.player2ScoreText.text = score.ToString();
+        }
     }
 }

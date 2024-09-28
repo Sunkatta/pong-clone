@@ -1,37 +1,15 @@
-using System;
 using Unity.Netcode;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
-    public static event Action<PlayerController> PlayerInstantiated;
-
-    public PlayerType Type { get; private set; }
-
-    public NetworkVariable<int> Score { get; set; } = new NetworkVariable<int>();
+    public PlayerType Type { get; set; }
 
     [SerializeField]
     private float speed;
 
     private bool canMoveUp = true;
     private bool canMoveDown = true;
-
-    public override void OnNetworkSpawn()
-    {
-        if (!this.IsServer)
-        {
-            return;
-        }
-
-        this.Type = PlayerType.Player1;
-
-        if (NetworkManager.Singleton.ConnectedClients.Count > Constants.MaxPlayersCount - 1)
-        {
-            this.Type = PlayerType.Player2;
-        }
-
-        PlayerInstantiated(this);
-    }
 
     private void Update()
     {
