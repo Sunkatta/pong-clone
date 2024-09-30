@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,6 +22,9 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private RectTransform joinPrivateMatchPanel;
+
+    [SerializeField]
+    private RectTransform lobbyPlayerListPanel;
 
     [SerializeField]
     private RectTransform authPanel;
@@ -72,7 +77,11 @@ public class MainMenuController : MonoBehaviour
     [SerializeField]
     private TMP_Text player2ScoreText;
 
+    [SerializeField]
+    private GameObject playerTilePrefab;
+
     private AudioSource btnClickSound;
+    private List<string> playerNames = new List<string>();
 
     private void Start()
     {
@@ -163,6 +172,28 @@ public class MainMenuController : MonoBehaviour
 
     private void OnPlayerJoined()
     {
+        this.playerNames.Clear();
+        this.playerNames = this.lobbyManager.JoinedPlayers
+            .Select(player => player.Data["playerName"].Value)
+            .ToList();
+
+        foreach (Transform playerTile in this.lobbyPlayerListPanel.transform)
+        {
+            Destroy(playerTile.gameObject);
+        }
+
+        foreach (var playerName in this.playerNames)
+        {
+            GameObject playerTile = Instantiate(this.playerTilePrefab, this.lobbyPlayerListPanel);
+
+            TMP_Text itemText = playerTile.GetComponentInChildren<TMP_Text>();
+
+            if (itemText != null)
+            {
+                itemText.text = playerName;
+            }
+        }
+
         this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
     }
 

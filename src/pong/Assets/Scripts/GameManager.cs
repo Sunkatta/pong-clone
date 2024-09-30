@@ -123,6 +123,7 @@ public class GameManager : NetworkBehaviour
                 break;
         }
     }
+
     private IEnumerator BeginGame()
     {
         yield return new WaitForSeconds(3);
@@ -201,7 +202,7 @@ public class GameManager : NetworkBehaviour
             {
                 var winner = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
 
-                // Announce to all players that the match has ended.
+                // TODO: Announce to all players that the match has ended.
                 this.MatchEnded(winner);
 
                 return;
@@ -213,15 +214,18 @@ public class GameManager : NetworkBehaviour
 
     private void OnBallHit()
     {
-        if (this.currentBallSpeed >= this.maxBallSpeed)
+        if (this.IsServer)
         {
-            return;
+            if (this.currentBallSpeed >= this.maxBallSpeed)
+            {
+                return;
+            }
+
+            var oldSpeed = this.currentBallSpeed;
+            this.currentBallSpeed++;
+
+            this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
         }
-
-        var oldSpeed = this.currentBallSpeed;
-        this.currentBallSpeed++;
-
-        this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
     }
 
     private Vector3 GetPlayerPosition(PlayerController player)

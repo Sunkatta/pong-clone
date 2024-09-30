@@ -17,13 +17,9 @@ public class LobbyManager : MonoBehaviour
     private bool shouldPing = false;
     private float heartbeatTimer;
 
-    public string LobbyCode
-    {
-        get
-        {
-            return this.localLobby.LobbyCode;
-        }
-    }
+    public string LobbyCode => this.localLobby.LobbyCode;
+
+    public ICollection<Player> JoinedPlayers => this.localLobby.Players;
 
     public string LobbyStatusMessage
     {
@@ -42,7 +38,7 @@ public class LobbyManager : MonoBehaviour
 
     private void Update()
     {
-        if (shouldPing)
+        if (this.shouldPing)
         {
             HandleLobbyHearbeat();
         }
@@ -73,7 +69,7 @@ public class LobbyManager : MonoBehaviour
                 {
                     Data = new Dictionary<string, PlayerDataObject>
                     {
-                        { "playerType", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerType.Player1.ToString()) },
+                        { "playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, AuthenticationService.Instance.Profile) },
                     }
                 }
             };
@@ -86,6 +82,7 @@ public class LobbyManager : MonoBehaviour
             await this.SubscribeToLobbyEvents(this.localLobby);
 
             this.PlayerJoined(PlayerType.Player1);
+            this.UpdateLobbyUiOnPlayerJoined();
         }
         catch (LobbyServiceException ex)
         {
@@ -103,7 +100,7 @@ public class LobbyManager : MonoBehaviour
                 {
                     Data = new Dictionary<string, PlayerDataObject>
                     {
-                        { "playerType", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, PlayerType.Player2.ToString()) },
+                        { "playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, AuthenticationService.Instance.Profile) },
                     }
                 }
             };
@@ -115,6 +112,7 @@ public class LobbyManager : MonoBehaviour
             await this.SubscribeToLobbyEvents(this.localLobby);
 
             this.PlayerJoined(PlayerType.Player2);
+            this.UpdateLobbyUiOnPlayerJoined();
         }
         catch (LobbyServiceException ex)
         {
@@ -150,7 +148,8 @@ public class LobbyManager : MonoBehaviour
 
                 if (this.localLobby.Players.Count == Constants.MaxPlayersCount)
                 {
-                    this.BeginGame(GameType.OnlinePvp);
+                    // TODO: Check that everyone is ready and then begin match
+                    // this.BeginGame(GameType.OnlinePvp);
                 }
             }
         };
