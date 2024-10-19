@@ -126,8 +126,6 @@ public class GameManager : NetworkBehaviour
 
     private IEnumerator BeginGame()
     {
-        yield return new WaitForSeconds(3);
-
         if (this.IsServer)
         {
             var ballInstance = Instantiate(this.ballPrefab);

@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -11,37 +13,29 @@ public class LobbyManager : MonoBehaviour
 {
     public event Action<PlayerType> PlayerJoined;
     public event Action<GameType> BeginGame;
-    public event Action UpdateLobbyUiOnPlayerJoined;
+    public event Action UpdateLobbyUi;
 
     private Lobby localLobby;
     private bool shouldPing = false;
     private float heartbeatTimer;
+    private float lobbyUpdateTimer;
 
     public string LobbyCode => this.localLobby.LobbyCode;
 
     public ICollection<Player> JoinedPlayers => this.localLobby.Players;
 
-    public string LobbyStatusMessage
-    {
-        get
-        {
-            if (this.localLobby.Players.Count < this.localLobby.MaxPlayers)
-            {
-                return $"{this.localLobby.Players.Count}/{this.localLobby.MaxPlayers} players joined...";
-            }
-            else
-            {
-                return "All players have joined! Match will begin shortly!";
-            }
-        }
-    }
+    public int MaxPlayers => this.localLobby.MaxPlayers;
+
+    public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
     private void Update()
     {
         if (this.shouldPing)
         {
-            HandleLobbyHearbeat();
+            this.HandleLobbyHearbeat();
         }
+
+        this.HandleLobbyPollForUpdates();
     }
 
     public async Task SignIn(string profileName)
@@ -62,7 +56,8 @@ public class LobbyManager : MonoBehaviour
         try
         {
             string lobbyName = Guid.NewGuid().ToString();
-            CreateLobbyOptions createLobbyOptions = new CreateLobbyOptions
+
+            var createLobbyOptions = new CreateLobbyOptions
             {
                 IsPrivate = true,
                 Player = new Player
@@ -70,19 +65,18 @@ public class LobbyManager : MonoBehaviour
                     Data = new Dictionary<string, PlayerDataObject>
                     {
                         { "playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, AuthenticationService.Instance.Profile) },
+                        { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, false.ToString()) },
                     }
                 }
             };
 
-            Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, Constants.MaxPlayersCount, createLobbyOptions);
-
-            this.localLobby = lobby;
+            this.localLobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, Constants.MaxPlayersCount, createLobbyOptions);
             this.shouldPing = true;
 
             await this.SubscribeToLobbyEvents(this.localLobby);
-
+            
             this.PlayerJoined(PlayerType.Player1);
-            this.UpdateLobbyUiOnPlayerJoined();
+            this.UpdateLobbyUi();
         }
         catch (LobbyServiceException ex)
         {
@@ -101,18 +95,36 @@ public class LobbyManager : MonoBehaviour
                     Data = new Dictionary<string, PlayerDataObject>
                     {
                         { "playerName", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, AuthenticationService.Instance.Profile) },
+                        { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, false.ToString()) },
                     }
                 }
             };
 
-            Lobby lobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
-
-            this.localLobby = lobby;
-
+            this.localLobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
             await this.SubscribeToLobbyEvents(this.localLobby);
 
             this.PlayerJoined(PlayerType.Player2);
-            this.UpdateLobbyUiOnPlayerJoined();
+            this.UpdateLobbyUi();
+        }
+        catch (LobbyServiceException ex)
+        {
+            Debug.Log(ex);
+        }
+    }
+
+    public async Task Ready(bool isReady)
+    {
+        try
+        {
+            var updatePlayerOptions = new UpdatePlayerOptions
+            {
+                Data = new Dictionary<string, PlayerDataObject>
+                {
+                    { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, isReady.ToString()) },
+                }
+            };
+
+            this.localLobby = await LobbyService.Instance.UpdatePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
         }
         catch (LobbyServiceException ex)
         {
@@ -136,24 +148,50 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    private async void HandleLobbyPollForUpdates()
+    {
+        if (this.localLobby != null)
+        {
+            this.lobbyUpdateTimer -= Time.deltaTime;
+
+            if (this.lobbyUpdateTimer < 0f)
+            {
+                float lobbyUpdateTimerMax = 1.1f;
+                this.lobbyUpdateTimer = lobbyUpdateTimerMax;
+
+                this.localLobby = await LobbyService.Instance.GetLobbyAsync(this.localLobby.Id);
+
+                this.UpdateLobbyUi();
+
+                if (this.localLobby.Players.Count == Constants.MaxPlayersCount && this.localLobby.Players.All(player => bool.Parse(player.Data["isReady"].Value)))
+                {
+                    StartCoroutine(this.BeginGameCountdown());
+                }
+                // TODO: Figure out how to stop countdown when player switches to Not Ready
+            }
+        }
+    }
+
     private async Task SubscribeToLobbyEvents(Lobby lobby)
     {
         var callbacks = new LobbyEventCallbacks();
+
         callbacks.PlayerJoined += playerChanges =>
         {
             foreach (var playerChange in playerChanges)
             {
                 this.localLobby.Players.Add(playerChange.Player);
-                this.UpdateLobbyUiOnPlayerJoined();
-
-                if (this.localLobby.Players.Count == Constants.MaxPlayersCount)
-                {
-                    // TODO: Check that everyone is ready and then begin match
-                    // this.BeginGame(GameType.OnlinePvp);
-                }
+                this.UpdateLobbyUi();
             }
         };
 
         await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
+    }
+
+    private IEnumerator BeginGameCountdown()
+    {
+        yield return new WaitForSeconds(3);
+
+        this.BeginGame(GameType.OnlinePvp);
     }
 }

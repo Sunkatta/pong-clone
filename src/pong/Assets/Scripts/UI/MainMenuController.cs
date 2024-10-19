@@ -60,6 +60,9 @@ public class MainMenuController : MonoBehaviour
     private Button setProfileBtn;
 
     [SerializeField]
+    private Button readyBtn;
+
+    [SerializeField]
     private TMP_InputField setProfileInput;
 
     [SerializeField]
@@ -81,13 +84,16 @@ public class MainMenuController : MonoBehaviour
     private GameObject playerTilePrefab;
 
     private AudioSource btnClickSound;
-    private List<string> playerNames = new List<string>();
+
+    private bool isReady;
+
+    private GameObject localPlayerTile;
 
     private void Start()
     {
         this.btnClickSound = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
-        this.lobbyManager.UpdateLobbyUiOnPlayerJoined += this.OnPlayerJoined;
+        this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         GameManager.PrepareInGameUi += this.OnUiPrepared;
         GameManager.ScoreChanged += this.OnScoreChanged;
 
@@ -130,7 +136,6 @@ public class MainMenuController : MonoBehaviour
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
             this.hostPrivateMatchPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
-            this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
         });
 
         this.hostPrivateMatchBtn.onClick.AddListener(async () =>
@@ -140,7 +145,15 @@ public class MainMenuController : MonoBehaviour
             this.onlinePvpPanel.gameObject.SetActive(false);
             this.hostPrivateMatchPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
-            this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
+        });
+
+        this.readyBtn.onClick.AddListener(async () =>
+        {
+            this.btnClickSound.Play();
+            this.isReady = !this.isReady;
+            await this.lobbyManager.Ready(isReady);
+            this.readyBtn.GetComponentInChildren<TMP_Text>().text = this.isReady ? "NOT READY" : "READY";
+            this.localPlayerTile.GetComponentInChildren<Toggle>().isOn = this.isReady;
         });
 
         this.backBtn.onClick.AddListener(() =>
@@ -170,31 +183,35 @@ public class MainMenuController : MonoBehaviour
         Application.Quit();
     }
 
-    private void OnPlayerJoined()
+    // This gets called every second when polling for lobby changes, so it might not be performant for
+    // more than 2 players, but it gets the job done for the time being.
+    private void OnLobbyUiUpdated()
     {
-        this.playerNames.Clear();
-        this.playerNames = this.lobbyManager.JoinedPlayers
-            .Select(player => player.Data["playerName"].Value)
-            .ToList();
-
         foreach (Transform playerTile in this.lobbyPlayerListPanel.transform)
         {
             Destroy(playerTile.gameObject);
         }
 
-        foreach (var playerName in this.playerNames)
+        foreach (var player in this.lobbyManager.JoinedPlayers)
         {
             GameObject playerTile = Instantiate(this.playerTilePrefab, this.lobbyPlayerListPanel);
+
+            if (player.Id == this.lobbyManager.LocalPlayer.Id)
+            {
+                this.localPlayerTile = playerTile;
+            }
 
             TMP_Text itemText = playerTile.GetComponentInChildren<TMP_Text>();
 
             if (itemText != null)
             {
-                itemText.text = playerName;
+                itemText.text = player.Data["playerName"].Value;
             }
+
+            playerTile.GetComponentInChildren<Toggle>().isOn = bool.Parse(player.Data["isReady"].Value);
         }
 
-        this.numberOfPlayersTxt.text = this.lobbyManager.LobbyStatusMessage;
+        this.numberOfPlayersTxt.text = $"{this.lobbyManager.JoinedPlayers.Count}/{this.lobbyManager.MaxPlayers}";
     }
 
     private void OnUiPrepared()
