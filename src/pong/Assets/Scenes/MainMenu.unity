@@ -1567,6 +1567,7 @@ MonoBehaviour:
   lobbyPlayerListPanel: {fileID: 1015749785}
   authPanel: {fileID: 1799427854}
   inGameHudPanel: {fileID: 543297454}
+  endGamePanel: {fileID: 1148733505}
   localPvpBtn: {fileID: 1562926454}
   onlinePvpBtn: {fileID: 782116246}
   playOnlineBtn: {fileID: 1073898370}
@@ -1583,7 +1584,10 @@ MonoBehaviour:
   numberOfPlayersTxt: {fileID: 1135735017}
   player1ScoreText: {fileID: 476270326}
   player2ScoreText: {fileID: 103997413}
+  endGameText: {fileID: 1832249261}
   playerTilePrefab: {fileID: 1630037488634774299, guid: 3b8fefba4553983408dee0e503ee02bc, type: 3}
+  gameWonSound: {fileID: 8300000, guid: 2667a0a008b044e218b63df62e2be749, type: 3}
+  btnClickSound: {fileID: 8300000, guid: efc3f2eb62e42f44b849b70d51c2fe58, type: 3}
 --- !u!82 &1013082358
 AudioSource:
   m_ObjectHideFlags: 0

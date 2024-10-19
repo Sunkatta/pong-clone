@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
 public class GameManager : NetworkBehaviour
 {
     public static event Action PrepareInGameUi;
-    public static Action<int, PlayerType> ScoreChanged;
-    public event Action<PlayerType> MatchEnded;
+    public static event Action<int, PlayerType> ScoreChanged;
+    public static event Action<string, string> MatchEnded;
 
     public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
 
@@ -36,6 +38,8 @@ public class GameManager : NetworkBehaviour
 
     [SerializeField]
     private GameType gameType;
+
+    private readonly List<LocalPlayer> players = new List<LocalPlayer>();
 
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
@@ -94,9 +98,11 @@ public class GameManager : NetworkBehaviour
         this.GenerateCollidersAcrossScreen();
     }
 
-    private void OnPlayerJoined(PlayerType playerType)
+    private void OnPlayerJoined(LocalPlayer player)
     {
-        switch (playerType)
+        this.players.Add(player);
+
+        switch (player.PlayerType)
         {
             case PlayerType.Player1:
                 NetworkManager.Singleton.StartHost();
@@ -198,16 +204,23 @@ public class GameManager : NetworkBehaviour
 
             if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
             {
-                var winner = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+                var winnerType = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+                var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
+                var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
 
-                // TODO: Announce to all players that the match has ended.
-                this.MatchEnded(winner);
+                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
 
                 return;
             }
 
             this.SetInitialGameState();
         }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void MatchEndedRpc(string winnerName, string loserName)
+    {
+        MatchEnded(winnerName, loserName);
     }
 
     private void OnBallHit()

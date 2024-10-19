@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -31,6 +29,9 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private RectTransform inGameHudPanel;
+
+    [SerializeField]
+    private RectTransform endGamePanel;
 
     [SerializeField]
     private Button localPvpBtn;
@@ -81,9 +82,18 @@ public class MainMenuController : MonoBehaviour
     private TMP_Text player2ScoreText;
 
     [SerializeField]
+    private TMP_Text endGameText;
+
+    [SerializeField]
     private GameObject playerTilePrefab;
 
-    private AudioSource btnClickSound;
+    [SerializeField]
+    private AudioClip gameWonSound;
+
+    [SerializeField]
+    private AudioClip btnClickSound;
+
+    private AudioSource mainMenuAudioSource;
 
     private bool isReady;
 
@@ -91,11 +101,12 @@ public class MainMenuController : MonoBehaviour
 
     private void Start()
     {
-        this.btnClickSound = GetComponent<AudioSource>();
+        this.mainMenuAudioSource = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         GameManager.PrepareInGameUi += this.OnUiPrepared;
         GameManager.ScoreChanged += this.OnScoreChanged;
+        GameManager.MatchEnded += this.OnGameEnded;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -104,14 +115,14 @@ public class MainMenuController : MonoBehaviour
 
         this.onlinePvpBtn.onClick.AddListener(() =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.mainMenuPanel.gameObject.SetActive(false);
             this.authPanel.gameObject.SetActive(true);
         });
 
         this.setProfileBtn.onClick.AddListener(async () =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.SignIn(this.setProfileInput.text);
             this.authPanel.gameObject.SetActive(false);
             this.onlinePvpPanel.gameObject.SetActive(true);
@@ -124,14 +135,14 @@ public class MainMenuController : MonoBehaviour
 
         this.joinPrivateMatchBtn.onClick.AddListener(() =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.onlinePvpPanel.gameObject.SetActive(false);
             this.joinPrivateMatchPanel.gameObject.SetActive(true);
         });
 
         this.joinPrivateMatchByCodeBtn.onClick.AddListener(async () =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
             this.hostPrivateMatchPanel.gameObject.SetActive(true);
@@ -140,7 +151,7 @@ public class MainMenuController : MonoBehaviour
 
         this.hostPrivateMatchBtn.onClick.AddListener(async () =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.HostPrivateMatch();
             this.onlinePvpPanel.gameObject.SetActive(false);
             this.hostPrivateMatchPanel.gameObject.SetActive(true);
@@ -149,7 +160,7 @@ public class MainMenuController : MonoBehaviour
 
         this.readyBtn.onClick.AddListener(async () =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.isReady = !this.isReady;
             await this.lobbyManager.Ready(isReady);
             this.readyBtn.GetComponentInChildren<TMP_Text>().text = this.isReady ? "NOT READY" : "READY";
@@ -158,7 +169,7 @@ public class MainMenuController : MonoBehaviour
 
         this.backBtn.onClick.AddListener(() =>
         {
-            this.btnClickSound.Play();
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.mainMenuPanel.gameObject.SetActive(true);
             this.onlinePvpPanel.gameObject.SetActive(false);
         });
@@ -171,14 +182,14 @@ public class MainMenuController : MonoBehaviour
 
     private IEnumerator StartLocalPvpCoroutine()
     {
-        this.btnClickSound.Play();
+        this.mainMenuAudioSource.Play();
         yield return new WaitForSeconds(0.1f);
         SceneManager.LoadScene("MainGame");
     }
 
     private IEnumerator QuitGameCoroutine()
     {
-        this.btnClickSound.Play();
+        this.mainMenuAudioSource.Play();
         yield return new WaitForSeconds(0.2f);
         Application.Quit();
     }
@@ -230,5 +241,19 @@ public class MainMenuController : MonoBehaviour
         {
             this.player2ScoreText.text = score.ToString();
         }
+    }
+
+    private void OnGameEnded(string winnerName, string loserName)
+    {
+        this.StartCoroutine(this.ShowEndGamePanelCoroutine(winnerName, loserName));
+    }
+
+    private IEnumerator ShowEndGamePanelCoroutine(string winnerName, string loserName)
+    {
+        yield return new WaitForSeconds(0.2f);
+        this.mainMenuAudioSource.PlayOneShot(this.gameWonSound);
+
+        this.endGameText.text = $"{winnerName} wins!\n {loserName}, want a rematch?";
+        this.endGamePanel.gameObject.SetActive(true);
     }
 }

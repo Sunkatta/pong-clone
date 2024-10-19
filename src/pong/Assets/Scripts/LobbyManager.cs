@@ -11,12 +11,13 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    public event Action<PlayerType> PlayerJoined;
+    public event Action<LocalPlayer> PlayerJoined;
     public event Action<GameType> BeginGame;
     public event Action UpdateLobbyUi;
 
     private Lobby localLobby;
     private bool shouldPing = false;
+    private bool shouldStartBeginGameCountdown = false;
     private float heartbeatTimer;
     private float lobbyUpdateTimer;
 
@@ -74,8 +75,10 @@ public class LobbyManager : MonoBehaviour
             this.shouldPing = true;
 
             await this.SubscribeToLobbyEvents(this.localLobby);
-            
-            this.PlayerJoined(PlayerType.Player1);
+
+            var localPlayer = new LocalPlayer(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
+
+            this.PlayerJoined(localPlayer);
             this.UpdateLobbyUi();
         }
         catch (LobbyServiceException ex)
@@ -103,7 +106,13 @@ public class LobbyManager : MonoBehaviour
             this.localLobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
             await this.SubscribeToLobbyEvents(this.localLobby);
 
-            this.PlayerJoined(PlayerType.Player2);
+            foreach (var lobbyPlayer in this.localLobby.Players)
+            {
+                var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
+
+                this.PlayerJoined(localPlayer);
+            }
+
             this.UpdateLobbyUi();
         }
         catch (LobbyServiceException ex)
@@ -163,8 +172,9 @@ public class LobbyManager : MonoBehaviour
 
                 this.UpdateLobbyUi();
 
-                if (this.localLobby.Players.Count == Constants.MaxPlayersCount && this.localLobby.Players.All(player => bool.Parse(player.Data["isReady"].Value)))
+                if (!this.shouldStartBeginGameCountdown && this.localLobby.Players.Count == Constants.MaxPlayersCount && this.localLobby.Players.All(player => bool.Parse(player.Data["isReady"].Value)))
                 {
+                    this.shouldStartBeginGameCountdown = true;
                     StartCoroutine(this.BeginGameCountdown());
                 }
                 // TODO: Figure out how to stop countdown when player switches to Not Ready
@@ -180,7 +190,10 @@ public class LobbyManager : MonoBehaviour
         {
             foreach (var playerChange in playerChanges)
             {
-                this.localLobby.Players.Add(playerChange.Player);
+                var lobbyPlayer = playerChange.Player;
+                this.localLobby.Players.Add(lobbyPlayer);
+                var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
+                this.PlayerJoined(localPlayer);
                 this.UpdateLobbyUi();
             }
         };
