@@ -107,6 +107,7 @@ public class MainMenuController : MonoBehaviour
         GameManager.PrepareInGameUi += this.OnUiPrepared;
         GameManager.ScoreChanged += this.OnScoreChanged;
         GameManager.MatchEnded += this.OnGameEnded;
+        GameManager.LobbyLoaded += this.OnLobbyLoaded;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -255,5 +256,14 @@ public class MainMenuController : MonoBehaviour
 
         this.endGameText.text = $"{winnerName} wins!\n {loserName}, want a rematch?";
         this.endGamePanel.gameObject.SetActive(true);
+    }
+
+    private void OnLobbyLoaded()
+    {
+        this.isReady = false;
+        this.lobbyManager.Ready(this.isReady).GetAwaiter();
+        this.inGameHudPanel.gameObject.SetActive(false);
+        this.endGamePanel.gameObject.SetActive(false);
+        this.hostPrivateMatchPanel.gameObject.SetActive(true);
     }
 }

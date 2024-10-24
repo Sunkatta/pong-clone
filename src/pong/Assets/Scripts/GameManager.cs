@@ -8,6 +8,7 @@ using UnityEngine;
 public class GameManager : NetworkBehaviour
 {
     public static event Action PrepareInGameUi;
+    public static event Action LobbyLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<string, string> MatchEnded;
 
@@ -68,7 +69,10 @@ public class GameManager : NetworkBehaviour
         this.Player1Score.Value = 0;
         this.Player2Score.Value = 0;
 
-        this.SetInitialGameState();
+        this.currentBallSpeed = this.initialBallSpeed;
+        this.ball.transform.position = Vector3.zero;
+        this.ballRigidbody.velocity = default;
+        this.latestScorer = null;
     }
 
     [Rpc(SendTo.Server)]
@@ -210,6 +214,8 @@ public class GameManager : NetworkBehaviour
 
                 this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
 
+                this.NewGame();
+
                 return;
             }
 
@@ -220,7 +226,20 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.ClientsAndHost)]
     private void MatchEndedRpc(string winnerName, string loserName)
     {
+        this.OnMatchEnded(winnerName, loserName);
+        
+    }
+
+    private void OnMatchEnded(string winnerName, string loserName)
+    {
+        this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
+    }
+
+    private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
+    {
         MatchEnded(winnerName, loserName);
+        yield return new WaitForSeconds(5);
+        LobbyLoaded();
     }
 
     private void OnBallHit()
