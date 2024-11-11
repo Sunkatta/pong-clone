@@ -212,6 +212,8 @@ public class GameManager : NetworkBehaviour
                 var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
                 var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
 
+                this.ball.Despawn();
+
                 this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
 
                 this.NewGame();
