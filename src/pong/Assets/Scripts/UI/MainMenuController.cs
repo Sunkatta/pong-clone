@@ -164,7 +164,7 @@ public class MainMenuController : MonoBehaviour
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.isReady = !this.isReady;
             await this.lobbyManager.Ready(isReady);
-            this.readyBtn.GetComponentInChildren<TMP_Text>().text = this.isReady ? "NOT READY" : "READY";
+            this.readyBtn.GetComponentInChildren<TMP_Text>().text = this.isReady ? Constants.PlayerNotReadyText : Constants.PlayerReadyText;
             this.localPlayerTile.GetComponentInChildren<Toggle>().isOn = this.isReady;
         });
 
@@ -261,6 +261,7 @@ public class MainMenuController : MonoBehaviour
     private void OnLobbyLoaded()
     {
         this.isReady = false;
+        this.readyBtn.GetComponentInChildren<TMP_Text>().text = Constants.PlayerReadyText;
         this.lobbyManager.Ready(this.isReady).GetAwaiter();
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
