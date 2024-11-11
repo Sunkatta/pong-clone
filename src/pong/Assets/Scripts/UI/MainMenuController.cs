@@ -262,7 +262,7 @@ public class MainMenuController : MonoBehaviour
     {
         this.isReady = false;
         this.readyBtn.GetComponentInChildren<TMP_Text>().text = Constants.PlayerReadyText;
-        this.lobbyManager.Ready(this.isReady).GetAwaiter();
+        this.lobbyManager.ResetLocalPlayer().GetAwaiter();
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
         this.hostPrivateMatchPanel.gameObject.SetActive(true);
