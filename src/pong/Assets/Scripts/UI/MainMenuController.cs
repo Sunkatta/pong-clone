@@ -16,7 +16,7 @@ public class MainMenuController : MonoBehaviour
     private RectTransform onlinePvpPanel;
 
     [SerializeField]
-    private RectTransform hostPrivateMatchPanel;
+    private RectTransform lobbyPanel;
 
     [SerializeField]
     private RectTransform joinPrivateMatchPanel;
@@ -40,9 +40,6 @@ public class MainMenuController : MonoBehaviour
     private Button onlinePvpBtn;
 
     [SerializeField]
-    private Button playOnlineBtn;
-
-    [SerializeField]
     private Button joinPrivateMatchBtn;
 
     [SerializeField]
@@ -55,13 +52,13 @@ public class MainMenuController : MonoBehaviour
     private Button quitGameBtn;
 
     [SerializeField]
-    private Button backBtn;
-
-    [SerializeField]
     private Button setProfileBtn;
 
     [SerializeField]
     private Button readyBtn;
+
+    [SerializeField]
+    private Button leaveBtn;
 
     [SerializeField]
     private TMP_InputField setProfileInput;
@@ -129,11 +126,6 @@ public class MainMenuController : MonoBehaviour
             this.onlinePvpPanel.gameObject.SetActive(true);
         });
 
-        this.playOnlineBtn.onClick.AddListener(() =>
-        {
-
-        });
-
         this.joinPrivateMatchBtn.onClick.AddListener(() =>
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
@@ -146,7 +138,7 @@ public class MainMenuController : MonoBehaviour
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
-            this.hostPrivateMatchPanel.gameObject.SetActive(true);
+            this.lobbyPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
         });
 
@@ -155,7 +147,7 @@ public class MainMenuController : MonoBehaviour
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.HostPrivateMatch();
             this.onlinePvpPanel.gameObject.SetActive(false);
-            this.hostPrivateMatchPanel.gameObject.SetActive(true);
+            this.lobbyPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
         });
 
@@ -168,11 +160,12 @@ public class MainMenuController : MonoBehaviour
             this.localPlayerTile.GetComponentInChildren<Toggle>().isOn = this.isReady;
         });
 
-        this.backBtn.onClick.AddListener(() =>
+        this.leaveBtn.onClick.AddListener(async () =>
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
-            this.mainMenuPanel.gameObject.SetActive(true);
-            this.onlinePvpPanel.gameObject.SetActive(false);
+            await this.lobbyManager.LeaveLobby();
+            this.lobbyPanel.gameObject.SetActive(false);
+            this.onlinePvpPanel.gameObject.SetActive(true);
         });
 
         this.quitGameBtn.onClick.AddListener(() =>
@@ -228,7 +221,7 @@ public class MainMenuController : MonoBehaviour
 
     private void OnUiPrepared()
     {
-        this.hostPrivateMatchPanel.gameObject.SetActive(false);
+        this.lobbyPanel.gameObject.SetActive(false);
         this.inGameHudPanel.gameObject.SetActive(true);
     }
 
@@ -265,6 +258,6 @@ public class MainMenuController : MonoBehaviour
         this.lobbyManager.ResetLocalPlayer().GetAwaiter();
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
-        this.hostPrivateMatchPanel.gameObject.SetActive(true);
+        this.lobbyPanel.gameObject.SetActive(true);
     }
 }

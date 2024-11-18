@@ -41,6 +41,11 @@ public class LobbyManager : MonoBehaviour
 
     public async Task SignIn(string profileName)
     {
+        if (UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn)
+        {
+            return;
+        }
+
         var options = new InitializationOptions();
         options.SetProfile(profileName);
 
@@ -134,6 +139,19 @@ public class LobbyManager : MonoBehaviour
             };
 
             this.localLobby = await LobbyService.Instance.UpdatePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
+        }
+        catch (LobbyServiceException ex)
+        {
+            Debug.Log(ex);
+        }
+    }
+
+    public async Task LeaveLobby()
+    {
+        try
+        {
+            await LobbyService.Instance.RemovePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId);
+            this.localLobby = null;
         }
         catch (LobbyServiceException ex)
         {
