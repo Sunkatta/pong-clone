@@ -121,6 +121,13 @@ public class MainMenuController : MonoBehaviour
         this.setProfileBtn.onClick.AddListener(async () =>
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
+
+            if (string.IsNullOrWhiteSpace(this.setProfileInput.text))
+            {
+                this.setProfileInput.GetComponent<ShakeController>().Shake();
+                return;
+            }
+
             await this.lobbyManager.SignIn(this.setProfileInput.text);
             this.authPanel.gameObject.SetActive(false);
             this.onlinePvpPanel.gameObject.SetActive(true);
@@ -136,6 +143,13 @@ public class MainMenuController : MonoBehaviour
         this.joinPrivateMatchByCodeBtn.onClick.AddListener(async () =>
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
+
+            if (string.IsNullOrWhiteSpace(this.joinCodeInput.text))
+            {
+                this.joinCodeInput.GetComponent<ShakeController>().Shake();
+                return;
+            }
+
             await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
             this.lobbyPanel.gameObject.SetActive(true);
