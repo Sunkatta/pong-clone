@@ -15,7 +15,6 @@ public class ShakeController : MonoBehaviour
         this.originalPosition = transform.position;
     }
 
-    // Update is called once per frame
     private void Update()
     {
         if (this.isShaking)
@@ -35,8 +34,6 @@ public class ShakeController : MonoBehaviour
 
     private IEnumerator ShakeNow()
     {
-        // Vector3 originalPosition = this.transform.position;
-
         if (!this.isShaking)
         {
             this.isShaking = true;
