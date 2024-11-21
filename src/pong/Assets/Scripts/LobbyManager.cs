@@ -13,6 +13,7 @@ public class LobbyManager : MonoBehaviour
 {
     public event Action<LocalPlayer> PlayerJoined;
     public event Action<GameType> BeginGame;
+    public event Action ShowCountdownUi;
     public event Action UpdateLobbyUi;
 
     private Lobby localLobby;
@@ -243,7 +244,9 @@ public class LobbyManager : MonoBehaviour
 
     private IEnumerator BeginGameCountdown()
     {
-        yield return new WaitForSeconds(3);
+        this.ShowCountdownUi();
+
+        yield return new WaitForSeconds(Constants.CountdownTimeInSeconds);
 
         this.BeginGame(GameType.OnlinePvp);
     }

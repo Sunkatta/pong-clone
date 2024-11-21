@@ -82,6 +82,9 @@ public class MainMenuController : MonoBehaviour
     private TMP_Text endGameText;
 
     [SerializeField]
+    private TMP_Text countdownTimerText;
+
+    [SerializeField]
     private GameObject playerTilePrefab;
 
     [SerializeField]
@@ -93,6 +96,9 @@ public class MainMenuController : MonoBehaviour
     private AudioSource mainMenuAudioSource;
 
     private bool isReady;
+    private bool shouldBeginCountdown;
+
+    private float remainingCountdownTime;
 
     private GameObject localPlayerTile;
 
@@ -101,6 +107,7 @@ public class MainMenuController : MonoBehaviour
         this.mainMenuAudioSource = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
+        this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
         GameManager.PrepareInGameUi += this.OnUiPrepared;
         GameManager.ScoreChanged += this.OnScoreChanged;
         GameManager.MatchEnded += this.OnGameEnded;
@@ -188,6 +195,26 @@ public class MainMenuController : MonoBehaviour
         });
     }
 
+    private void Update()
+    {
+        if (this.shouldBeginCountdown)
+        {
+            if (this.remainingCountdownTime > 0)
+            {
+                this.remainingCountdownTime -= Time.deltaTime;
+            }
+            else if (this.remainingCountdownTime < 0)
+            {
+                this.remainingCountdownTime = 0;
+                this.shouldBeginCountdown = false;
+            }
+
+            int seconds = Mathf.FloorToInt(this.remainingCountdownTime % 60);
+
+            this.countdownTimerText.text = $"ALL PLAYERS READY! MATCH BEGINS IN {seconds}";
+        }
+    }
+
     private IEnumerator StartLocalPvpCoroutine()
     {
         this.mainMenuAudioSource.Play();
@@ -273,5 +300,12 @@ public class MainMenuController : MonoBehaviour
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
         this.lobbyPanel.gameObject.SetActive(true);
+    }
+
+    private void OnCountdownUiShown()
+    {
+        this.shouldBeginCountdown = true;
+        this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
+        this.countdownTimerText.gameObject.SetActive(true);
     }
 }
