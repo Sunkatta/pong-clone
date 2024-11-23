@@ -143,13 +143,10 @@ public class GameManager : NetworkBehaviour
             ballInstanceNetworkObject.Spawn();
             yield return new WaitForSeconds(1);
             this.BallSpawnedRpc(ballInstanceNetworkObject);
+            this.PrepareInGameUiRpc();
+            yield return new WaitForSeconds(5);
+            this.SetInitialGameState();
         }
-
-        this.PrepareInGameUiRpc();
-
-        yield return new WaitForSeconds(5);
-
-        this.SetInitialGameState();
     }
 
     [Rpc(SendTo.ClientsAndHost)]
