@@ -16,6 +16,9 @@ public class LobbyManager : MonoBehaviour
     public event Action ShowCountdownUi;
     public event Action UpdateLobbyUi;
 
+    [SerializeField]
+    private RelayManager relayManager;
+
     private Lobby localLobby;
     private bool shouldPing = false;
     private bool shouldStartBeginGameCountdown = false;
@@ -84,6 +87,16 @@ public class LobbyManager : MonoBehaviour
 
             var localPlayer = new LocalPlayer(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
 
+            string relayJoinCode = await this.relayManager.CreateRelay();
+
+            this.localLobby = await LobbyService.Instance.UpdateLobbyAsync(this.localLobby.Id, new UpdateLobbyOptions
+            {
+                Data = new Dictionary<string, DataObject>
+                {
+                    { "relayCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode) }
+                }
+            });
+
             this.PlayerJoined(localPlayer);
             this.UpdateLobbyUi();
         }
@@ -114,9 +127,14 @@ public class LobbyManager : MonoBehaviour
 
             foreach (var lobbyPlayer in this.localLobby.Players)
             {
-                var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
+                if (lobbyPlayer.Id != this.localLobby.HostId)
+                {
+                    var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
 
-                this.PlayerJoined(localPlayer);
+                    await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
+
+                    this.PlayerJoined(localPlayer);
+                }
             }
 
             this.UpdateLobbyUi();
