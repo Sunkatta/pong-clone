@@ -288,7 +288,8 @@ public class MainMenuController : MonoBehaviour
         yield return new WaitForSeconds(0.2f);
         this.mainMenuAudioSource.PlayOneShot(this.gameWonSound);
 
-        this.endGameText.text = $"{winnerName} wins!\n {loserName}, want a rematch?";
+        this.endGameText.text = $"{winnerName} WINS!\n {loserName}, WANT A REMATCH?";
+        this.countdownTimerText.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(true);
     }
 
