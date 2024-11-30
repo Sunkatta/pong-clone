@@ -151,13 +151,12 @@ public class MainMenuController : MonoBehaviour
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
 
-            if (string.IsNullOrWhiteSpace(this.joinCodeInput.text))
+            if (string.IsNullOrWhiteSpace(this.joinCodeInput.text) || !await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text))
             {
                 this.joinCodeInput.GetComponent<ShakeController>().Shake();
                 return;
             }
 
-            await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text);
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
             this.lobbyPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;

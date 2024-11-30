@@ -107,7 +107,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task JoinPrivateMatchByCode(string lobbyCode)
+    public async Task<bool> JoinPrivateMatchByCode(string lobbyCode)
     {
         try
         {
@@ -139,10 +139,13 @@ public class LobbyManager : MonoBehaviour
             }
 
             this.UpdateLobbyUi();
+
+            return true;
         }
         catch (LobbyServiceException ex)
         {
             Debug.Log(ex);
+            return false;
         }
     }
 
