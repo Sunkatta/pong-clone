@@ -20,11 +20,11 @@ public class BackButtonController : MonoBehaviour
 
         buttonComponent.onClick.AddListener(() =>
         {
-            this.StartCoroutine(this.StartLocalPvpCoroutine());
+            this.StartCoroutine(this.GoBack());
         });
     }
 
-    private IEnumerator StartLocalPvpCoroutine()
+    private IEnumerator GoBack()
     {
         this.backButtonAudioSource.Play();
         yield return new WaitForSeconds(0.1f);
