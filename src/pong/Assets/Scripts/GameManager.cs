@@ -97,6 +97,7 @@ public class GameManager : NetworkBehaviour
         this.goalSound = GetComponent<AudioSource>();
 
         this.lobbyManager.PlayerJoined += this.OnPlayerJoined;
+        this.lobbyManager.PlayerLeft += this.OnPlayerLeft;
         this.lobbyManager.BeginGame += OnBeginGame;
 
         this.GenerateCollidersAcrossScreen();
@@ -117,6 +118,13 @@ public class GameManager : NetworkBehaviour
             default:
                 break;
         }
+    }
+
+    private void OnPlayerLeft(string playerId)
+    {
+        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
+        this.players.Remove(localPlayer);
+        NetworkManager.Singleton.Shutdown();
     }
 
     private void OnBeginGame(GameType gameType)

@@ -12,6 +12,7 @@ using UnityEngine;
 public class LobbyManager : MonoBehaviour
 {
     public event Action<LocalPlayer> PlayerJoined;
+    public event Action<string> PlayerLeft;
     public event Action<GameType> BeginGame;
     public event Action ShowCountdownUi;
     public event Action UpdateLobbyUi;
@@ -170,6 +171,7 @@ public class LobbyManager : MonoBehaviour
         try
         {
             await LobbyService.Instance.RemovePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId);
+            this.PlayerLeft(this.LocalPlayer.Id);
             this.localLobby = null;
         }
         catch (LobbyServiceException ex)
