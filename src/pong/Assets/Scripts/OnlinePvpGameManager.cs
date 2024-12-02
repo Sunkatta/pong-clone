@@ -5,7 +5,7 @@ using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
-public class GameManager : NetworkBehaviour
+public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
     public static event Action PrepareInGameUi;
     public static event Action LobbyLoaded;
@@ -15,12 +15,6 @@ public class GameManager : NetworkBehaviour
     public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
 
     public NetworkVariable<int> Player2Score { get; set; } = new NetworkVariable<int>();
-
-    [SerializeField]
-    private new Camera camera;
-
-    [SerializeField]
-    private LobbyManager lobbyManager;
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -36,9 +30,6 @@ public class GameManager : NetworkBehaviour
 
     [SerializeField]
     private int targetScore;
-
-    [SerializeField]
-    private GameType gameType;
 
     private readonly List<LocalPlayer> players = new List<LocalPlayer>();
 
@@ -75,6 +66,87 @@ public class GameManager : NetworkBehaviour
         this.latestScorer = null;
     }
 
+    public void BeginGame()
+    {
+        StartCoroutine(this.BeginGameCouroutine());
+    }
+
+    public void OnPlayerScored(PlayerType scorer)
+    {
+        this.goalSound.Play();
+
+        if (this.IsServer)
+        {
+            this.latestScorer = scorer;
+
+            if (scorer == PlayerType.Player1)
+            {
+                this.Player1Score.Value++;
+            }
+            else
+            {
+                this.Player2Score.Value++;
+            }
+
+            if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
+            {
+                var winnerType = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+                var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
+                var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
+
+                this.ball.Despawn();
+
+                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
+
+                this.NewGame();
+
+                return;
+            }
+
+            this.SetInitialGameState();
+        }
+    }
+
+    public void OnBallHit()
+    {
+        if (this.IsServer)
+        {
+            if (this.currentBallSpeed >= this.maxBallSpeed)
+            {
+                return;
+            }
+
+            var oldSpeed = this.currentBallSpeed;
+            this.currentBallSpeed++;
+
+            this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
+        }
+    }
+
+    public void OnPlayerJoined(LocalPlayer player)
+    {
+        this.players.Add(player);
+
+        switch (player.PlayerType)
+        {
+            case PlayerType.Player1:
+                NetworkManager.Singleton.StartHost();
+                break;
+            case PlayerType.Player2:
+                NetworkManager.Singleton.StartClient();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void OnPlayerLeft(string playerId)
+    {
+        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
+        this.players.Remove(localPlayer);
+        NetworkManager.Singleton.Shutdown();
+    }
+
     [Rpc(SendTo.Server)]
     private void ClientConnectedRpc(RpcParams rpcParams = default)
     {
@@ -95,54 +167,10 @@ public class GameManager : NetworkBehaviour
     private void Start()
     {
         this.goalSound = GetComponent<AudioSource>();
-
-        this.lobbyManager.PlayerJoined += this.OnPlayerJoined;
-        this.lobbyManager.PlayerLeft += this.OnPlayerLeft;
-        this.lobbyManager.BeginGame += OnBeginGame;
-
         this.GenerateCollidersAcrossScreen();
     }
 
-    private void OnPlayerJoined(LocalPlayer player)
-    {
-        this.players.Add(player);
-
-        switch (player.PlayerType)
-        {
-            case PlayerType.Player1:
-                NetworkManager.Singleton.StartHost();
-                break;
-            case PlayerType.Player2:
-                NetworkManager.Singleton.StartClient();
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void OnPlayerLeft(string playerId)
-    {
-        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
-        this.players.Remove(localPlayer);
-        NetworkManager.Singleton.Shutdown();
-    }
-
-    private void OnBeginGame(GameType gameType)
-    {
-        switch (gameType)
-        {
-            case GameType.LocalPvp:
-                break;
-            case GameType.OnlinePvp:
-                StartCoroutine(this.BeginGame());
-
-                break;
-            default:
-                break;
-        }
-    }
-
-    private IEnumerator BeginGame()
+    private IEnumerator BeginGameCouroutine()
     {
         if (this.IsServer)
         {
@@ -194,50 +222,14 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    private void OnPlayerScored(PlayerType scorer)
-    {
-        this.goalSound.Play();
-
-        if (this.IsServer)
-        {
-            this.latestScorer = scorer;
-
-            if (scorer == PlayerType.Player1)
-            {
-                this.Player1Score.Value++;
-            }
-            else
-            {
-                this.Player2Score.Value++;
-            }
-
-            if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
-            {
-                var winnerType = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
-                var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
-                var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
-
-                this.ball.Despawn();
-
-                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
-
-                this.NewGame();
-
-                return;
-            }
-
-            this.SetInitialGameState();
-        }
-    }
-
     [Rpc(SendTo.ClientsAndHost)]
     private void MatchEndedRpc(string winnerName, string loserName)
     {
-        this.OnMatchEnded(winnerName, loserName);
+        this.EndGame(winnerName, loserName);
         
     }
 
-    private void OnMatchEnded(string winnerName, string loserName)
+    public void EndGame(string winnerName, string loserName)
     {
         this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
     }
@@ -249,34 +241,18 @@ public class GameManager : NetworkBehaviour
         LobbyLoaded();
     }
 
-    private void OnBallHit()
-    {
-        if (this.IsServer)
-        {
-            if (this.currentBallSpeed >= this.maxBallSpeed)
-            {
-                return;
-            }
-
-            var oldSpeed = this.currentBallSpeed;
-            this.currentBallSpeed++;
-
-            this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
-        }
-    }
-
     private Vector3 GetPlayerPosition(PlayerController player)
     {
-        Vector3 screenLeftSide = this.camera.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
-        Vector3 screenRightSide = this.camera.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
+        Vector3 screenLeftSide = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
+        Vector3 screenRightSide = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
 
         return player.Type == PlayerType.Player1 ? new Vector3(screenLeftSide.x + .5f, 0) : new Vector3(screenRightSide.x - .5f, 0);
     }
 
     private void GenerateCollidersAcrossScreen()
     {
-        Vector2 lDCorner = this.camera.ViewportToWorldPoint(new Vector3(0, 0f, this.camera.nearClipPlane));
-        Vector2 rUCorner = this.camera.ViewportToWorldPoint(new Vector3(1f, 1f, this.camera.nearClipPlane));
+        Vector2 lDCorner = Camera.main.ViewportToWorldPoint(new Vector3(0, 0f, Camera.main.nearClipPlane));
+        Vector2 rUCorner = Camera.main.ViewportToWorldPoint(new Vector3(1f, 1f, Camera.main.nearClipPlane));
         Vector2[] colliderpoints;
 
         var upperEdgeGameObject = new GameObject(Constants.UpperEdge);

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class MainGameUIController : MonoBehaviour
 {
     [SerializeField]
-    private GameManager gameManager;
+    private OnlinePvpGameManager gameManager;
 
     [SerializeField]
     private RectTransform endGamePanel;

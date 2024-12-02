@@ -11,20 +11,21 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    public event Action<LocalPlayer> PlayerJoined;
-    public event Action<string> PlayerLeft;
-    public event Action<GameType> BeginGame;
     public event Action ShowCountdownUi;
     public event Action UpdateLobbyUi;
 
     [SerializeField]
     private RelayManager relayManager;
 
+    [SerializeField]
+    private GameObject onlinePvpGameManager;
+
     private Lobby localLobby;
     private bool shouldPing = false;
     private bool shouldStartBeginGameCountdown = false;
     private float heartbeatTimer;
     private float lobbyUpdateTimer;
+    private IGameManager gameManager;
 
     public string LobbyCode => this.localLobby.LobbyCode;
 
@@ -98,7 +99,10 @@ public class LobbyManager : MonoBehaviour
                 }
             });
 
-            this.PlayerJoined(localPlayer);
+            var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
+            this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
+
+            this.gameManager.OnPlayerJoined(localPlayer);
             this.UpdateLobbyUi();
         }
         catch (LobbyServiceException ex)
@@ -126,6 +130,9 @@ public class LobbyManager : MonoBehaviour
             this.localLobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
             await this.SubscribeToLobbyEvents(this.localLobby);
 
+            var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
+            this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
+
             foreach (var lobbyPlayer in this.localLobby.Players)
             {
                 if (lobbyPlayer.Id != this.localLobby.HostId)
@@ -134,7 +141,7 @@ public class LobbyManager : MonoBehaviour
 
                     await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
 
-                    this.PlayerJoined(localPlayer);
+                    this.gameManager.OnPlayerJoined(localPlayer);
                 }
             }
 
@@ -174,7 +181,7 @@ public class LobbyManager : MonoBehaviour
         try
         {
             await LobbyService.Instance.RemovePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId);
-            this.PlayerLeft(this.LocalPlayer.Id);
+            this.gameManager.OnPlayerLeft(this.LocalPlayer.Id);
             this.localLobby = null;
         }
         catch (LobbyServiceException ex)
@@ -257,7 +264,7 @@ public class LobbyManager : MonoBehaviour
                 var lobbyPlayer = playerChange.Player;
                 this.localLobby.Players.Add(lobbyPlayer);
                 var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
-                this.PlayerJoined(localPlayer);
+                this.gameManager.OnPlayerJoined(localPlayer);
                 this.UpdateLobbyUi();
             }
         };
@@ -271,6 +278,6 @@ public class LobbyManager : MonoBehaviour
 
         yield return new WaitForSeconds(Constants.CountdownTimeInSeconds);
 
-        this.BeginGame(GameType.OnlinePvp);
+        this.gameManager.BeginGame();
     }
 }

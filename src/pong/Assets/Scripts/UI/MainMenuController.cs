@@ -108,10 +108,10 @@ public class MainMenuController : MonoBehaviour
         this.mainMenuPanel.gameObject.SetActive(true);
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
-        GameManager.PrepareInGameUi += this.OnUiPrepared;
-        GameManager.ScoreChanged += this.OnScoreChanged;
-        GameManager.MatchEnded += this.OnGameEnded;
-        GameManager.LobbyLoaded += this.OnLobbyLoaded;
+        OnlinePvpGameManager.PrepareInGameUi += this.OnUiPrepared;
+        OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
+        OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
+        OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
