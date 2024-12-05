@@ -2705,8 +2705,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eadc2cc6e1fc7534b89b5e61040efd58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localPvpGameManager: {fileID: 8910375843750263519, guid: bffcec92f6d6681418a74d91e48f5c00, type: 3}
   lobbyManager: {fileID: 441164521}
-  gameManager: {fileID: 0}
   mainMenuPanel: {fileID: 1065743605}
   onlinePvpPanel: {fileID: 1608456174}
   lobbyPanel: {fileID: 128272415}
