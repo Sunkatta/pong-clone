@@ -150,7 +150,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [Rpc(SendTo.Server)]
     private void ClientConnectedRpc(RpcParams rpcParams = default)
     {
-        var playerInstanceController = this.playerPrefab.GetComponent<PlayerController>();
+        var playerInstanceController = this.playerPrefab.GetComponent<OnlinePlayerController>();
         playerInstanceController.Type = PlayerType.Player1;
 
         if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
@@ -241,7 +241,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         LobbyLoaded();
     }
 
-    private Vector3 GetPlayerPosition(PlayerController player)
+    private Vector3 GetPlayerPosition(OnlinePlayerController player)
     {
         Vector3 screenLeftSide = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
         Vector3 screenRightSide = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));

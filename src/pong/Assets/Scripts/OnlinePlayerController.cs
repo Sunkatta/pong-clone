@@ -1,7 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerController : NetworkBehaviour
+public class OnlinePlayerController : NetworkBehaviour
 {
     public PlayerType Type { get; set; }
 

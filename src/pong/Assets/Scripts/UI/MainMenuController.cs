@@ -121,6 +121,7 @@ public class MainMenuController : MonoBehaviour
 
         LocalPvpGameManager.ScoreChanged += this.OnScoreChanged;
         LocalPvpGameManager.MatchEnded += this.OnGameEnded;
+        LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -234,6 +235,13 @@ public class MainMenuController : MonoBehaviour
 
             this.countdownTimerText.text = $"ALL PLAYERS READY! MATCH BEGINS IN {seconds}";
         }
+    }
+
+    private void OnMainMenuLoaded()
+    {
+        this.inGameHudPanel.gameObject.SetActive(false);
+        this.endGamePanel.gameObject.SetActive(false);
+        this.mainMenuPanel.gameObject.SetActive(true);
     }
 
     private IEnumerator QuitGameCoroutine()

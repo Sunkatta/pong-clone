@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
+    public static event Action MainMenuLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<string, string> MatchEnded;
 
@@ -41,12 +42,27 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         StartCoroutine(this.BeginGameCouroutine());
     }
 
-    public void EndGame(string winnerName, string loserName)
+    public void OnPlayerJoined(LocalPlayer player)
+    {
+        this.players.Add(player);
+
+        var playerGameObject = Instantiate(this.playerPrefab);
+        var playerInstanceController = playerGameObject.GetComponent<LocalPlayerController>();
+        playerInstanceController.Type = player.PlayerType;
+        playerGameObject.transform.position = this.GetPlayerPosition(player);
+    }
+
+    public void OnPlayerLeft(string playerId)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void EndGame(string winnerName, string loserName)
     {
         this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
     }
 
-    public void OnBallHit()
+    private void OnBallHit()
     {
         if (this.currentBallSpeed >= this.maxBallSpeed)
         {
@@ -59,20 +75,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
     }
 
-    public void OnPlayerJoined(LocalPlayer player)
-    {
-        this.players.Add(player);
-
-        var playerGameObject = Instantiate(this.playerPrefab);
-        playerGameObject.transform.position = this.GetPlayerPosition(player);
-    }
-
-    public void OnPlayerLeft(string playerId)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public void OnPlayerScored(PlayerType scorer)
+    private void OnPlayerScored(PlayerType scorer)
     {
         this.goalSound.Play();
 
@@ -96,10 +99,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
 
             Destroy(this.ball);
-
             this.EndGame(winnerPlayer.Username, loserPlayer.Username);
-
-            this.NewGame();
 
             return;
         }
@@ -107,29 +107,25 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.SetInitialGameState();
     }
 
-    // Start is called before the first frame update
     private void Start()
     {
         this.goalSound = GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
     }
 
-    public void NewGame()
-    {
-        this.Player1Score = 0;
-        this.Player2Score = 0;
-
-        this.currentBallSpeed = this.initialBallSpeed;
-        this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = default;
-        this.latestScorer = null;
-    }
-
     private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
     {
         MatchEnded(winnerName, loserName);
         yield return new WaitForSeconds(5);
-        // LobbyLoaded();
+
+        foreach (var player in FindObjectsOfType<LocalPlayerController>())
+        {
+            Destroy(player.gameObject);
+        }
+
+        MainMenuLoaded();
+
+        Destroy(this.gameObject);
     }
 
     private Vector3 GetPlayerPosition(LocalPlayer player)
