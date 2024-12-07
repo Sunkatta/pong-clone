@@ -10,4 +10,6 @@ public static class Constants
     public const string Player = "Player";
     public const string PlayerReadyText = "READY";
     public const string PlayerNotReadyText = "NOT READY";
+    public const string ReturningToLobbyText = "RETURNING TO LOBBY...";
+    public const string ReturningToMainMenuText = "RETURNING TO MAIN MENU...";
 }

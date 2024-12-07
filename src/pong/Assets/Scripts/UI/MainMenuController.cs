@@ -85,6 +85,9 @@ public class MainMenuController : MonoBehaviour
     private TMP_Text endGameText;
 
     [SerializeField]
+    private TMP_Text navigatingToText;
+
+    [SerializeField]
     private TMP_Text countdownTimerText;
 
     [SerializeField]
@@ -300,17 +303,18 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
-    private void OnGameEnded(string winnerName, string loserName)
+    private void OnGameEnded(GameOverStatistics gameOverStatistics)
     {
-        this.StartCoroutine(this.ShowEndGamePanelCoroutine(winnerName, loserName));
+        this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
     }
 
-    private IEnumerator ShowEndGamePanelCoroutine(string winnerName, string loserName)
+    private IEnumerator ShowEndGamePanelCoroutine(GameOverStatistics gameOverStatistics)
     {
         yield return new WaitForSeconds(0.2f);
         this.mainMenuAudioSource.PlayOneShot(this.gameWonSound);
 
-        this.endGameText.text = $"{winnerName} WINS!\n {loserName}, WANT A REMATCH?";
+        this.endGameText.text = $"{gameOverStatistics.WinnerName} WINS!\n {gameOverStatistics.LoserName}, WANT A REMATCH?";
+        this.navigatingToText.text = gameOverStatistics.NavigatingToMessage;
         this.countdownTimerText.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(true);
     }

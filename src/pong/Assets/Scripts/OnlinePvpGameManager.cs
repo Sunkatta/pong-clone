@@ -11,7 +11,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     public static event Action LobbyLoaded;
     public static event Action HostDisconnected;
     public static event Action<int, PlayerType> ScoreChanged;
-    public static event Action<string, string> MatchEnded;
+    public static event Action<GameOverStatistics> MatchEnded;
 
     public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
 
@@ -257,7 +257,14 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
     {
-        MatchEnded(winnerName, loserName);
+        var gameOverStatistics = new GameOverStatistics
+        {
+            WinnerName = winnerName,
+            LoserName = loserName,
+            NavigatingToMessage = Constants.ReturningToLobbyText,
+        };
+
+        MatchEnded(gameOverStatistics);
         yield return new WaitForSeconds(5);
         LobbyLoaded();
     }

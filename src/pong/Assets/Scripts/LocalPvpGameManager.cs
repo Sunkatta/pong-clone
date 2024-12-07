@@ -8,7 +8,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
     public static event Action MainMenuLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
-    public static event Action<string, string> MatchEnded;
+    public static event Action<GameOverStatistics> MatchEnded;
 
     public int Player1Score { get; set; }
 
@@ -116,7 +116,14 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
     {
-        MatchEnded(winnerName, loserName);
+        var gameOverStatistics = new GameOverStatistics
+        {
+            WinnerName = winnerName,
+            LoserName = loserName,
+            NavigatingToMessage = Constants.ReturningToMainMenuText,
+        };
+
+        MatchEnded(gameOverStatistics);
         yield return new WaitForSeconds(5);
 
         foreach (var player in FindObjectsOfType<LocalPlayerController>())
