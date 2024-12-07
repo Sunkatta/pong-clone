@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
@@ -143,7 +142,7 @@ public class MainMenuController : MonoBehaviour
 
         this.onlinePvpBtn.onClick.AddListener(() =>
         {
-            // this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.mainMenuPanel.gameObject.SetActive(false);
             this.authPanel.gameObject.SetActive(true);
         });
@@ -165,7 +164,7 @@ public class MainMenuController : MonoBehaviour
 
         this.joinPrivateMatchBtn.onClick.AddListener(() =>
         {
-            // this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.onlinePvpPanel.gameObject.SetActive(false);
             this.joinPrivateMatchPanel.gameObject.SetActive(true);
         });
@@ -205,7 +204,7 @@ public class MainMenuController : MonoBehaviour
 
         this.leaveBtn.onClick.AddListener(async () =>
         {
-            // this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
+            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             await this.lobbyManager.LeaveLobby();
             this.lobbyPanel.gameObject.SetActive(false);
             this.onlinePvpPanel.gameObject.SetActive(true);
