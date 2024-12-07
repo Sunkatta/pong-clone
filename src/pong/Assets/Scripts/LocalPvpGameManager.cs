@@ -36,6 +36,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private GameObject ball;
 
     private readonly List<LocalPlayer> players = new List<LocalPlayer>();
+    private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     public void BeginGame()
     {
@@ -123,6 +124,11 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             Destroy(player.gameObject);
         }
 
+        foreach (var edge in this.fieldEdges)
+        {
+            Destroy(edge);
+        }
+
         MainMenuLoaded();
 
         Destroy(this.gameObject);
@@ -143,6 +149,8 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         var ballController = this.ball.GetComponent<BallController>();
         ballController.BallHit += this.OnBallHit;
         ballController.GoalPassed += this.OnPlayerScored;
+        ScoreChanged(Player1Score, PlayerType.Player1);
+        ScoreChanged(Player2Score, PlayerType.Player2);
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
     }
@@ -182,6 +190,8 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         colliderpoints[1] = new Vector2(rUCorner.x, rUCorner.y);
         upperEdge.points = colliderpoints;
 
+        this.fieldEdges.Add(upperEdgeGameObject);
+
         var lowerEdgeGameObject = new GameObject(Constants.LowerEdge);
         lowerEdgeGameObject.tag = Constants.LowerEdge;
         EdgeCollider2D lowerEdge = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
@@ -189,6 +199,8 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
         lowerEdge.points = colliderpoints;
+
+        this.fieldEdges.Add(lowerEdgeGameObject);
 
         var leftGoalGameObject = new GameObject(Constants.LeftGoal);
         leftGoalGameObject.tag = Constants.LeftGoal;
@@ -198,6 +210,8 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
         leftGoalCollider.points = colliderpoints;
 
+        this.fieldEdges.Add(leftGoalGameObject);
+
         var rightGoalGameObject = new GameObject(Constants.RightGoal);
         rightGoalGameObject.tag = Constants.RightGoal;
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
@@ -205,5 +219,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
         rightGoalCollider.points = colliderpoints;
+
+        this.fieldEdges.Add(rightGoalGameObject);
     }
 }
