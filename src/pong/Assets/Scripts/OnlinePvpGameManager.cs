@@ -9,6 +9,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
     public static event Action PrepareInGameUi;
     public static event Action LobbyLoaded;
+    public static event Action HostDisconnected;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<string, string> MatchEnded;
 
@@ -32,6 +33,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     private int targetScore;
 
     private readonly List<LocalPlayer> players = new List<LocalPlayer>();
+    private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     private float currentBallSpeed;
     private Rigidbody2D ballRigidbody;
@@ -71,7 +73,50 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         StartCoroutine(this.BeginGameCouroutine());
     }
 
-    public void OnPlayerScored(PlayerType scorer)
+    public void OnPlayerJoined(LocalPlayer player)
+    {
+        this.players.Add(player);
+
+        switch (player.PlayerType)
+        {
+            case PlayerType.Player1:
+                NetworkManager.Singleton.StartHost();
+                break;
+            case PlayerType.Player2:
+                NetworkManager.Singleton.StartClient();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void OnPlayerLeft(string playerId)
+    {
+        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
+        this.players.Remove(localPlayer);
+
+        if (this.IsHost)
+        {
+            this.HostDisconnectedRpc();
+        }
+
+        NetworkManager.Singleton.Shutdown();
+
+        foreach (var edge in this.fieldEdges)
+        {
+            Destroy(edge);
+        }
+
+        Destroy(this.gameObject);
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void HostDisconnectedRpc()
+    {
+        HostDisconnected();
+    }
+
+    private void OnPlayerScored(PlayerType scorer)
     {
         this.goalSound.Play();
 
@@ -107,7 +152,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         }
     }
 
-    public void OnBallHit()
+    private void OnBallHit()
     {
         if (this.IsServer)
         {
@@ -121,30 +166,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
             this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
         }
-    }
-
-    public void OnPlayerJoined(LocalPlayer player)
-    {
-        this.players.Add(player);
-
-        switch (player.PlayerType)
-        {
-            case PlayerType.Player1:
-                NetworkManager.Singleton.StartHost();
-                break;
-            case PlayerType.Player2:
-                NetworkManager.Singleton.StartClient();
-                break;
-            default:
-                break;
-        }
-    }
-
-    public void OnPlayerLeft(string playerId)
-    {
-        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
-        this.players.Remove(localPlayer);
-        NetworkManager.Singleton.Shutdown();
     }
 
     [Rpc(SendTo.Server)]
@@ -263,6 +284,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         colliderpoints[1] = new Vector2(rUCorner.x, rUCorner.y);
         upperEdge.points = colliderpoints;
 
+        this.fieldEdges.Add(upperEdgeGameObject);
+
         var lowerEdgeGameObject = new GameObject(Constants.LowerEdge);
         lowerEdgeGameObject.tag = Constants.LowerEdge;
         EdgeCollider2D lowerEdge = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
@@ -270,6 +293,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
         lowerEdge.points = colliderpoints;
+
+        this.fieldEdges.Add(lowerEdgeGameObject);
 
         var leftGoalGameObject = new GameObject(Constants.LeftGoal);
         leftGoalGameObject.tag = Constants.LeftGoal;
@@ -279,6 +304,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
         leftGoalCollider.points = colliderpoints;
 
+        this.fieldEdges.Add(leftGoalGameObject);
+
         var rightGoalGameObject = new GameObject(Constants.RightGoal);
         rightGoalGameObject.tag = Constants.RightGoal;
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
@@ -286,5 +313,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
         colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
         rightGoalCollider.points = colliderpoints;
+
+        this.fieldEdges.Add(rightGoalGameObject);
     }
 }

@@ -117,6 +117,7 @@ public class MainMenuController : MonoBehaviour
         OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
         OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
+        OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
 
         LocalPvpGameManager.ScoreChanged += this.OnScoreChanged;
         LocalPvpGameManager.MatchEnded += this.OnGameEnded;
@@ -329,5 +330,11 @@ public class MainMenuController : MonoBehaviour
         this.shouldBeginCountdown = true;
         this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
         this.countdownTimerText.gameObject.SetActive(true);
+    }
+
+    private void OnHostDisconnected()
+    {
+        this.lobbyPanel.gameObject.SetActive(false);
+        this.onlinePvpPanel.gameObject.SetActive(true);
     }
 }

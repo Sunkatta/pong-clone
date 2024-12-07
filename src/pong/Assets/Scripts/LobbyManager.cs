@@ -35,6 +35,14 @@ public class LobbyManager : MonoBehaviour
 
     public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
+    private void Start()
+    {
+        OnlinePvpGameManager.HostDisconnected += async () =>
+        {
+            await this.LeaveLobby();
+        };
+    }
+
     private void Update()
     {
         if (this.shouldPing)
