@@ -1,19 +1,24 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class PlayerController : MonoBehaviour
+public class OnlinePlayerController : NetworkBehaviour
 {
+    public PlayerType Type { get; set; }
+
     [SerializeField]
     private float speed;
 
-    [SerializeField]
-    private PlayerType playerType;
-
     private bool canMoveUp = true;
     private bool canMoveDown = true;
-    
+
     private void Update()
     {
-        var playerAxis = this.playerType == PlayerType.Player1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
+        if (!this.IsOwner)
+        {
+            return;
+        }
+
+        var playerAxis = Input.GetAxis("Player1");
 
         if (playerAxis > 0 && this.canMoveUp)
         {

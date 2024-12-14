@@ -1,5 +1,6 @@
 using System.Collections;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,7 +8,7 @@ using UnityEngine.UI;
 public class MainGameUIController : MonoBehaviour
 {
     [SerializeField]
-    private GameManager gameManager;
+    private OnlinePvpGameManager gameManager;
 
     [SerializeField]
     private RectTransform endGamePanel;
@@ -41,7 +42,7 @@ public class MainGameUIController : MonoBehaviour
     private void Start()
     {
         this.endGameAudio = GetComponent<AudioSource>();
-        this.gameManager.GameEnded += this.OnGameEnded;
+        // this.gameManager.MatchEnded += this.OnGameEnded;
 
         this.endGamePanelBackToMainMenuBtn.onClick.AddListener(() =>
         {
