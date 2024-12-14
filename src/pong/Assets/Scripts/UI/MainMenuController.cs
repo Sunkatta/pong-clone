@@ -43,28 +43,16 @@ public class MainMenuController : MonoBehaviour
     private Button onlinePvpBtn;
 
     [SerializeField]
-    private Button joinPrivateMatchBtn;
-
-    [SerializeField]
     private Button joinPrivateMatchByCodeBtn;
 
     [SerializeField]
-    private Button hostPrivateMatchBtn;
-
-    [SerializeField]
     private Button quitGameBtn;
-
-    [SerializeField]
-    private Button setProfileBtn;
 
     [SerializeField]
     private Button readyBtn;
 
     [SerializeField]
     private Button leaveBtn;
-
-    [SerializeField]
-    private TMP_InputField setProfileInput;
 
     [SerializeField]
     private TMP_InputField hostCodeInput;
@@ -151,28 +139,6 @@ public class MainMenuController : MonoBehaviour
             this.authPanel.gameObject.SetActive(true);
         });
 
-        this.setProfileBtn.onClick.AddListener(async () =>
-        {
-            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
-
-            if (string.IsNullOrWhiteSpace(this.setProfileInput.text))
-            {
-                this.setProfileInput.GetComponent<ShakeController>().Shake();
-                return;
-            }
-
-            await this.lobbyManager.SignIn(this.setProfileInput.text);
-            this.authPanel.gameObject.SetActive(false);
-            this.onlinePvpPanel.gameObject.SetActive(true);
-        });
-
-        this.joinPrivateMatchBtn.onClick.AddListener(() =>
-        {
-            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
-            this.onlinePvpPanel.gameObject.SetActive(false);
-            this.joinPrivateMatchPanel.gameObject.SetActive(true);
-        });
-
         this.joinPrivateMatchByCodeBtn.onClick.AddListener(async () =>
         {
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
@@ -184,15 +150,6 @@ public class MainMenuController : MonoBehaviour
             }
 
             this.joinPrivateMatchPanel.gameObject.SetActive(false);
-            this.lobbyPanel.gameObject.SetActive(true);
-            this.hostCodeInput.text = this.lobbyManager.LobbyCode;
-        });
-
-        this.hostPrivateMatchBtn.onClick.AddListener(async () =>
-        {
-            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
-            await this.lobbyManager.HostPrivateMatch();
-            this.onlinePvpPanel.gameObject.SetActive(false);
             this.lobbyPanel.gameObject.SetActive(true);
             this.hostCodeInput.text = this.lobbyManager.LobbyCode;
         });

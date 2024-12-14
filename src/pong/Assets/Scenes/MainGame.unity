@@ -3162,14 +3162,10 @@ MonoBehaviour:
   endGamePanel: {fileID: 1148733505}
   localPvpBtn: {fileID: 1562926454}
   onlinePvpBtn: {fileID: 782116246}
-  joinPrivateMatchBtn: {fileID: 955959540}
   joinPrivateMatchByCodeBtn: {fileID: 1135534873}
-  hostPrivateMatchBtn: {fileID: 2057761513}
   quitGameBtn: {fileID: 1304988540}
-  setProfileBtn: {fileID: 1113338518}
   readyBtn: {fileID: 945649253}
   leaveBtn: {fileID: 1577047991}
-  setProfileInput: {fileID: 7253423775859956285}
   hostCodeInput: {fileID: 1835716990}
   joinCodeInput: {fileID: 1890560603}
   numberOfPlayersTxt: {fileID: 1135735017}
@@ -5199,6 +5195,7 @@ GameObject:
   - component: {fileID: 1608456174}
   - component: {fileID: 1608456176}
   - component: {fileID: 1608456175}
+  - component: {fileID: 1608456177}
   m_Layer: 5
   m_Name: OnlinePvpPanel
   m_TagString: Untagged
@@ -5266,6 +5263,23 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1608456173}
   m_CullTransparentMesh: 1
+--- !u!114 &1608456177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1608456173}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8768761fc297be42a4dd089de53d236, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyManager: {fileID: 441164521}
+  lobbyPanel: {fileID: 128272415}
+  joinPrivateMatchPanel: {fileID: 259487722}
+  hostPrivateMatchBtn: {fileID: 2057761513}
+  joinPrivateMatchBtn: {fileID: 955959540}
 --- !u!1 &1631942592
 GameObject:
   m_ObjectHideFlags: 0
@@ -5574,6 +5588,7 @@ GameObject:
   - component: {fileID: 1799427854}
   - component: {fileID: 1799427856}
   - component: {fileID: 1799427855}
+  - component: {fileID: 1799427857}
   m_Layer: 5
   m_Name: AuthPanel
   m_TagString: Untagged
@@ -5641,6 +5656,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1799427853}
   m_CullTransparentMesh: 1
+--- !u!114 &1799427857
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799427853}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4743d4e17c03d9e4a9ebcedb9ccf434a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyManager: {fileID: 441164521}
+  onlinePvpPanel: {fileID: 1608456174}
+  setProfileBtn: {fileID: 1113338518}
+  setProfileInput: {fileID: 7253423775859956285}
 --- !u!1 &1832249260
 GameObject:
   m_ObjectHideFlags: 0
