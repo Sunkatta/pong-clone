@@ -21,19 +21,17 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private GameObject playerPrefab;
 
     [SerializeField]
-    private float initialBallSpeed;
-
-    [SerializeField]
     private float maxBallSpeed;
 
     [SerializeField]
     private int targetScore;
 
-    private float currentBallSpeed;
+    private bool isMatchRunning;
+    
     private PlayerType? latestScorer;
-    private Rigidbody2D ballRigidbody;
     private AudioSource goalSound;
     private GameObject ball;
+    private BallController ballController;
 
     private readonly List<LocalPlayer> players = new List<LocalPlayer>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
@@ -65,15 +63,13 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private void OnBallHit()
     {
-        if (this.currentBallSpeed >= this.maxBallSpeed)
+        if (this.ballController.CurrentBallSpeed >= this.maxBallSpeed)
         {
             return;
         }
 
-        var oldSpeed = this.currentBallSpeed;
-        this.currentBallSpeed++;
-
-        this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
+        var newSpeed = this.ballController.CurrentBallSpeed + 1;
+        this.ballController.UpdateSpeed(newSpeed);
     }
 
     private void OnPlayerScored(PlayerType scorer)
@@ -114,8 +110,18 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.GenerateCollidersAcrossScreen();
     }
 
+    private void Update()
+    {
+        if (this.isMatchRunning)
+        {
+            this.ballController.Move();
+        }
+    }
+
     private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
     {
+        this.isMatchRunning = false;
+
         var gameOverStatistics = new GameOverStatistics
         {
             WinnerName = winnerName,
@@ -152,21 +158,20 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private IEnumerator BeginGameCouroutine()
     {
         this.ball = Instantiate(this.ballPrefab);
-        this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
-        var ballController = this.ball.GetComponent<BallController>();
-        ballController.BallHit += this.OnBallHit;
-        ballController.GoalPassed += this.OnPlayerScored;
+        this.ballController = this.ball.GetComponent<BallController>();
+        this.ballController.BallHit += this.OnBallHit;
+        this.ballController.GoalPassed += this.OnPlayerScored;
         ScoreChanged(Player1Score, PlayerType.Player1);
         ScoreChanged(Player2Score, PlayerType.Player2);
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
+        this.isMatchRunning = true;
     }
 
     private void SetInitialGameState()
     {
-        this.currentBallSpeed = this.initialBallSpeed;
-        this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = this.currentBallSpeed * GetBallDirection();
+        this.ballController.ResetBall();
+        this.ballController.UpdateBallDirection(this.GetBallDirection());
     }
 
     private Vector2 GetBallDirection()

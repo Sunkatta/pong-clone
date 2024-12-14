@@ -24,9 +24,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     private NetworkObject playerPrefab;
 
     [SerializeField]
-    private float initialBallSpeed;
-
-    [SerializeField]
     private float maxBallSpeed;
 
     [SerializeField]
@@ -35,10 +32,10 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     private readonly List<LocalPlayer> players = new List<LocalPlayer>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
-    private float currentBallSpeed;
-    private Rigidbody2D ballRigidbody;
     private PlayerType? latestScorer;
     private AudioSource goalSound;
+    private BallController ballController;
+    private bool isMatchRunning;
 
     private NetworkObject ball;
 
@@ -62,9 +59,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         this.Player1Score.Value = 0;
         this.Player2Score.Value = 0;
 
-        this.currentBallSpeed = this.initialBallSpeed;
-        this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = default;
+        this.ballController.ResetBall();
         this.latestScorer = null;
     }
 
@@ -142,6 +137,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
                 this.ball.Despawn();
 
                 this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
+                this.isMatchRunning = false;
 
                 this.NewGame();
 
@@ -156,15 +152,13 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     {
         if (this.IsServer)
         {
-            if (this.currentBallSpeed >= this.maxBallSpeed)
+            if (this.ballController.CurrentBallSpeed >= this.maxBallSpeed)
             {
                 return;
             }
 
-            var oldSpeed = this.currentBallSpeed;
-            this.currentBallSpeed++;
-
-            this.ballRigidbody.velocity *= this.currentBallSpeed / oldSpeed;
+            var newSpeed = this.ballController.CurrentBallSpeed + 1;
+            this.ballController.UpdateSpeed(newSpeed);
         }
     }
 
@@ -191,6 +185,14 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         this.GenerateCollidersAcrossScreen();
     }
 
+    private void Update()
+    {
+        if (this.isMatchRunning && this.IsServer)
+        {
+            this.ballController.Move();
+        }
+    }
+
     private IEnumerator BeginGameCouroutine()
     {
         if (this.IsServer)
@@ -203,6 +205,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
             this.PrepareInGameUiRpc();
             yield return new WaitForSeconds(5);
             this.SetInitialGameState();
+            this.isMatchRunning = true;
         }
     }
 
@@ -210,8 +213,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     private void BallSpawnedRpc(NetworkObjectReference ballNetworkObject)
     {
         this.ball = ballNetworkObject;
-        this.ballRigidbody = this.ball.GetComponent<Rigidbody2D>();
-        var ballController = this.ball.GetComponent<BallController>();
+        this.ballController = this.ball.GetComponent<BallController>();
         ballController.BallHit += this.OnBallHit;
         ballController.GoalPassed += this.OnPlayerScored;
     }
@@ -224,9 +226,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     private void SetInitialGameState()
     {
-        this.currentBallSpeed = this.initialBallSpeed;
-        this.ball.transform.position = Vector3.zero;
-        this.ballRigidbody.velocity = this.currentBallSpeed * GetBallDirection();
+        this.ballController.ResetBall();
+        this.ballController.UpdateBallDirection(this.GetBallDirection());
     }
 
     private Vector2 GetBallDirection()
