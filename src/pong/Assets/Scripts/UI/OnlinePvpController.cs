@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,9 +31,15 @@ public class OnlinePvpController : MonoBehaviour
 
         this.joinPrivateMatchBtn.onClick.AddListener(() =>
         {
-            this.joinPrivateMatchBtn.GetComponent<AudioSource>().Play();
-            this.gameObject.SetActive(false);
-            this.joinPrivateMatchPanel.gameObject.SetActive(true);
+            this.StartCoroutine(this.JoinPrivateMatchCoroutine());
         });
+    }
+
+    private IEnumerator JoinPrivateMatchCoroutine()
+    {
+        this.joinPrivateMatchBtn.GetComponent<AudioSource>().Play();
+        yield return new WaitForSeconds(0.1f);
+        this.gameObject.SetActive(false);
+        this.joinPrivateMatchPanel.gameObject.SetActive(true);
     }
 }
