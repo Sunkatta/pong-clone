@@ -23,6 +23,7 @@ public class LobbyManager : MonoBehaviour
     private Lobby localLobby;
     private bool shouldPing = false;
     private bool shouldStartBeginGameCountdown = false;
+    private bool lobbyInstantiated = false;
     private float heartbeatTimer;
     private float lobbyUpdateTimer;
     private IGameManager gameManager;
@@ -111,7 +112,7 @@ public class LobbyManager : MonoBehaviour
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
             this.gameManager.OnPlayerJoined(localPlayer);
-            this.UpdateLobbyUi();
+            this.lobbyInstantiated = true;
         }
         catch (LobbyServiceException ex)
         {
@@ -153,7 +154,7 @@ public class LobbyManager : MonoBehaviour
                 }
             }
 
-            this.UpdateLobbyUi();
+            this.lobbyInstantiated = true;
 
             return true;
         }
@@ -238,7 +239,7 @@ public class LobbyManager : MonoBehaviour
 
     private async void HandleLobbyPollForUpdates()
     {
-        if (this.localLobby != null)
+        if (this.localLobby != null && this.lobbyInstantiated)
         {
             this.lobbyUpdateTimer -= Time.deltaTime;
 
