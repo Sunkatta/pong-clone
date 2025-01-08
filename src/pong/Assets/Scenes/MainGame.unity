@@ -724,6 +724,7 @@ GameObject:
   - component: {fileID: 259487722}
   - component: {fileID: 259487724}
   - component: {fileID: 259487723}
+  - component: {fileID: 259487725}
   m_Layer: 5
   m_Name: JoinPrivateMatchPanel
   m_TagString: Untagged
@@ -791,6 +792,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 259487721}
   m_CullTransparentMesh: 1
+--- !u!114 &259487725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 259487721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c41fd78ee1555e47a6272540a2dea8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyManager: {fileID: 441164521}
+  lobbyPanel: {fileID: 128272415}
+  joinPrivateMatchByCodeBtn: {fileID: 1135534873}
+  joinCodeInput: {fileID: 1890560603}
 --- !u!1 &441164520
 GameObject:
   m_ObjectHideFlags: 0
@@ -1836,20 +1853,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localPvpGameManager: {fileID: 8910375843750263519, guid: bffcec92f6d6681418a74d91e48f5c00, type: 3}
-  lobbyManager: {fileID: 441164521}
   mainMenuPanel: {fileID: 1065743605}
   onlinePvpPanel: {fileID: 1608456174}
   lobbyPanel: {fileID: 128272415}
-  joinPrivateMatchPanel: {fileID: 259487722}
   authPanel: {fileID: 1799427854}
   inGameHudPanel: {fileID: 543297454}
   endGamePanel: {fileID: 1148733505}
   localPvpBtn: {fileID: 1562926454}
   onlinePvpBtn: {fileID: 782116246}
-  joinPrivateMatchByCodeBtn: {fileID: 1135534873}
   quitGameBtn: {fileID: 1304988540}
-  hostCodeInput: {fileID: 1835716990}
-  joinCodeInput: {fileID: 1890560603}
   player1ScoreText: {fileID: 476270326}
   player2ScoreText: {fileID: 103997413}
   endGameText: {fileID: 1832249261}

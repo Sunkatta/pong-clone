@@ -10,9 +10,6 @@ public class MainMenuController : MonoBehaviour
     private GameObject localPvpGameManager;
 
     [SerializeField]
-    private LobbyManager lobbyManager;
-
-    [SerializeField]
     private RectTransform mainMenuPanel;
 
     [SerializeField]
@@ -20,9 +17,6 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private RectTransform lobbyPanel;
-
-    [SerializeField]
-    private RectTransform joinPrivateMatchPanel;
 
     [SerializeField]
     private RectTransform authPanel;
@@ -40,16 +34,7 @@ public class MainMenuController : MonoBehaviour
     private Button onlinePvpBtn;
 
     [SerializeField]
-    private Button joinPrivateMatchByCodeBtn;
-
-    [SerializeField]
     private Button quitGameBtn;
-
-    [SerializeField]
-    private TMP_InputField hostCodeInput;
-
-    [SerializeField]
-    private TMP_InputField joinCodeInput;
 
     [SerializeField]
     private TMP_Text player1ScoreText;
@@ -106,21 +91,6 @@ public class MainMenuController : MonoBehaviour
             this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
             this.mainMenuPanel.gameObject.SetActive(false);
             this.authPanel.gameObject.SetActive(true);
-        });
-
-        this.joinPrivateMatchByCodeBtn.onClick.AddListener(async () =>
-        {
-            this.mainMenuAudioSource.PlayOneShot(this.btnClickSound);
-
-            if (string.IsNullOrWhiteSpace(this.joinCodeInput.text) || !await this.lobbyManager.JoinPrivateMatchByCode(this.joinCodeInput.text))
-            {
-                this.joinCodeInput.GetComponent<ShakeController>().Shake();
-                return;
-            }
-
-            this.joinPrivateMatchPanel.gameObject.SetActive(false);
-            this.lobbyPanel.gameObject.SetActive(true);
-            this.hostCodeInput.text = this.lobbyManager.LobbyCode;
         });
 
         this.quitGameBtn.onClick.AddListener(() =>
