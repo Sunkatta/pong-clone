@@ -54,22 +54,32 @@ public class LobbyManager : MonoBehaviour
         this.HandleLobbyPollForUpdates();
     }
 
-    public async Task SignIn(string profileName)
+    public async Task<bool> SignIn(string profileName)
     {
-        if (UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn)
+        try
         {
-            return;
+            if (UnityServices.State == ServicesInitializationState.Initialized && AuthenticationService.Instance.IsSignedIn)
+            {
+                return true;
+            }
+
+            var options = new InitializationOptions();
+            options.SetProfile(profileName);
+
+            Debug.Log($"Set profile with name {profileName}");
+
+            await UnityServices.InitializeAsync(options);
+            await AuthenticationService.Instance.SignInAnonymouslyAsync();
+
+            Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
+
+            return true;
         }
-
-        var options = new InitializationOptions();
-        options.SetProfile(profileName);
-
-        Debug.Log($"Set profile with name {profileName}");
-
-        await UnityServices.InitializeAsync(options);
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
-
-        Debug.Log($"PlayerID: {AuthenticationService.Instance.PlayerId}");
+        catch (AuthenticationException ex)
+        {
+            Debug.Log(ex);
+            return false;
+        }
     }
 
     public async Task HostPrivateMatch()

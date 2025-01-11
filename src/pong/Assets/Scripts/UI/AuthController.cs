@@ -41,13 +41,12 @@ public class AuthController : MonoBehaviour
         // Need this explicit delay, otherwise sound does not play after profile is set for the first time.
         await Task.Delay((int)(btnAudioSource.clip.length * 1000));
 
-        if (string.IsNullOrWhiteSpace(this.setProfileInput.text))
+        if (string.IsNullOrWhiteSpace(this.setProfileInput.text) || !await this.lobbyManager.SignIn(this.setProfileInput.text))
         {
             this.setProfileInput.GetComponent<ShakeController>().Shake();
             return;
         }
 
-        await this.lobbyManager.SignIn(this.setProfileInput.text);
         this.gameObject.SetActive(false);
         this.onlinePvpPanel.gameObject.SetActive(true);
     }
