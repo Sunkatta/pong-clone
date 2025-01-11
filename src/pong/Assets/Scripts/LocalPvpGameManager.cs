@@ -142,6 +142,9 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             Destroy(edge);
         }
 
+        ScoreChanged(0, PlayerType.Player1);
+        ScoreChanged(0, PlayerType.Player2);
+
         MainMenuLoaded();
 
         Destroy(this.gameObject);
@@ -161,8 +164,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.ballController = this.ball.GetComponent<BallController>();
         this.ballController.BallHit += this.OnBallHit;
         this.ballController.GoalPassed += this.OnPlayerScored;
-        ScoreChanged(Player1Score, PlayerType.Player1);
-        ScoreChanged(Player2Score, PlayerType.Player2);
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
         this.isMatchRunning = true;
