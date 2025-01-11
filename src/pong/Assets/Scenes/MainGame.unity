@@ -1105,6 +1105,8 @@ GameObject:
   - component: {fileID: 543297454}
   - component: {fileID: 543297456}
   - component: {fileID: 543297455}
+  - component: {fileID: 543297458}
+  - component: {fileID: 543297457}
   m_Layer: 5
   m_Name: InGameHudPanel
   m_TagString: Untagged
@@ -1171,6 +1173,121 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 543297453}
   m_CullTransparentMesh: 1
+--- !u!82 &543297457
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543297453}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &543297458
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 543297453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f494e2393d9b57a4dab737a4c414cdf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mainMenuPanel: {fileID: 1065743605}
+  endGamePanel: {fileID: 1148733505}
+  player1ScoreText: {fileID: 476270326}
+  player2ScoreText: {fileID: 103997413}
+  endGameText: {fileID: 1832249261}
+  navigatingToText: {fileID: 1084282350}
+  gameWonSound: {fileID: 8300000, guid: 2667a0a008b044e218b63df62e2be749, type: 3}
 --- !u!1001 &782116244
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1854,19 +1971,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   localPvpGameManager: {fileID: 8910375843750263519, guid: bffcec92f6d6681418a74d91e48f5c00, type: 3}
   mainMenuPanel: {fileID: 1065743605}
-  onlinePvpPanel: {fileID: 1608456174}
   lobbyPanel: {fileID: 128272415}
   authPanel: {fileID: 1799427854}
   inGameHudPanel: {fileID: 543297454}
-  endGamePanel: {fileID: 1148733505}
   localPvpBtn: {fileID: 1562926454}
   onlinePvpBtn: {fileID: 782116246}
   quitGameBtn: {fileID: 1304988540}
-  player1ScoreText: {fileID: 476270326}
-  player2ScoreText: {fileID: 103997413}
-  endGameText: {fileID: 1832249261}
-  navigatingToText: {fileID: 1084282350}
-  gameWonSound: {fileID: 8300000, guid: 2667a0a008b044e218b63df62e2be749, type: 3}
   btnClickSound: {fileID: 8300000, guid: efc3f2eb62e42f44b849b70d51c2fe58, type: 3}
 --- !u!82 &1013082358
 AudioSource:

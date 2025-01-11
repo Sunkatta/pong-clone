@@ -13,9 +13,6 @@ public class MainMenuController : MonoBehaviour
     private RectTransform mainMenuPanel;
 
     [SerializeField]
-    private RectTransform onlinePvpPanel;
-
-    [SerializeField]
     private RectTransform lobbyPanel;
 
     [SerializeField]
@@ -23,9 +20,6 @@ public class MainMenuController : MonoBehaviour
 
     [SerializeField]
     private RectTransform inGameHudPanel;
-
-    [SerializeField]
-    private RectTransform endGamePanel;
 
     [SerializeField]
     private Button localPvpBtn;
@@ -37,21 +31,6 @@ public class MainMenuController : MonoBehaviour
     private Button quitGameBtn;
 
     [SerializeField]
-    private TMP_Text player1ScoreText;
-
-    [SerializeField]
-    private TMP_Text player2ScoreText;
-
-    [SerializeField]
-    private TMP_Text endGameText;
-
-    [SerializeField]
-    private TMP_Text navigatingToText;
-
-    [SerializeField]
-    private AudioClip gameWonSound;
-
-    [SerializeField]
     private AudioClip btnClickSound;
 
     private AudioSource mainMenuAudioSource;
@@ -61,12 +40,6 @@ public class MainMenuController : MonoBehaviour
     {
         this.mainMenuAudioSource = GetComponent<AudioSource>();
         this.mainMenuPanel.gameObject.SetActive(true);
-        OnlinePvpGameManager.PrepareInGameUi += this.OnUiPrepared;
-        OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
-        OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.ScoreChanged += this.OnScoreChanged;
-        LocalPvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
 
         this.localPvpBtn.onClick.AddListener(() =>
         {
@@ -99,50 +72,10 @@ public class MainMenuController : MonoBehaviour
         });
     }
 
-    private void OnMainMenuLoaded()
-    {
-        this.inGameHudPanel.gameObject.SetActive(false);
-        this.endGamePanel.gameObject.SetActive(false);
-        this.mainMenuPanel.gameObject.SetActive(true);
-    }
-
     private IEnumerator QuitGameCoroutine()
     {
         this.mainMenuAudioSource.Play();
         yield return new WaitForSeconds(0.2f);
         Application.Quit();
-    }
-
-    private void OnUiPrepared()
-    {
-        this.lobbyPanel.gameObject.SetActive(false);
-        this.inGameHudPanel.gameObject.SetActive(true);
-    }
-
-    private void OnScoreChanged(int score, PlayerType playerType)
-    {
-        if (playerType == PlayerType.Player1)
-        {
-            this.player1ScoreText.text = score.ToString();
-        }
-        else
-        {
-            this.player2ScoreText.text = score.ToString();
-        }
-    }
-
-    private void OnGameEnded(GameOverStatistics gameOverStatistics)
-    {
-        this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
-    }
-
-    private IEnumerator ShowEndGamePanelCoroutine(GameOverStatistics gameOverStatistics)
-    {
-        yield return new WaitForSeconds(0.2f);
-        this.mainMenuAudioSource.PlayOneShot(this.gameWonSound);
-
-        this.endGameText.text = $"{gameOverStatistics.WinnerName} WINS!\n {gameOverStatistics.LoserName}, WANT A REMATCH?";
-        this.navigatingToText.text = gameOverStatistics.NavigatingToMessage;
-        this.endGamePanel.gameObject.SetActive(true);
     }
 }

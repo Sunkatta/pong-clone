@@ -50,6 +50,7 @@ public class LobbyController : MonoBehaviour
         this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
         OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
+        OnlinePvpGameManager.PrepareInGameUi += this.OnUiPrepared;
 
         this.hostCodeInput.text = this.lobbyManager.LobbyCode;
 
@@ -143,5 +144,12 @@ public class LobbyController : MonoBehaviour
     {
         this.gameObject.SetActive(false);
         this.onlinePvpPanel.gameObject.SetActive(true);
+    }
+
+    private void OnUiPrepared()
+    {
+        this.gameObject.SetActive(false);
+        this.countdownTimerText.gameObject.SetActive(false);
+        this.inGameHudPanel.gameObject.SetActive(true);
     }
 }
