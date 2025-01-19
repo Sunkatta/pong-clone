@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 4167992945
+  GlobalObjectIdHash: 4178744921
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -67,14 +67,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59cff4d94fe0bc144926bfeceb6bf24d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  camera: {fileID: 0}
-  lobbyManager: {fileID: 0}
   ballPrefab: {fileID: 4954779921624782939, guid: 33135583ae3f5de489a6e2fd02daa293, type: 3}
   playerPrefab: {fileID: 3301485981495198369, guid: 9302692166a205942975d27a1062bd0a, type: 3}
-  initialBallSpeed: 6
   maxBallSpeed: 15
   targetScore: 11
-  gameType: 1
 --- !u!82 &719132752378075583
 AudioSource:
   m_ObjectHideFlags: 0
@@ -84,10 +80,10 @@ AudioSource:
   m_GameObject: {fileID: 4108386623983346425}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: d79243c71eb57fa469f0d2b3c3627e50, type: 2}
   m_audioClip: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.5
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0

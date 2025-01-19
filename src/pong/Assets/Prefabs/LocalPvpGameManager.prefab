@@ -47,7 +47,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPrefab: {fileID: 4954779921624782939, guid: 33135583ae3f5de489a6e2fd02daa293, type: 3}
   playerPrefab: {fileID: 9164971107830190795, guid: 2456c79492699fa48a53cbe7ffc2aeaf, type: 3}
-  initialBallSpeed: 6
   maxBallSpeed: 15
   targetScore: 11
 --- !u!82 &-299206103873351951
@@ -59,7 +58,7 @@ AudioSource:
   m_GameObject: {fileID: 8910375843750263519}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 24300002, guid: d79243c71eb57fa469f0d2b3c3627e50, type: 2}
   m_audioClip: {fileID: 8300000, guid: 52320e590bf774734a288886eba557ba, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1

@@ -15,10 +15,16 @@ public class MainMenuController : MonoBehaviour
     private RectTransform inGameHudPanel;
 
     [SerializeField]
+    private RectTransform optionsPanel;
+
+    [SerializeField]
     private Button localPvpBtn;
 
     [SerializeField]
     private Button onlinePvpBtn;
+
+    [SerializeField]
+    private Button optionsBtn;
 
     [SerializeField]
     private Button quitGameBtn;
@@ -35,6 +41,11 @@ public class MainMenuController : MonoBehaviour
         this.onlinePvpBtn.onClick.AddListener(() =>
         {
             this.StartCoroutine(this.OnlinePvpCoroutine());
+        });
+
+        this.optionsBtn.onClick.AddListener(() =>
+        {
+            this.StartCoroutine(this.OptionsCoroutine());
         });
 
         this.quitGameBtn.onClick.AddListener(() =>
@@ -68,6 +79,14 @@ public class MainMenuController : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         this.gameObject.SetActive(false);
         this.authPanel.gameObject.SetActive(true);
+    }
+
+    private IEnumerator OptionsCoroutine()
+    {
+        this.optionsBtn.GetComponent<AudioSource>().Play();
+        yield return new WaitForSeconds(0.1f);
+        this.gameObject.SetActive(false);
+        this.optionsPanel.gameObject.SetActive(true);
     }
 
     private IEnumerator QuitGameCoroutine()
