@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
@@ -52,6 +53,12 @@ public class MainMenuController : MonoBehaviour
         {
             this.StartCoroutine(this.QuitGameCoroutine());
         });
+    }
+
+    private void OnEnable()
+    {
+        var eventSystem = EventSystem.current.GetComponent<EventSystem>();
+        eventSystem.SetSelectedGameObject(this.localPvpBtn.gameObject);
     }
 
     private IEnumerator LocalPvpCoroutine()

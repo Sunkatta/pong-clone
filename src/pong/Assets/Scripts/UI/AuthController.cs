@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class AuthController : MonoBehaviour
@@ -25,12 +26,10 @@ public class AuthController : MonoBehaviour
         });
     }
 
-    private async void Update()
+    private void OnEnable()
     {
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            await this.OnSetProfile();
-        }
+        var eventSystem = EventSystem.current.GetComponent<EventSystem>();
+        eventSystem.SetSelectedGameObject(this.setProfileInput.gameObject);
     }
 
     private async Task OnSetProfile()

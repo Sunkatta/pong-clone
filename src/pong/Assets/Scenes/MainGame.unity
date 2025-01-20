@@ -3960,6 +3960,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1065743605}
     m_Modifications:
+    - target: {fileID: 3513926209156203214, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
+      propertyPath: m_Navigation.m_Mode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3513926209156203214, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
+      propertyPath: m_Navigation.m_WrapAround
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6089859506503413453, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
       propertyPath: m_Name
       value: QuitBtn
@@ -4311,6 +4319,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1065743605}
     m_Modifications:
+    - target: {fileID: 3513926209156203214, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
+      propertyPath: m_Navigation.m_Mode
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3513926209156203214, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
+      propertyPath: m_Navigation.m_WrapAround
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6089859506503413453, guid: 335c80fd1ec653e4ea8cf93687beebfd, type: 3}
       propertyPath: m_Name
       value: LocalPvpBtn

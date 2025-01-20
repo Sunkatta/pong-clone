@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class OnlinePvpController : MonoBehaviour
@@ -33,6 +34,12 @@ public class OnlinePvpController : MonoBehaviour
         {
             this.StartCoroutine(this.JoinPrivateMatchCoroutine());
         });
+    }
+
+    private void OnEnable()
+    {
+        var eventSystem = EventSystem.current.GetComponent<EventSystem>();
+        eventSystem.SetSelectedGameObject(this.joinPrivateMatchBtn.gameObject);
     }
 
     private IEnumerator JoinPrivateMatchCoroutine()

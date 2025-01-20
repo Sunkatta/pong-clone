@@ -27,6 +27,12 @@ public class OptionsController : MonoBehaviour
         });
     }
 
+    private void OnEnable()
+    {
+        var eventSystem = EventSystem.current.GetComponent<EventSystem>();
+        eventSystem.SetSelectedGameObject(this.masterVolumeSlider.gameObject);
+    }
+
     private void RegisterEventTriggerEntries(EventTrigger eventTrigger)
     {
         EventTrigger.Entry endDragEntry = new EventTrigger.Entry

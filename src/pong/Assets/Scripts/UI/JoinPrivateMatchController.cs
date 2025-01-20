@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class JoinPrivateMatchController : MonoBehaviour
@@ -25,12 +26,10 @@ public class JoinPrivateMatchController : MonoBehaviour
         });
     }
 
-    private async void Update()
+    private void OnEnable()
     {
-        if (Input.GetKeyDown(KeyCode.Return))
-        {
-            await this.OnJoinPrivateMatchByCode();
-        }
+        var eventSystem = EventSystem.current.GetComponent<EventSystem>();
+        eventSystem.SetSelectedGameObject(this.joinCodeInput.gameObject);
     }
 
     private async Task OnJoinPrivateMatchByCode()
