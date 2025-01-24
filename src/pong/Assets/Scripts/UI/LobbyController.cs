@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,11 +47,17 @@ public class LobbyController : MonoBehaviour
 
     private void Start()
     {
+        var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
+        var gameManager = gameManagerGameObject.GetComponent<IGameManager>();
+        var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
+
+        gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
+        gameManager.PrepareInGameUi += this.OnUiPrepared;
+
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
         OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
-        OnlinePvpGameManager.PrepareInGameUi += this.OnUiPrepared;
 
         this.hostCodeInput.text = this.lobbyManager.LobbyCode;
 
@@ -146,7 +153,7 @@ public class LobbyController : MonoBehaviour
         this.onlinePvpPanel.gameObject.SetActive(true);
     }
 
-    private void OnUiPrepared()
+    private void OnUiPrepared(List<LocalPlayer> players)
     {
         this.gameObject.SetActive(false);
         this.countdownTimerText.gameObject.SetActive(false);

@@ -1,4 +1,6 @@
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -17,6 +19,12 @@ public class InGameHudController : MonoBehaviour
     private TMP_Text player2ScoreText;
 
     [SerializeField]
+    private TMP_Text player1UsernameText;
+
+    [SerializeField]
+    private TMP_Text player2UsernameText;
+
+    [SerializeField]
     private TMP_Text endGameText;
 
     [SerializeField]
@@ -26,6 +34,12 @@ public class InGameHudController : MonoBehaviour
     private AudioClip gameWonSound;
 
     private AudioSource inGameAudioSource;
+
+    public void OnUiPrepared(List<LocalPlayer> players)
+    {
+        this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
+        this.player2UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2).Username;
+    }
 
     private void Start()
     {

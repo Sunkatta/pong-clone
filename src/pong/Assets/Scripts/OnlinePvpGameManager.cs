@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
-    public static event Action PrepareInGameUi;
+    public event Action<List<LocalPlayer>> PrepareInGameUi;
     public static event Action LobbyLoaded;
     public static event Action HostDisconnected;
     public static event Action<int, PlayerType> ScoreChanged;
@@ -165,18 +165,36 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [Rpc(SendTo.Server)]
     private void ClientConnectedRpc(RpcParams rpcParams = default)
     {
-        var playerInstanceController = this.playerPrefab.GetComponent<OnlinePlayerController>();
-        playerInstanceController.Type = PlayerType.Player1;
+        var player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1);
 
         if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
         {
-            playerInstanceController.Type = PlayerType.Player2;
+            player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2);
         }
 
         NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
             ownerClientId: rpcParams.Receive.SenderClientId,
             isPlayerObject: true,
-            position: this.GetPlayerPosition(playerInstanceController));
+            position: this.GetPlayerPosition(player.PlayerType));
+
+        if (player.PlayerType == PlayerType.Player2)
+        {
+            // This works for now, but only with 2 players. If/when more players are added, every new client
+            // will need to sync the previously joined players.
+            var player1 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1);
+            var localPlayerNetworkModel = new LocalPlayerNetworkModel(player1.Id, player1.Username, player1.PlayerType);
+            this.SyncPlayerWithClientsRpc(localPlayerNetworkModel);
+        }
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void SyncPlayerWithClientsRpc(LocalPlayerNetworkModel localPlayerNetworkModel)
+    {
+        var localPlayer = new LocalPlayer(localPlayerNetworkModel.GetId(),
+            localPlayerNetworkModel.GetUsername(),
+            localPlayerNetworkModel.GetPlayerType());
+
+        this.players.Add(localPlayer);
     }
 
     private void Start()
@@ -221,7 +239,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [Rpc(SendTo.ClientsAndHost)]
     private void PrepareInGameUiRpc()
     {
-        PrepareInGameUi();
+        PrepareInGameUi(this.players);
     }
 
     private void SetInitialGameState()
@@ -270,12 +288,12 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         LobbyLoaded();
     }
 
-    private Vector3 GetPlayerPosition(OnlinePlayerController player)
+    private Vector3 GetPlayerPosition(PlayerType playerType)
     {
         Vector3 screenLeftSide = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
         Vector3 screenRightSide = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
 
-        return player.Type == PlayerType.Player1 ? new Vector3(screenLeftSide.x + .5f, 0) : new Vector3(screenRightSide.x - .5f, 0);
+        return playerType == PlayerType.Player1 ? new Vector3(screenLeftSide.x + .5f, 0) : new Vector3(screenRightSide.x - .5f, 0);
     }
 
     private void GenerateCollidersAcrossScreen()

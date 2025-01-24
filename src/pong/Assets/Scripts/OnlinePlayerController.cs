@@ -3,8 +3,6 @@ using UnityEngine;
 
 public class OnlinePlayerController : NetworkBehaviour
 {
-    public PlayerType Type { get; set; }
-
     [SerializeField]
     private float speed;
 

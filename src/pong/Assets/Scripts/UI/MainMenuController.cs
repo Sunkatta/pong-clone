@@ -64,9 +64,14 @@ public class MainMenuController : MonoBehaviour
     private IEnumerator LocalPvpCoroutine()
     {
         this.localPvpBtn.GetComponent<AudioSource>().Play();
+
+        var localPvpGameManager = Instantiate(this.localPvpGameManager);
+        this.gameManager = localPvpGameManager.GetComponent<IGameManager>();
+
+        var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
+        this.gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
+
         yield return new WaitForSeconds(0.1f);
-        var onlinePvpGameManager = Instantiate(this.localPvpGameManager);
-        this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
         var player1 = new LocalPlayer(Guid.NewGuid().ToString(), "Player 1", PlayerType.Player1);
         this.gameManager.OnPlayerJoined(player1);

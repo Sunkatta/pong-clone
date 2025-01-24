@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
+    public event Action<List<LocalPlayer>> PrepareInGameUi;
     public static event Action MainMenuLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<GameOverStatistics> MatchEnded;
@@ -164,6 +165,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.ballController = this.ball.GetComponent<BallController>();
         this.ballController.BallHit += this.OnBallHit;
         this.ballController.GoalPassed += this.OnPlayerScored;
+        PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
         this.isMatchRunning = true;
