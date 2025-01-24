@@ -30,6 +30,8 @@ public class JoinPrivateMatchController : MonoBehaviour
     {
         var eventSystem = EventSystem.current.GetComponent<EventSystem>();
         eventSystem.SetSelectedGameObject(this.joinCodeInput.gameObject);
+
+        this.joinCodeInput.text = string.Empty;
     }
 
     private async Task OnJoinPrivateMatchByCode()

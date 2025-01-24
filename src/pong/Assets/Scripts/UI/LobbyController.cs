@@ -45,6 +45,11 @@ public class LobbyController : MonoBehaviour
 
     private GameObject localPlayerTile;
 
+    private void OnEnable()
+    {
+        this.hostCodeInput.text = this.lobbyManager.LobbyCode;
+    }
+
     private void Start()
     {
         var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
@@ -58,8 +63,6 @@ public class LobbyController : MonoBehaviour
         this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
         OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
-
-        this.hostCodeInput.text = this.lobbyManager.LobbyCode;
 
         this.readyBtn.onClick.AddListener(async () =>
         {
