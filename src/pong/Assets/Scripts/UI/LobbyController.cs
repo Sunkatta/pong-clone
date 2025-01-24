@@ -48,17 +48,17 @@ public class LobbyController : MonoBehaviour
     private void OnEnable()
     {
         this.hostCodeInput.text = this.lobbyManager.LobbyCode;
-    }
 
-    private void Start()
-    {
         var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
         var gameManager = gameManagerGameObject.GetComponent<IGameManager>();
         var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
 
         gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
         gameManager.PrepareInGameUi += this.OnUiPrepared;
+    }
 
+    private void Start()
+    {
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
