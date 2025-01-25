@@ -60,7 +60,7 @@ public class LobbyController : MonoBehaviour
     private void Start()
     {
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
-        this.lobbyManager.ShowCountdownUi += this.OnCountdownUiShown;
+        this.lobbyManager.ShouldShowCountdownUi += this.OnShouldShowCountdownUi;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
         OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
 
@@ -142,11 +142,20 @@ public class LobbyController : MonoBehaviour
         this.gameObject.SetActive(true);
     }
 
-    private void OnCountdownUiShown()
+    private void OnShouldShowCountdownUi(bool shouldShowCountdownUi)
     {
-        this.shouldBeginCountdown = true;
         this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
-        this.countdownTimerText.gameObject.SetActive(true);
+
+        if (shouldShowCountdownUi)
+        {
+            this.shouldBeginCountdown = true;
+            this.countdownTimerText.gameObject.SetActive(true);
+        }
+        else
+        {
+            this.shouldBeginCountdown = false;
+            this.countdownTimerText.gameObject.SetActive(false);
+        }
     }
 
     private void OnHostDisconnected()

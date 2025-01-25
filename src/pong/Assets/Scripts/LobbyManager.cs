@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,8 +10,10 @@ using UnityEngine;
 
 public class LobbyManager : MonoBehaviour
 {
-    public event Action ShowCountdownUi;
+    public event Action<bool> ShouldShowCountdownUi;
     public event Action UpdateLobbyUi;
+
+    private const float LobbyUpdateIntervalInSeconds = 1.1f;
 
     [SerializeField]
     private RelayManager relayManager;
@@ -25,7 +26,8 @@ public class LobbyManager : MonoBehaviour
     private bool shouldStartBeginGameCountdown = false;
     private bool lobbyInstantiated = false;
     private float heartbeatTimer;
-    private float lobbyUpdateTimer;
+    private float lobbyUpdateTimer = LobbyUpdateIntervalInSeconds;
+    private float beginGameCountdownTimer = Constants.CountdownTimeInSeconds;
     private IGameManager gameManager;
 
     public string LobbyCode => this.localLobby.LobbyCode;
@@ -49,6 +51,11 @@ public class LobbyManager : MonoBehaviour
         if (this.shouldPing)
         {
             this.HandleLobbyHearbeat();
+        }
+        
+        if (this.shouldStartBeginGameCountdown)
+        {
+            this.HandleBeginGameCountdown();
         }
 
         this.HandleLobbyPollForUpdates();
@@ -179,6 +186,9 @@ public class LobbyManager : MonoBehaviour
     {
         try
         {
+            this.shouldStartBeginGameCountdown = false;
+            this.ShouldShowCountdownUi(false);
+
             var updatePlayerOptions = new UpdatePlayerOptions
             {
                 Data = new Dictionary<string, PlayerDataObject>
@@ -233,19 +243,44 @@ public class LobbyManager : MonoBehaviour
 
             if (this.lobbyUpdateTimer < 0f)
             {
-                float lobbyUpdateTimerMax = 1.1f;
+                float lobbyUpdateTimerMax = LobbyUpdateIntervalInSeconds;
                 this.lobbyUpdateTimer = lobbyUpdateTimerMax;
 
                 this.localLobby = await LobbyService.Instance.GetLobbyAsync(this.localLobby.Id);
 
                 this.UpdateLobbyUi();
 
-                if (!this.shouldStartBeginGameCountdown && this.localLobby.Players.Count == Constants.MaxPlayersCount && this.localLobby.Players.All(player => bool.Parse(player.Data["isReady"].Value)))
+                if (this.localLobby.Players.Count != Constants.MaxPlayersCount || !this.localLobby.Players.All(player => bool.Parse(player.Data["isReady"].Value)))
                 {
-                    this.shouldStartBeginGameCountdown = true;
-                    StartCoroutine(this.BeginGameCountdown());
+                    this.beginGameCountdownTimer = Constants.CountdownTimeInSeconds;
+                    this.shouldStartBeginGameCountdown = false;
+                    this.ShouldShowCountdownUi(false);
+                    return;
                 }
-                // TODO: Figure out how to stop countdown when player switches to Not Ready
+
+                if (!this.shouldStartBeginGameCountdown)
+                {
+                    this.beginGameCountdownTimer = Constants.CountdownTimeInSeconds;
+                    this.shouldStartBeginGameCountdown = true;
+                    this.ShouldShowCountdownUi(true);
+                }
+            }
+        }
+    }
+
+    private void HandleBeginGameCountdown()
+    {
+        if (this.localLobby != null)
+        {
+            this.beginGameCountdownTimer -= Time.deltaTime;
+
+            if (this.beginGameCountdownTimer < 0f)
+            {
+                float beginGameCountdownTimerMax = Constants.CountdownTimeInSeconds;
+                this.beginGameCountdownTimer = beginGameCountdownTimerMax;
+
+                this.gameManager.BeginGame();
+                this.Ready(false).GetAwaiter();
             }
         }
     }
@@ -267,37 +302,5 @@ public class LobbyManager : MonoBehaviour
         };
 
         await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
-    }
-
-    private IEnumerator BeginGameCountdown()
-    {
-        this.ShowCountdownUi();
-
-        yield return new WaitForSeconds(Constants.CountdownTimeInSeconds);
-
-        this.gameManager.BeginGame();
-        this.ResetLocalPlayer().GetAwaiter();
-    }
-
-    private async Task ResetLocalPlayer()
-    {
-        try
-        {
-            this.shouldStartBeginGameCountdown = false;
-
-            var updatePlayerOptions = new UpdatePlayerOptions
-            {
-                Data = new Dictionary<string, PlayerDataObject>
-                {
-                    { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, false.ToString()) },
-                }
-            };
-
-            this.localLobby = await LobbyService.Instance.UpdatePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
-        }
-        catch (LobbyServiceException ex)
-        {
-            Debug.Log(ex);
-        }
     }
 }
