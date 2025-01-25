@@ -38,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 104}
-  m_SizeDelta: {x: 250, y: 50}
+  m_SizeDelta: {x: 280, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &366624220393683619
 CanvasRenderer:
@@ -308,8 +308,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u200B"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2185d127c8cfffa4f8a714c99b69e471, type: 2}
-  m_sharedMaterial: {fileID: 3408296908235297940, guid: 2185d127c8cfffa4f8a714c99b69e471, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f3ef1619e918a62498925e8cc39de89d, type: 2}
+  m_sharedMaterial: {fileID: -3302519872676514879, guid: f3ef1619e918a62498925e8cc39de89d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -443,8 +443,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: ENTER NAME HERE...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2185d127c8cfffa4f8a714c99b69e471, type: 2}
-  m_sharedMaterial: {fileID: 3408296908235297940, guid: 2185d127c8cfffa4f8a714c99b69e471, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: f3ef1619e918a62498925e8cc39de89d, type: 2}
+  m_sharedMaterial: {fileID: -3302519872676514879, guid: f3ef1619e918a62498925e8cc39de89d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
