@@ -209,28 +209,6 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task ResetLocalPlayer()
-    {
-        try
-        {
-            this.shouldStartBeginGameCountdown = false;
-
-            var updatePlayerOptions = new UpdatePlayerOptions
-            {
-                Data = new Dictionary<string, PlayerDataObject>
-                {
-                    { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, false.ToString()) },
-                }
-            };
-
-            this.localLobby = await LobbyService.Instance.UpdatePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
-        }
-        catch (LobbyServiceException ex)
-        {
-            Debug.Log(ex);
-        }
-    }
-
     private async void HandleLobbyHearbeat()
     {
         if (this.localLobby != null)
@@ -298,5 +276,28 @@ public class LobbyManager : MonoBehaviour
         yield return new WaitForSeconds(Constants.CountdownTimeInSeconds);
 
         this.gameManager.BeginGame();
+        this.ResetLocalPlayer().GetAwaiter();
+    }
+
+    private async Task ResetLocalPlayer()
+    {
+        try
+        {
+            this.shouldStartBeginGameCountdown = false;
+
+            var updatePlayerOptions = new UpdatePlayerOptions
+            {
+                Data = new Dictionary<string, PlayerDataObject>
+                {
+                    { "isReady", new PlayerDataObject(PlayerDataObject.VisibilityOptions.Member, false.ToString()) },
+                }
+            };
+
+            this.localLobby = await LobbyService.Instance.UpdatePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId, updatePlayerOptions);
+        }
+        catch (LobbyServiceException ex)
+        {
+            Debug.Log(ex);
+        }
     }
 }

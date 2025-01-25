@@ -137,7 +137,6 @@ public class LobbyController : MonoBehaviour
     {
         this.isReady = false;
         this.readyBtn.GetComponentInChildren<TMP_Text>().text = Constants.PlayerReadyText;
-        this.lobbyManager.ResetLocalPlayer().GetAwaiter();
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
         this.gameObject.SetActive(true);
