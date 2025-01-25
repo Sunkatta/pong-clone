@@ -54,15 +54,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         };
     }
 
-    public void NewGame()
-    {
-        this.Player1Score.Value = 0;
-        this.Player2Score.Value = 0;
-
-        this.ballController.ResetBall();
-        this.latestScorer = null;
-    }
-
     public void BeginGame()
     {
         StartCoroutine(this.BeginGameCouroutine());
@@ -138,8 +129,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
                 this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
                 this.isMatchRunning = false;
-
-                this.NewGame();
 
                 return;
             }
@@ -285,6 +274,15 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
         MatchEnded(gameOverStatistics);
         yield return new WaitForSeconds(5);
+
+        if (this.IsServer)
+        {
+            this.Player1Score.Value = 0;
+            this.Player2Score.Value = 0;
+
+            this.latestScorer = null;
+        }
+
         LobbyLoaded();
     }
 
