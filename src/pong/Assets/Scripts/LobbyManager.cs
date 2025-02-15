@@ -38,14 +38,6 @@ public class LobbyManager : MonoBehaviour
 
     public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
-    private void Start()
-    {
-        OnlinePvpGameManager.HostDisconnected += async () =>
-        {
-            await this.LeaveLobby();
-        };
-    }
-
     private void Update()
     {
         if (this.shouldPing)
@@ -129,6 +121,12 @@ public class LobbyManager : MonoBehaviour
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
             this.gameManager.OnPlayerJoined(localPlayer);
+
+            this.gameManager.PlayerDisconnected += async (playerId, _) =>
+            {
+                await this.LeaveLobby(playerId);
+            };
+
             this.lobbyInstantiated = true;
         }
         catch (LobbyServiceException ex)
@@ -158,6 +156,11 @@ public class LobbyManager : MonoBehaviour
 
             var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
+
+            this.gameManager.PlayerDisconnected += async (playerId, _) =>
+            {
+                await this.LeaveLobby(playerId);
+            };
 
             foreach (var lobbyPlayer in this.localLobby.Players)
             {
@@ -205,12 +208,11 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    public async Task LeaveLobby()
+    private async Task LeaveLobby(string playerId)
     {
         try
         {
-            await LobbyService.Instance.RemovePlayerAsync(this.localLobby.Id, AuthenticationService.Instance.PlayerId);
-            this.gameManager.OnPlayerLeft(this.LocalPlayer.Id);
+            await LobbyService.Instance.RemovePlayerAsync(this.localLobby.Id, playerId);
             this.localLobby = null;
         }
         catch (LobbyServiceException ex)
@@ -246,7 +248,16 @@ public class LobbyManager : MonoBehaviour
                 float lobbyUpdateTimerMax = LobbyUpdateIntervalInSeconds;
                 this.lobbyUpdateTimer = lobbyUpdateTimerMax;
 
-                this.localLobby = await LobbyService.Instance.GetLobbyAsync(this.localLobby.Id);
+                try
+                {
+                    this.localLobby = await LobbyService.Instance.GetLobbyAsync(this.localLobby.Id);
+                }
+                catch (LobbyServiceException ex)
+                {
+                    this.localLobby = null;
+                    Debug.Log(ex.Message);
+                    return;
+                }
 
                 this.UpdateLobbyUi();
 

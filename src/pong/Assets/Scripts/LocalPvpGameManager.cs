@@ -7,6 +7,7 @@ using UnityEngine;
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
     public event Action<List<LocalPlayer>> PrepareInGameUi;
+    public event Action<string, bool> PlayerDisconnected;
     public static event Action MainMenuLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<GameOverStatistics> MatchEnded;
@@ -52,7 +53,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         playerGameObject.transform.position = this.GetPlayerPosition(player);
     }
 
-    public void OnPlayerLeft(string playerId)
+    public void LeaveGame()
     {
         throw new NotImplementedException();
     }

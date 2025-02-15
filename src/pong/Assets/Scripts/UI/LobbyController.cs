@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -44,17 +45,25 @@ public class LobbyController : MonoBehaviour
     private float remainingCountdownTime;
 
     private GameObject localPlayerTile;
+    private IGameManager gameManager;
 
     private void OnEnable()
     {
         this.hostCodeInput.text = this.lobbyManager.LobbyCode;
+        this.readyBtn.GetComponentInChildren<TMP_Text>().text = Constants.PlayerReadyText;
 
         var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
-        var gameManager = gameManagerGameObject.GetComponent<IGameManager>();
+        this.gameManager = gameManagerGameObject.GetComponent<OnlinePvpGameManager>();
         var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
 
-        gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
-        gameManager.PrepareInGameUi += this.OnUiPrepared;
+        this.gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
+        this.gameManager.PrepareInGameUi += this.OnUiPrepared;
+        this.gameManager.PlayerDisconnected += this.OnDisconnected;
+    }
+
+    private void OnDisable()
+    {
+        this.gameManager = null;
     }
 
     private void Start()
@@ -62,7 +71,6 @@ public class LobbyController : MonoBehaviour
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShouldShowCountdownUi += this.OnShouldShowCountdownUi;
         OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
-        OnlinePvpGameManager.HostDisconnected += this.OnHostDisconnected;
 
         this.readyBtn.onClick.AddListener(async () =>
         {
@@ -73,12 +81,9 @@ public class LobbyController : MonoBehaviour
             this.localPlayerTile.GetComponentInChildren<Toggle>().isOn = this.isReady;
         });
 
-        this.leaveBtn.onClick.AddListener(async () =>
+        this.leaveBtn.onClick.AddListener(() =>
         {
-            this.leaveBtn.GetComponent<AudioSource>().Play();
-            await this.lobbyManager.LeaveLobby();
-            this.gameObject.SetActive(false);
-            this.onlinePvpPanel.gameObject.SetActive(true);
+            StartCoroutine(this.LeaveGameCoroutine());
         });
     }
 
@@ -158,10 +163,14 @@ public class LobbyController : MonoBehaviour
         }
     }
 
-    private void OnHostDisconnected()
+    private void OnDisconnected(string _, bool shouldNavigateToOnlinePvpPanel)
     {
-        this.gameObject.SetActive(false);
-        this.onlinePvpPanel.gameObject.SetActive(true);
+        if (shouldNavigateToOnlinePvpPanel)
+        {
+            this.gameObject.SetActive(false);
+            this.inGameHudPanel.gameObject.SetActive(false);
+            this.onlinePvpPanel.gameObject.SetActive(true);
+        }
     }
 
     private void OnUiPrepared(List<LocalPlayer> players)
@@ -169,5 +178,14 @@ public class LobbyController : MonoBehaviour
         this.gameObject.SetActive(false);
         this.countdownTimerText.gameObject.SetActive(false);
         this.inGameHudPanel.gameObject.SetActive(true);
+    }
+
+    private IEnumerator LeaveGameCoroutine()
+    {
+        this.leaveBtn.GetComponent<AudioSource>().Play();
+        yield return new WaitForSeconds(0.1f);
+        this.gameManager.LeaveGame();
+        this.gameObject.SetActive(false);
+        this.onlinePvpPanel.gameObject.SetActive(true);
     }
 }

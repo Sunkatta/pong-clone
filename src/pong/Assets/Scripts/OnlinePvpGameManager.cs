@@ -8,8 +8,8 @@ using UnityEngine;
 public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
     public event Action<List<LocalPlayer>> PrepareInGameUi;
+    public event Action<string, bool> PlayerDisconnected;
     public static event Action LobbyLoaded;
-    public static event Action HostDisconnected;
     public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<GameOverStatistics> MatchEnded;
 
@@ -36,6 +36,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     private AudioSource goalSound;
     private BallController ballController;
     private bool isMatchRunning;
+    private LocalPlayer localPlayer;
 
     private NetworkObject ball;
 
@@ -62,6 +63,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     public void OnPlayerJoined(LocalPlayer player)
     {
         this.players.Add(player);
+        this.localPlayer = player;
 
         switch (player.PlayerType)
         {
@@ -73,33 +75,62 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
                 break;
             default:
                 break;
-        }
+        }        
     }
 
-    public void OnPlayerLeft(string playerId)
+    public void LeaveGame()
     {
-        var localPlayer = this.players.FirstOrDefault(player => player.Id == playerId);
-        this.players.Remove(localPlayer);
-
-        if (this.IsHost)
-        {
-            this.HostDisconnectedRpc();
-        }
-
         NetworkManager.Singleton.Shutdown();
-
-        foreach (var edge in this.fieldEdges)
-        {
-            Destroy(edge);
-        }
-
-        Destroy(this.gameObject);
     }
 
-    [Rpc(SendTo.NotServer)]
-    private void HostDisconnectedRpc()
+    private void OnPlayerLeft(ulong _)
     {
-        HostDisconnected();
+        if (this.IsServer)
+        {
+            var player2 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2);
+
+            if (player2 == null)
+            {
+                this.PlayerDisconnected(this.localPlayer.Id, true);
+
+                NetworkManager.Singleton.Shutdown();
+
+                foreach (var edge in this.fieldEdges)
+                {
+                    Destroy(edge);
+                }
+
+                Destroy(this.gameObject);
+                return;
+            }
+
+            this.players.Remove(player2);
+            this.PlayerDisconnected(player2.Id, false);
+
+            if (this.isMatchRunning)
+            {
+                var winnerPlayer = this.players.First();
+                var loserPlayer = player2;
+
+                this.ball.Despawn();
+
+                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
+                this.isMatchRunning = false;
+            }
+        }
+        else
+        {
+            this.PlayerDisconnected(this.localPlayer.Id, true);
+
+            NetworkManager.Singleton.Shutdown();
+
+            foreach (var edge in this.fieldEdges)
+            {
+                Destroy(edge);
+            }
+
+            Destroy(this.gameObject);
+        }
     }
 
     private void OnPlayerScored(PlayerType scorer)
@@ -190,6 +221,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     {
         this.goalSound = GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
+
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
     }
 
     private void Update()
@@ -198,6 +231,12 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         {
             this.ballController.Move();
         }
+    }
+
+    public override void OnDestroy()
+    {
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerLeft;
+        base.OnDestroy();
     }
 
     private IEnumerator BeginGameCouroutine()
