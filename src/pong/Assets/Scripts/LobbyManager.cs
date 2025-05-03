@@ -151,7 +151,7 @@ public class LobbyManager : MonoBehaviour
                 }
             };
 
-            this.localLobby = await Lobbies.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
+            this.localLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
             await this.SubscribeToLobbyEvents(this.localLobby);
 
             var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
