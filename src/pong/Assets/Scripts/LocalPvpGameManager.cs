@@ -134,7 +134,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         MatchEnded(gameOverStatistics);
         yield return new WaitForSeconds(5);
 
-        foreach (var player in FindObjectsOfType<LocalPlayerController>())
+        foreach (var player in FindObjectsByType<LocalPlayerController>(FindObjectsSortMode.None))
         {
             Destroy(player.gameObject);
         }
