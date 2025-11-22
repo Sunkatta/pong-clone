@@ -31,14 +31,25 @@ public class InGameHudController : MonoBehaviour
     private TMP_Text navigatingToText;
 
     [SerializeField]
+    private TMP_Text countdownTimerText;
+
+    [SerializeField]
     private AudioClip gameWonSound;
 
     private AudioSource inGameAudioSource;
+
+    private bool shouldBeginCountdown;
+
+    private float remainingCountdownTime;
 
     public void OnUiPrepared(List<LocalPlayer> players)
     {
         this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
         this.player2UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2).Username;
+
+        this.countdownTimerText.gameObject.SetActive(true);
+        this.shouldBeginCountdown = true;
+        this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
     }
 
     private void Start()
@@ -50,6 +61,27 @@ public class InGameHudController : MonoBehaviour
         LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
 
         this.inGameAudioSource = this.GetComponent<AudioSource>();
+    }
+
+    private void Update()
+    {
+        if (this.shouldBeginCountdown)
+        {
+            if (this.remainingCountdownTime > 0)
+            {
+                this.remainingCountdownTime -= Time.deltaTime;
+            }
+            else if (this.remainingCountdownTime < 0)
+            {
+                this.remainingCountdownTime = 0;
+                this.shouldBeginCountdown = false;
+                this.countdownTimerText.gameObject.SetActive(false);
+            }
+
+            int seconds = Mathf.FloorToInt(this.remainingCountdownTime % 60);
+
+            this.countdownTimerText.text = $"{seconds}";
+        }
     }
 
     private void OnScoreChanged(int score, PlayerType playerType)
