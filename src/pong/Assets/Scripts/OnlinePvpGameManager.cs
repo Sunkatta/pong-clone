@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
-    public event Action<List<LocalPlayer>> PrepareInGameUi;
+    public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action LobbyLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
@@ -29,14 +29,14 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [SerializeField]
     private int targetScore;
 
-    private readonly List<LocalPlayer> players = new List<LocalPlayer>();
+    private readonly List<PlayerEntity> players = new List<PlayerEntity>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     private PlayerType? latestScorer;
     private AudioSource goalSound;
     private BallController ballController;
     private bool isMatchRunning;
-    private LocalPlayer localPlayer;
+    private PlayerEntity localPlayer;
 
     private NetworkObject ball;
 
@@ -60,7 +60,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         StartCoroutine(this.BeginGameCouroutine());
     }
 
-    public void OnPlayerJoined(LocalPlayer player)
+    public void OnPlayerJoined(PlayerEntity player)
     {
         this.players.Add(player);
         this.localPlayer = player;
@@ -210,7 +210,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [Rpc(SendTo.NotServer)]
     private void SyncPlayerWithClientsRpc(LocalPlayerNetworkModel localPlayerNetworkModel)
     {
-        var localPlayer = new LocalPlayer(localPlayerNetworkModel.GetId(),
+        var localPlayer = new PlayerEntity(localPlayerNetworkModel.GetId(),
             localPlayerNetworkModel.GetUsername(),
             localPlayerNetworkModel.GetPlayerType());
 

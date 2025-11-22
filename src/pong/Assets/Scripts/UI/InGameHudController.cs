@@ -42,7 +42,7 @@ public class InGameHudController : MonoBehaviour
 
     private float remainingCountdownTime;
 
-    public void OnUiPrepared(List<LocalPlayer> players)
+    public void OnUiPrepared(List<PlayerEntity> players)
     {
         this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
         this.player2UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2).Username;

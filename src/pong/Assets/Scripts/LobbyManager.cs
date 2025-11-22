@@ -105,7 +105,7 @@ public class LobbyManager : MonoBehaviour
 
             await this.SubscribeToLobbyEvents(this.localLobby);
 
-            var localPlayer = new LocalPlayer(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
+            var localPlayer = new PlayerEntity(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
 
             string relayJoinCode = await this.relayManager.CreateRelay();
 
@@ -166,7 +166,7 @@ public class LobbyManager : MonoBehaviour
             {
                 if (lobbyPlayer.Id != this.localLobby.HostId)
                 {
-                    var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
+                    var localPlayer = new PlayerEntity(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
 
                     await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
 
@@ -306,7 +306,7 @@ public class LobbyManager : MonoBehaviour
             {
                 var lobbyPlayer = playerChange.Player;
                 this.localLobby.Players.Add(lobbyPlayer);
-                var localPlayer = new LocalPlayer(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
+                var localPlayer = new PlayerEntity(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
                 this.gameManager.OnPlayerJoined(localPlayer);
                 this.UpdateLobbyUi();
             }

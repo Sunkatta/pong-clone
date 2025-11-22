@@ -73,10 +73,10 @@ public class MainMenuController : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        var player1 = new LocalPlayer(Guid.NewGuid().ToString(), "Player 1", PlayerType.Player1);
+        var player1 = new PlayerEntity(Guid.NewGuid().ToString(), "Player 1", PlayerType.Player1);
         this.gameManager.OnPlayerJoined(player1);
 
-        var player2 = new LocalPlayer(Guid.NewGuid().ToString(), "Player 2", PlayerType.Player2);
+        var player2 = new PlayerEntity(Guid.NewGuid().ToString(), "Player 2", PlayerType.Player2);
         this.gameManager.OnPlayerJoined(player2);
 
         this.gameManager.BeginGame();

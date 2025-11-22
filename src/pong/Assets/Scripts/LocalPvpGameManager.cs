@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
-    public event Action<List<LocalPlayer>> PrepareInGameUi;
+    public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action MainMenuLoaded;
     public static event Action<int, PlayerType> ScoreChanged;
@@ -35,7 +35,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private GameObject ball;
     private BallController ballController;
 
-    private readonly List<LocalPlayer> players = new List<LocalPlayer>();
+    private readonly List<PlayerEntity> players = new List<PlayerEntity>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     public void BeginGame()
@@ -43,7 +43,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         StartCoroutine(this.BeginGameCouroutine());
     }
 
-    public void OnPlayerJoined(LocalPlayer player)
+    public void OnPlayerJoined(PlayerEntity player)
     {
         this.players.Add(player);
 
@@ -152,7 +152,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         Destroy(this.gameObject);
     }
 
-    private Vector3 GetPlayerPosition(LocalPlayer player)
+    private Vector3 GetPlayerPosition(PlayerEntity player)
     {
         Vector3 screenLeftSide = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
         Vector3 screenRightSide = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));

@@ -173,7 +173,7 @@ public class LobbyController : MonoBehaviour
         }
     }
 
-    private void OnUiPrepared(List<LocalPlayer> players)
+    private void OnUiPrepared(List<PlayerEntity> players)
     {
         this.gameObject.SetActive(false);
         this.countdownTimerText.gameObject.SetActive(false);
