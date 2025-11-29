@@ -1,6 +1,6 @@
 using System;
 
-public class PlayerEntity : Entity
+public class PlayerEntity
 {
     public PlayerEntity(string id, string username, PlayerType playerType)
     {
@@ -24,22 +24,9 @@ public class PlayerEntity : Entity
 
     public string Username { get; }
 
-    public PlayerType PlayerType { get; }
+    public PlayerType PlayerType { get; set; }
 
     public int Score { get; private set; }
 
-    public Position2DValueObject PaddlePosition { get; private set; }
-
     public void ScorePoint() => this.Score++;
-
-    public void UpdatePosition(Position2DValueObject position)
-    {
-        if (position.X == this.PaddlePosition.X && position.Y == this.PaddlePosition.Y)
-        {
-            return;
-        }
-
-        this.PaddlePosition = new Position2DValueObject(position.X, position.Y);
-        this.AddDomainEvent(new PlayerMovedDomainEvent(this.Id, this.PaddlePosition));
-    }
 }

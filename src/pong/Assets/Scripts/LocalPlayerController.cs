@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class LocalPlayerController : MonoBehaviour
 {
-    //private readonly IMovePlayerUseCase movePlayerUseCase = new MovePlayerUseCase();
-
     public PlayerType Type { get; set; }
 
     [SerializeField]
@@ -14,12 +12,10 @@ public class LocalPlayerController : MonoBehaviour
 
     private void Update()
     {
-        var playerAxis = this.Type == PlayerType.Player1 ? Input.GetAxisRaw("Player1") : Input.GetAxisRaw("Player2");
+        var playerAxis = this.Type == PlayerType.Player1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
 
         if (playerAxis > 0 && this.canMoveUp)
         {
-            //var movePlayerCommand = new MovePlayerCommand();
-            //this.movePlayerUseCase.Execute(movePlayerCommand);
             this.transform.position += speed * Time.deltaTime * Vector3.up;
             this.canMoveDown = true;
         }
