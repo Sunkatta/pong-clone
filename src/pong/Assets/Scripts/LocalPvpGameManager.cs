@@ -3,9 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
+    private IObjectResolver resolver;
+
     public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action MainMenuLoaded;
@@ -38,6 +42,12 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private readonly List<PlayerEntity> players = new List<PlayerEntity>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
+    [Inject]
+    public void Construct(IObjectResolver resolver)
+    {
+        this.resolver = resolver;
+    }
+
     public void BeginGame()
     {
         StartCoroutine(this.BeginGameCouroutine());
@@ -47,9 +57,10 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     {
         this.players.Add(player);
 
-        var playerGameObject = Instantiate(this.playerPrefab);
+        var playerGameObject = resolver.Instantiate(this.playerPrefab);
         var playerInstanceController = playerGameObject.GetComponent<LocalPlayerController>();
         playerInstanceController.Type = player.PlayerType;
+        playerInstanceController.Id = player.Id;
         playerGameObject.transform.position = this.GetPlayerPosition(player);
     }
 

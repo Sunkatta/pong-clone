@@ -1,8 +1,14 @@
 using UnityEngine;
+using VContainer;
 
 public class LocalPlayerController : MonoBehaviour
 {
+    private IMovePlayerUseCase movePlayerUseCase;
+    private PlayerMovedDomainEventHandler playerMovedHandler;
+
     public PlayerType Type { get; set; }
+
+    public string Id { get; set; }
 
     [SerializeField]
     private float speed;
@@ -10,18 +16,40 @@ public class LocalPlayerController : MonoBehaviour
     private bool canMoveUp = true;
     private bool canMoveDown = true;
 
+    [Inject]
+    public void Construct(IMovePlayerUseCase movePlayerUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
+    {
+        this.movePlayerUseCase = movePlayerUseCase;
+        this.playerMovedHandler = playerMovedHandler;
+    }
+
+    private void OnEnable()
+    {
+        playerMovedHandler.PlayerMoved += OnPlayerMoved;
+    }
+
+    private void OnDisable()
+    {
+        playerMovedHandler.PlayerMoved -= OnPlayerMoved;
+    }
+
     private void Update()
     {
-        var playerAxis = this.Type == PlayerType.Player1 ? Input.GetAxis("Player1") : Input.GetAxis("Player2");
+        var playerAxis = this.Type == PlayerType.Player1 ? Input.GetAxisRaw("Player1") : Input.GetAxisRaw("Player2");
+        var position = this.transform.position;
 
         if (playerAxis > 0 && this.canMoveUp)
         {
-            this.transform.position += speed * Time.deltaTime * Vector3.up;
+            position.y += speed * Time.deltaTime;
+            var movePlayerCommand = new MovePlayerCommand("1", Id, position.y);
+            this.movePlayerUseCase.Execute(movePlayerCommand);
             this.canMoveDown = true;
         }
         else if (playerAxis < 0 && this.canMoveDown)
         {
-            this.transform.position -= speed * Time.deltaTime * Vector3.up;
+            position.y -= speed * Time.deltaTime;
+            var movePlayerCommand = new MovePlayerCommand("1", Id, position.y);
+            this.movePlayerUseCase.Execute(movePlayerCommand);
             this.canMoveUp = true;
         }
     }
@@ -37,5 +65,17 @@ public class LocalPlayerController : MonoBehaviour
         {
             this.canMoveDown = false;
         }
+    }
+
+    private void OnPlayerMoved(PlayerMovedDomainEvent domainEvent)
+    {
+        if (domainEvent.PlayerId != Id)
+        {
+            return;
+        }
+
+        var position = this.transform.position;
+        position.y = domainEvent.NewPlayerPosition.Y;
+        this.transform.position = position;
     }
 }

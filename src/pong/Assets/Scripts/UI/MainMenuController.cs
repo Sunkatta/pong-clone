@@ -3,9 +3,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using VContainer;
+using VContainer.Unity;
 
 public class MainMenuController : MonoBehaviour
 {
+    private IObjectResolver objectResolver;
+    private ICreateGameUseCase createGameUseCase;
+
     [SerializeField]
     private GameObject localPvpGameManager;
 
@@ -31,6 +36,13 @@ public class MainMenuController : MonoBehaviour
     private Button quitGameBtn;
 
     private IGameManager gameManager;
+
+    [Inject]
+    public void Construct(IObjectResolver objectResolver, ICreateGameUseCase createGameUseCase)
+    {
+        this.objectResolver = objectResolver;
+        this.createGameUseCase = createGameUseCase;
+    }
 
     private void Start()
     {
@@ -65,7 +77,7 @@ public class MainMenuController : MonoBehaviour
     {
         this.localPvpBtn.GetComponent<AudioSource>().Play();
 
-        var localPvpGameManager = Instantiate(this.localPvpGameManager);
+        var localPvpGameManager = this.objectResolver.Instantiate(this.localPvpGameManager);
         this.gameManager = localPvpGameManager.GetComponent<IGameManager>();
 
         var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
@@ -78,6 +90,19 @@ public class MainMenuController : MonoBehaviour
 
         var player2 = new PlayerEntity(Guid.NewGuid().ToString(), "Player 2", PlayerType.Player2);
         this.gameManager.OnPlayerJoined(player2);
+
+        var createGameCommand = new CreateGameCommand("1",
+            player1.Id,
+            player1.Username,
+            player2.Id,
+            player2.Username,
+            (-10, -5),
+            (10, -5),
+            (10, 5),
+            (-10, 5),
+            7);
+
+        this.createGameUseCase.Execute(createGameCommand);
 
         this.gameManager.BeginGame();
 
