@@ -1,6 +1,6 @@
 public class MovePlayerCommand
 {
-    public MovePlayerCommand(string gameId, string playerId, int newY)
+    public MovePlayerCommand(string gameId, string playerId, float newY)
     {
         this.GameId = gameId;
         this.PlayerId = playerId;
@@ -11,5 +11,5 @@ public class MovePlayerCommand
 
     public string PlayerId { get; }
 
-    public int NewY { get; }
+    public float NewY { get; }
 }

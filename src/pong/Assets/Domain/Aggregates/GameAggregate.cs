@@ -13,12 +13,21 @@ public class GameAggregate : Entity, IAggregateRoot
             throw new ArgumentNullException(nameof(id), "Id cannot be null, empty or whitespace");
         }
 
+        this.Id = id;
+
         this.Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player 1 cannot be null");
         this.Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player 2 cannot be null");
         
         this.PaddleSpeed = paddleSpeed;
 
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
+    }
+
+    public GameAggregate(PlayerEntity player1,
+        PlayerEntity player2,
+        GameFieldValueObject gameFieldValueObject,
+        float paddleSpeed) : this(Guid.NewGuid().ToString(), player1, player2, gameFieldValueObject, paddleSpeed)
+    {
     }
 
     public string Id { get;}
