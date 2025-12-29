@@ -6,7 +6,8 @@ public class GameAggregate : Entity, IAggregateRoot
         PlayerEntity player1,
         PlayerEntity player2,
         GameFieldValueObject gameFieldValueObject,
-        float paddleSpeed)
+        float paddleSpeed,
+        float paddleLength)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -20,13 +21,22 @@ public class GameAggregate : Entity, IAggregateRoot
         
         this.PaddleSpeed = paddleSpeed;
 
+        if (paddleLength <= 0)
+        {
+            throw new ArgumentException("Paddle length cannot be less than or equal to 0");
+        }
+
+        this.PaddleLength = paddleLength;
+
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
     }
 
     public GameAggregate(PlayerEntity player1,
         PlayerEntity player2,
         GameFieldValueObject gameFieldValueObject,
-        float paddleSpeed) : this(Guid.NewGuid().ToString(), player1, player2, gameFieldValueObject, paddleSpeed)
+        float paddleSpeed,
+        float paddleLength)
+        : this(Guid.NewGuid().ToString(), player1, player2, gameFieldValueObject, paddleSpeed, paddleLength)
     {
     }
 
@@ -38,11 +48,13 @@ public class GameAggregate : Entity, IAggregateRoot
 
     public float PaddleSpeed { get; }
 
+    public float PaddleLength { get; }
+
     public GameFieldValueObject GameFieldValueObject { get; }
 
     public void MovePlayer(string playerId, float newY)
     {
-        if (newY < this.GameFieldValueObject.BottomLeftCornerPosition.Y || newY > this.GameFieldValueObject.TopLeftCornerPosition.Y)
+        if (newY < this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2) || newY > this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2))
         {
             // Player is outside the bounds of the game field. Do nothing.
             // Consider resetting them inside the game field.

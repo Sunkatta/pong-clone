@@ -100,7 +100,8 @@ public class MainMenuController : MonoBehaviour
             (10, -5),
             (10, 5),
             (-10, 5),
-            7);
+            7,
+            2);
 
         this.createGameUseCase.Execute(createGameCommand);
 

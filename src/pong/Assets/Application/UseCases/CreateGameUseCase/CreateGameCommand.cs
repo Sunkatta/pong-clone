@@ -9,7 +9,8 @@ public class CreateGameCommand
         (float, float) bottomRightCornerPosition,
         (float, float) topRightCornerPosition,
         (float, float) topLeftCornerPosition,
-        float paddleSped)
+        float paddleSped,
+        float paddleLength)
     {
         this.GameId = gameId;
         this.Player1Id = player1Id;
@@ -21,6 +22,7 @@ public class CreateGameCommand
         this.TopRightCornerPosition = topRightCornerPosition;
         this.TopLeftCornerPosition = topLeftCornerPosition;
         this.PaddleSpeed = paddleSped;
+        this.PaddleLength = paddleLength;
     }
 
     public string GameId { get; }
@@ -42,4 +44,6 @@ public class CreateGameCommand
     public (float, float) TopLeftCornerPosition { get; }
 
     public float PaddleSpeed { get; }
+
+    public float PaddleLength { get; }
 }
