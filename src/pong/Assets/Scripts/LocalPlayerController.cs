@@ -1,6 +1,7 @@
 using UnityEngine;
 using VContainer;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class LocalPlayerController : MonoBehaviour
 {
     private IMovePlayerUseCase movePlayerUseCase;
@@ -13,11 +14,19 @@ public class LocalPlayerController : MonoBehaviour
     [SerializeField]
     private float speed;
 
+    private Rigidbody2D rb;
+    private float inputAxis;
+
     [Inject]
     public void Construct(IMovePlayerUseCase movePlayerUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
     {
         this.movePlayerUseCase = movePlayerUseCase;
         this.playerMovedHandler = playerMovedHandler;
+    }
+
+    private void Awake()
+    {
+        this.rb = this.GetComponent<Rigidbody2D>();
     }
 
     private void OnEnable()
@@ -32,21 +41,21 @@ public class LocalPlayerController : MonoBehaviour
 
     private void Update()
     {
-        var playerAxis = this.Type == PlayerType.Player1 ? Input.GetAxisRaw("Player1") : Input.GetAxisRaw("Player2");
-        var position = this.transform.position;
+        this.inputAxis = Type == PlayerType.Player1
+            ? Input.GetAxisRaw("Player1")
+            : Input.GetAxisRaw("Player2");
+    }
 
-        if (playerAxis > 0)
+    private void FixedUpdate()
+    {
+        if (inputAxis == 0f)
         {
-            position.y += speed * Time.deltaTime;
-            var movePlayerCommand = new MovePlayerCommand("1", Id, position.y);
-            this.movePlayerUseCase.Execute(movePlayerCommand);
+            return;
         }
-        else if (playerAxis < 0)
-        {
-            position.y -= speed * Time.deltaTime;
-            var movePlayerCommand = new MovePlayerCommand("1", Id, position.y);
-            this.movePlayerUseCase.Execute(movePlayerCommand);
-        }
+
+        float newY = this.rb.position.y + inputAxis * speed * Time.fixedDeltaTime;
+        var movePlayerCommand = new MovePlayerCommand("1", Id, newY);
+        movePlayerUseCase.Execute(movePlayerCommand);
     }
 
     private void OnPlayerMoved(PlayerMovedDomainEvent domainEvent)
@@ -56,8 +65,9 @@ public class LocalPlayerController : MonoBehaviour
             return;
         }
 
-        var position = this.transform.position;
-        position.y = domainEvent.NewPlayerPosition.Y;
-        this.transform.position = position;
+        Vector2 newPosition = this.rb.position;
+        newPosition.y = domainEvent.NewPlayerPosition.Y;
+
+        this.rb.MovePosition(newPosition);
     }
 }
