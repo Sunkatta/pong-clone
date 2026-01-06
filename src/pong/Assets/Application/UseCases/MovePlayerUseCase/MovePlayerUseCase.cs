@@ -1,3 +1,5 @@
+using System;
+
 public class MovePlayerUseCase : IMovePlayerUseCase
 {
     private readonly IGameService gameService;
@@ -11,8 +13,9 @@ public class MovePlayerUseCase : IMovePlayerUseCase
 
     public void Execute(MovePlayerCommand movePlayerCommand)
     {
-        GameAggregate gameAggregate = this.gameService.GetById(movePlayerCommand.GameId);
-
+        GameAggregate gameAggregate = this.gameService.GetById(movePlayerCommand.GameId)
+            ?? throw new InvalidOperationException($"Game with Id {movePlayerCommand.GameId} not found");
+        
         gameAggregate.MovePlayer(movePlayerCommand.PlayerId, movePlayerCommand.NewY);
         this.domainEventDispatcherService.Dispatch(gameAggregate);
     }

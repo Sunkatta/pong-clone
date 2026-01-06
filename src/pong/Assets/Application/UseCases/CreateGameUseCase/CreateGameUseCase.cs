@@ -11,15 +11,19 @@ public class CreateGameUseCase : ICreateGameUseCase
     {
         var player1Entity = new PlayerEntity(createGameCommand.Player1Id, createGameCommand.Player1Username, PlayerType.Player1);
         var player2Entity = new PlayerEntity(createGameCommand.Player2Id, createGameCommand.Player2Username, PlayerType.Player2);
+
+        var ballEntity = new BallEntity("1", 6, new Position2DValueObject(0, 0), new Position2DValueObject(0, 0));
+
         var gameFieldValueObject = new GameFieldValueObject(
-            new Position2DValueObject(createGameCommand.BottomLeftCornerPosition.Item1, createGameCommand.BottomLeftCornerPosition.Item2),
-            new Position2DValueObject(createGameCommand.BottomRightCornerPosition.Item1, createGameCommand.BottomRightCornerPosition.Item2),
-            new Position2DValueObject(createGameCommand.TopRightCornerPosition.Item1, createGameCommand.TopRightCornerPosition.Item2),
-            new Position2DValueObject(createGameCommand.TopLeftCornerPosition.Item1, createGameCommand.TopLeftCornerPosition.Item2));
+            new Position2DValueObject(createGameCommand.BottomLeftCornerPosition.X, createGameCommand.BottomLeftCornerPosition.Y),
+            new Position2DValueObject(createGameCommand.BottomRightCornerPosition.X, createGameCommand.BottomRightCornerPosition.Y),
+            new Position2DValueObject(createGameCommand.TopRightCornerPosition.X, createGameCommand.TopRightCornerPosition.Y),
+            new Position2DValueObject(createGameCommand.TopLeftCornerPosition.X, createGameCommand.TopLeftCornerPosition.Y));
 
         GameAggregate gameAggregate = new GameAggregate(createGameCommand.GameId,
             player1Entity,
             player2Entity,
+            ballEntity,
             gameFieldValueObject,
             createGameCommand.PaddleSpeed,
             createGameCommand.PaddleLength);

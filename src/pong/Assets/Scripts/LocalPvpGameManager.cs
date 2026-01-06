@@ -173,7 +173,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private IEnumerator BeginGameCouroutine()
     {
-        this.ball = Instantiate(this.ballPrefab);
+        this.ball = resolver.Instantiate(this.ballPrefab);
         this.ballController = this.ball.GetComponent<BallController>();
         this.ballController.BallHit += this.OnBallHit;
         this.ballController.GoalPassed += this.OnPlayerScored;
@@ -207,45 +207,72 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     {
         Vector2 lDCorner = Camera.main.ViewportToWorldPoint(new Vector3(0, 0f, Camera.main.nearClipPlane));
         Vector2 rUCorner = Camera.main.ViewportToWorldPoint(new Vector3(1f, 1f, Camera.main.nearClipPlane));
-        Vector2[] colliderpoints;
 
-        var upperEdgeGameObject = new GameObject(Constants.UpperEdge);
-        upperEdgeGameObject.tag = Constants.UpperEdge;
-        EdgeCollider2D upperEdge = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = upperEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, rUCorner.y);
-        upperEdge.points = colliderpoints;
+        var upperEdgeGameObject = new GameObject(Constants.UpperEdge)
+        {
+            tag = Constants.UpperEdge
+        };
+
+        Rigidbody2D upperEdgeRigidbody = upperEdgeGameObject.AddComponent<Rigidbody2D>();
+        upperEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D upperEdgeCollider = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
+        upperEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(upperEdgeGameObject);
 
-        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge);
-        lowerEdgeGameObject.tag = Constants.LowerEdge;
-        EdgeCollider2D lowerEdge = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = lowerEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        lowerEdge.points = colliderpoints;
+        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge)
+        {
+            tag = Constants.LowerEdge
+        };
+
+        Rigidbody2D lowerEdgeRigidbody = lowerEdgeGameObject.AddComponent<Rigidbody2D>();
+        lowerEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D lowerEdgeCollider = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
+        lowerEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(lowerEdgeGameObject);
 
-        var leftGoalGameObject = new GameObject(Constants.LeftGoal);
-        leftGoalGameObject.tag = Constants.LeftGoal;
+        var leftGoalGameObject = new GameObject(Constants.LeftGoal)
+        {
+            tag = Constants.LeftGoal
+        };
+
+        Rigidbody2D leftGoalRigidbody = leftGoalGameObject.AddComponent<Rigidbody2D>();
+        leftGoalRigidbody.bodyType = RigidbodyType2D.Static;
+
         EdgeCollider2D leftGoalCollider = leftGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = leftGoalCollider.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
-        leftGoalCollider.points = colliderpoints;
+        leftGoalCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(lDCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(leftGoalGameObject);
 
-        var rightGoalGameObject = new GameObject(Constants.RightGoal);
-        rightGoalGameObject.tag = Constants.RightGoal;
+        var rightGoalGameObject = new GameObject(Constants.RightGoal)
+        {
+            tag = Constants.RightGoal
+        };
+
+        Rigidbody2D rightGoalRigidbody = rightGoalGameObject.AddComponent<Rigidbody2D>();
+        rightGoalRigidbody.bodyType = RigidbodyType2D.Static;
+
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = rightGoalCollider.points;
-        colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        rightGoalCollider.points = colliderpoints;
+        rightGoalCollider.points = new Vector2[]
+        {
+            new Vector2(rUCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(rightGoalGameObject);
     }

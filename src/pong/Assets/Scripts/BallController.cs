@@ -1,9 +1,13 @@
 using System;
 using Unity.Netcode;
 using UnityEngine;
+using VContainer;
 
 public class BallController : NetworkBehaviour
 {
+    private IMoveBallUseCase moveBallUseCase;
+    private BallMovedDomainEventHandler ballMovedHandler;
+
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
 
@@ -15,9 +19,28 @@ public class BallController : NetworkBehaviour
 
     public float CurrentBallSpeed { get; private set; }
 
+    [Inject]
+    public void Construct(IMoveBallUseCase moveBallUseCase, BallMovedDomainEventHandler ballMovedHandler)
+    {
+        this.moveBallUseCase = moveBallUseCase;
+        this.ballMovedHandler = ballMovedHandler;
+    }
+
+    private void OnEnable()
+    {
+        this.ballMovedHandler.BallMoved += OnBallMoved;
+    }
+
+    private void OnDisable()
+    {
+        this.ballMovedHandler.BallMoved -= OnBallMoved;
+    }
+
     public void Move()
     {
-        this.transform.position += this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
+        //this.transform.position += this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
+        var newPosition = this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
+        this.moveBallUseCase.Execute(new MoveBallCommand("1", (newPosition.x, newPosition.y)));
     }
 
     public void UpdateSpeed(float newSpeed)
@@ -74,5 +97,10 @@ public class BallController : NetworkBehaviour
         Gizmos.DrawLine(this.transform.position, new Vector2(1f, -1f));
         Gizmos.DrawLine(this.transform.position, new Vector2(-1f, -1f));
         Gizmos.DrawLine(this.transform.position, new Vector2(-1f, 1f));
+    }
+
+    private void OnBallMoved(BallMovedDomainEvent ballMovedDomainEvent)
+    {
+        this.transform.position += new Vector3(ballMovedDomainEvent.NewPosition.X, ballMovedDomainEvent.NewPosition.Y);
     }
 }

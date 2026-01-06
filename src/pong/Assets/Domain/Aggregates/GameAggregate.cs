@@ -5,6 +5,7 @@ public class GameAggregate : Entity, IAggregateRoot
     public GameAggregate(string id,
         PlayerEntity player1,
         PlayerEntity player2,
+        BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength)
@@ -18,6 +19,7 @@ public class GameAggregate : Entity, IAggregateRoot
 
         this.Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player 1 cannot be null");
         this.Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player 2 cannot be null");
+        this.Ball = ball ?? throw new ArgumentNullException(nameof(ball), "Ball cannot be null");
         
         this.PaddleSpeed = paddleSpeed;
 
@@ -33,10 +35,11 @@ public class GameAggregate : Entity, IAggregateRoot
 
     public GameAggregate(PlayerEntity player1,
         PlayerEntity player2,
+        BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength)
-        : this(Guid.NewGuid().ToString(), player1, player2, gameFieldValueObject, paddleSpeed, paddleLength)
+        : this(Guid.NewGuid().ToString(), player1, player2, ball, gameFieldValueObject, paddleSpeed, paddleLength)
     {
     }
 
@@ -45,6 +48,8 @@ public class GameAggregate : Entity, IAggregateRoot
     public PlayerEntity Player1 { get; }
 
     public PlayerEntity Player2 { get; }
+
+    public BallEntity Ball { get; }
 
     public float PaddleSpeed { get; }
 
@@ -69,5 +74,31 @@ public class GameAggregate : Entity, IAggregateRoot
         {
             this.Player2.UpdatePosition(new Position2DValueObject(this.Player2.PaddlePosition.X, newY));
         }
+        else
+        {
+            throw new ArgumentException($"Player with Id {playerId} not found");
+        }
+    }
+
+    public void MoveBall(Position2DValueObject newPosition)
+    {
+        if (newPosition.X > this.GameFieldValueObject.TopRightCornerPosition.X)
+        {
+            // Player 1 (left) scored.
+            return;
+        }
+
+        if (newPosition.X < this.GameFieldValueObject.TopLeftCornerPosition.X)
+        {
+            // Player 2 (right) scored.
+            return;
+        }
+
+        this.Ball.UpdatePosition(newPosition);
+    }
+
+    public void UpdateBallDirection(Position2DValueObject newDirection, bool hitByPlayer)
+    {
+        this.Ball.UpdateDirection(newDirection, hitByPlayer);
     }
 }

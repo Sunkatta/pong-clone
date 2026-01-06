@@ -5,10 +5,10 @@ public class CreateGameCommand
         string player1Username,
         string player2Id,
         string player2Username,
-        (float, float) bottomLeftCornerPosition,
-        (float, float) bottomRightCornerPosition,
-        (float, float) topRightCornerPosition,
-        (float, float) topLeftCornerPosition,
+        (float x, float y) bottomLeftCornerPosition,
+        (float x, float y) bottomRightCornerPosition,
+        (float x, float y) topRightCornerPosition,
+        (float x, float y) topLeftCornerPosition,
         float paddleSped,
         float paddleLength)
     {
@@ -35,13 +35,13 @@ public class CreateGameCommand
 
     public string Player2Username { get; }
 
-    public (float, float) BottomLeftCornerPosition { get; }
+    public (float X, float Y) BottomLeftCornerPosition { get; }
 
-    public (float, float) BottomRightCornerPosition { get; }
+    public (float X, float Y) BottomRightCornerPosition { get; }
 
-    public (float, float) TopRightCornerPosition { get; }
+    public (float X, float Y) TopRightCornerPosition { get; }
 
-    public (float, float) TopLeftCornerPosition { get; }
+    public (float X, float Y) TopLeftCornerPosition { get; }
 
     public float PaddleSpeed { get; }
 

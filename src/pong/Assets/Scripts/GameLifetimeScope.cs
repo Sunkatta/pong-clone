@@ -8,6 +8,7 @@ public class GameLifetimeScope : LifetimeScope
         // Application Use Cases
         builder.Register<IMovePlayerUseCase, MovePlayerUseCase>(Lifetime.Transient);
         builder.Register<ICreateGameUseCase, CreateGameUseCase>(Lifetime.Transient);
+        builder.Register<IMoveBallUseCase, MoveBallUseCase>(Lifetime.Transient);
 
         // Application Boundaries
         builder.Register<IDomainEventDispatcherService, DomainEventDispatcherService>(Lifetime.Singleton);
@@ -18,6 +19,10 @@ public class GameLifetimeScope : LifetimeScope
         // Infrastructure
         // TODO: Consider exposing a dedicated event stream and rely on IDomainEventHandler instead.
         builder.Register<PlayerMovedDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
+        builder.Register<BallMovedDomainEventHandler>(Lifetime.Singleton)
             .AsSelf()
             .AsImplementedInterfaces();
 
