@@ -247,10 +247,11 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             tag = Constants.LeftGoal
         };
 
-        Rigidbody2D leftGoalRigidbody = leftGoalGameObject.AddComponent<Rigidbody2D>();
-        leftGoalRigidbody.bodyType = RigidbodyType2D.Static;
+        //Rigidbody2D leftGoalRigidbody = leftGoalGameObject.AddComponent<Rigidbody2D>();
+        //leftGoalRigidbody.bodyType = RigidbodyType2D.Static;
 
         EdgeCollider2D leftGoalCollider = leftGoalGameObject.AddComponent<EdgeCollider2D>();
+        leftGoalCollider.isTrigger = true;
         leftGoalCollider.points = new Vector2[]
         {
             new Vector2(lDCorner.x, lDCorner.y),
@@ -264,10 +265,11 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             tag = Constants.RightGoal
         };
 
-        Rigidbody2D rightGoalRigidbody = rightGoalGameObject.AddComponent<Rigidbody2D>();
-        rightGoalRigidbody.bodyType = RigidbodyType2D.Static;
+        //Rigidbody2D rightGoalRigidbody = rightGoalGameObject.AddComponent<Rigidbody2D>();
+        //rightGoalRigidbody.bodyType = RigidbodyType2D.Static;
 
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
+        rightGoalCollider.isTrigger = true;
         rightGoalCollider.points = new Vector2[]
         {
             new Vector2(rUCorner.x, rUCorner.y),

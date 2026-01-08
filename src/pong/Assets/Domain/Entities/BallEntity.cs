@@ -2,7 +2,7 @@ using System;
 
 public class BallEntity : Entity
 {
-    public BallEntity(string id, float initialSpeed, Position2DValueObject initialDirection, Position2DValueObject initialPosition)
+    public BallEntity(string id, float initialSpeed, float maxSpeed, Position2DValueObject initialDirection, Position2DValueObject initialPosition)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -14,14 +14,27 @@ public class BallEntity : Entity
             throw new ArgumentException("Initial ball speed cannot be less than or equal to 0");
         }
 
+        this.InitialSpeed = initialSpeed;
         this.CurrentSpeed = initialSpeed;
+
+        if (maxSpeed <= 0)
+        {
+            throw new ArgumentException("Maximum ball speed cannot be less than or equal to 0");
+        }
+
+        this.MaxSpeed = maxSpeed;
+
         this.Direction = initialDirection;
         this.Position = initialPosition;
     }
 
     public string Id { get; }
 
+    public float InitialSpeed { get; }
+
     public float CurrentSpeed { get; private set; }
+
+    public float MaxSpeed { get; }
 
     public Position2DValueObject Direction { get; private set; }
 
@@ -33,14 +46,15 @@ public class BallEntity : Entity
         this.AddDomainEvent(new BallMovedDomainEvent(newPosition));
     }
 
-    public void UpdateDirection(Position2DValueObject newDirection, bool hitByPlayer)
+    public void UpdateDirection(Position2DValueObject newDirection, bool isHitByPlayer)
     {
-        if (hitByPlayer)
+        if (isHitByPlayer && this.CurrentSpeed < this.MaxSpeed)
         {
             this.CurrentSpeed++;
         }
         
         this.Direction = newDirection;
+        this.AddDomainEvent(new BallDirectionUpdatedDomainEvent(newDirection, this.CurrentSpeed));
     }
 
     public void UpdateSpeed(float newSpeed)

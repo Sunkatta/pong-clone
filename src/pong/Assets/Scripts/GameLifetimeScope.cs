@@ -9,6 +9,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<IMovePlayerUseCase, MovePlayerUseCase>(Lifetime.Transient);
         builder.Register<ICreateGameUseCase, CreateGameUseCase>(Lifetime.Transient);
         builder.Register<IMoveBallUseCase, MoveBallUseCase>(Lifetime.Transient);
+        builder.Register<IUpdateBallDirectionUseCase, UpdateBallDirectionUseCase>(Lifetime.Transient);
 
         // Application Boundaries
         builder.Register<IDomainEventDispatcherService, DomainEventDispatcherService>(Lifetime.Singleton);
@@ -23,6 +24,10 @@ public class GameLifetimeScope : LifetimeScope
             .AsImplementedInterfaces();
 
         builder.Register<BallMovedDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
+        builder.Register<BallDirectionUpdatedDomainEventHandler>(Lifetime.Singleton)
             .AsSelf()
             .AsImplementedInterfaces();
 

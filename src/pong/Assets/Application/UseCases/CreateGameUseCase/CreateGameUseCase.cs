@@ -12,7 +12,7 @@ public class CreateGameUseCase : ICreateGameUseCase
         var player1Entity = new PlayerEntity(createGameCommand.Player1Id, createGameCommand.Player1Username, PlayerType.Player1);
         var player2Entity = new PlayerEntity(createGameCommand.Player2Id, createGameCommand.Player2Username, PlayerType.Player2);
 
-        var ballEntity = new BallEntity("1", 6, new Position2DValueObject(0, 0), new Position2DValueObject(0, 0));
+        var ballEntity = new BallEntity("1", 6, 15, new Position2DValueObject(0, 0), new Position2DValueObject(0, 0));
 
         var gameFieldValueObject = new GameFieldValueObject(
             new Position2DValueObject(createGameCommand.BottomLeftCornerPosition.X, createGameCommand.BottomLeftCornerPosition.Y),

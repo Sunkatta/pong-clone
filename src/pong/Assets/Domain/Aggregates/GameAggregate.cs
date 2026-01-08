@@ -85,12 +85,14 @@ public class GameAggregate : Entity, IAggregateRoot
         if (newPosition.X > this.GameFieldValueObject.TopRightCornerPosition.X)
         {
             // Player 1 (left) scored.
+            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
             return;
         }
 
         if (newPosition.X < this.GameFieldValueObject.TopLeftCornerPosition.X)
         {
             // Player 2 (right) scored.
+            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
             return;
         }
 

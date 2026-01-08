@@ -6,7 +6,9 @@ using VContainer;
 public class BallController : NetworkBehaviour
 {
     private IMoveBallUseCase moveBallUseCase;
+    private IUpdateBallDirectionUseCase updateBallDirectionUseCase;
     private BallMovedDomainEventHandler ballMovedHandler;
+    private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
 
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
@@ -20,25 +22,31 @@ public class BallController : NetworkBehaviour
     public float CurrentBallSpeed { get; private set; }
 
     [Inject]
-    public void Construct(IMoveBallUseCase moveBallUseCase, BallMovedDomainEventHandler ballMovedHandler)
+    public void Construct(IMoveBallUseCase moveBallUseCase,
+        IUpdateBallDirectionUseCase updateBallDirectionUseCase,
+        BallMovedDomainEventHandler ballMovedHandler,
+        BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler) 
     {
         this.moveBallUseCase = moveBallUseCase;
+        this.updateBallDirectionUseCase = updateBallDirectionUseCase;
         this.ballMovedHandler = ballMovedHandler;
+        this.ballDirectionUpdatedHandler = ballDirectionUpdatedHandler;
     }
 
     private void OnEnable()
     {
         this.ballMovedHandler.BallMoved += OnBallMoved;
+        this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
     }
 
     private void OnDisable()
     {
         this.ballMovedHandler.BallMoved -= OnBallMoved;
+        this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
     }
 
     public void Move()
     {
-        //this.transform.position += this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
         var newPosition = this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
         this.moveBallUseCase.Execute(new MoveBallCommand("1", (newPosition.x, newPosition.y)));
     }
@@ -67,28 +75,32 @@ public class BallController : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag(Constants.RightGoal))
-        {
-            this.GoalPassed(PlayerType.Player1);
-            return;
-        }
+        //if (collision.gameObject.CompareTag(Constants.RightGoal))
+        //{
+        //    this.GoalPassed(PlayerType.Player1);
+        //    return;
+        //}
 
-        if (collision.gameObject.CompareTag(Constants.LeftGoal))
-        {
-            this.GoalPassed(PlayerType.Player2);
-            return;
-        }
+        //if (collision.gameObject.CompareTag(Constants.LeftGoal))
+        //{
+        //    this.GoalPassed(PlayerType.Player2);
+        //    return;
+        //}
 
         this.bounceSound.Play();
 
         ContactPoint2D contact = collision.GetContact(0);
 
-        this.ballDirection = Vector2.Reflect(this.ballDirection, contact.normal);
+        var newDirection = Vector2.Reflect(this.ballDirection, contact.normal);
+        bool isHitByPlayer = false;
 
         if (collision.gameObject.CompareTag(Constants.Player))
         {
-            this.BallHit();
+            // this.BallHit();
+            isHitByPlayer = true;
         }
+
+        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand("1", (newDirection.x, newDirection.y), isHitByPlayer));
     }
 
     private void OnDrawGizmosSelected()
@@ -102,5 +114,11 @@ public class BallController : NetworkBehaviour
     private void OnBallMoved(BallMovedDomainEvent ballMovedDomainEvent)
     {
         this.transform.position += new Vector3(ballMovedDomainEvent.NewPosition.X, ballMovedDomainEvent.NewPosition.Y);
+    }
+
+    private void OnBallDirectionUpdated(BallDirectionUpdatedDomainEvent ballDirectionUpdatedDomainEvent)
+    {
+        this.ballDirection = new Vector2(ballDirectionUpdatedDomainEvent.NewDirection.X, ballDirectionUpdatedDomainEvent.NewDirection.Y);
+        this.CurrentBallSpeed = ballDirectionUpdatedDomainEvent.NewSpeed;
     }
 }

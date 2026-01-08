@@ -8,7 +8,8 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
     // The drawback of this is that we need to inject each
     // IEnumerable<IDomainEventHandler<{DomainEvent}>> separately.
     public DomainEventDispatcherService(IEnumerable<IDomainEventHandler<PlayerMovedDomainEvent>> playerMovedHandlers,
-        IEnumerable<IDomainEventHandler<BallMovedDomainEvent>> ballMovedHandlers)
+        IEnumerable<IDomainEventHandler<BallMovedDomainEvent>> ballMovedHandlers,
+        IEnumerable<IDomainEventHandler<BallDirectionUpdatedDomainEvent>> ballDirectionUpdatedHandlers)
     {
         this.domainEventHandlers = new Dictionary<Type, List<object>>
         {
@@ -19,6 +20,10 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
             {
                 typeof(BallMovedDomainEvent),
                 new List<object>(ballMovedHandlers)
+            },
+            {
+                typeof(BallDirectionUpdatedDomainEvent),
+                new List<object>(ballDirectionUpdatedHandlers)
             }
         };
     }
