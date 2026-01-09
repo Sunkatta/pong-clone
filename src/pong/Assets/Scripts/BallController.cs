@@ -10,7 +10,6 @@ public class BallController : NetworkBehaviour
     private IUpdateBallDirectionUseCase updateBallDirectionUseCase;
     private BallMovedDomainEventHandler ballMovedHandler;
     private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
-    private PlayerScoredDomainEventHandler playerScoredHandler;
 
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
@@ -27,28 +26,24 @@ public class BallController : NetworkBehaviour
     public void Construct(IMoveBallUseCase moveBallUseCase,
         IUpdateBallDirectionUseCase updateBallDirectionUseCase,
         BallMovedDomainEventHandler ballMovedHandler,
-        BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler,
-        PlayerScoredDomainEventHandler playerScoredHandler) 
+        BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler) 
     {
         this.moveBallUseCase = moveBallUseCase;
         this.updateBallDirectionUseCase = updateBallDirectionUseCase;
         this.ballMovedHandler = ballMovedHandler;
         this.ballDirectionUpdatedHandler = ballDirectionUpdatedHandler;
-        this.playerScoredHandler = playerScoredHandler;
     }
 
     private void OnEnable()
     {
         this.ballMovedHandler.BallMoved += OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
-        this.playerScoredHandler.PlayerScored += OnPlayerScored;
     }
 
     private void OnDisable()
     {
         this.ballMovedHandler.BallMoved -= OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
-        this.playerScoredHandler.PlayerScored -= OnPlayerScored;
     }
 
     public void Move()
@@ -113,10 +108,5 @@ public class BallController : NetworkBehaviour
     {
         this.ballDirection = new Vector2(ballDirectionUpdatedDomainEvent.NewDirection.X, ballDirectionUpdatedDomainEvent.NewDirection.Y);
         this.CurrentBallSpeed = ballDirectionUpdatedDomainEvent.NewSpeed;
-    }
-
-    private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
-    {
-        this.GoalPassed(playerScoredDomainEvent.PlayerType);
     }
 }

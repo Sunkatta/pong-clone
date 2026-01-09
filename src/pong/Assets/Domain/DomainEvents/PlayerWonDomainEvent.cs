@@ -1,12 +1,18 @@
 public class PlayerWonDomainEvent : IDomainEvent
 {
-    public PlayerWonDomainEvent(string winnerPlayerId, PlayerType winnerPlayerType)
+    public PlayerWonDomainEvent(string winnerPlayerId, string winnerPlayerUsername, string loserPlayerId, string loserPlayerUsername)
     {
         this.WinnerPlayerId = winnerPlayerId;
-        this.WinnerPlayerType = winnerPlayerType;
+        this.WinnerPlayerUsername = winnerPlayerUsername;
+        this.LoserPlayerId = loserPlayerId;
+        this.LoserPlayerUsername = loserPlayerUsername;
     }
 
     public string WinnerPlayerId { get; }
 
-    public PlayerType WinnerPlayerType { get; }
+    public string WinnerPlayerUsername { get; }
+
+    public string LoserPlayerId { get; }
+
+    public string LoserPlayerUsername { get; }
 }

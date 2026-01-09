@@ -106,7 +106,7 @@ public class GameAggregate : Entity, IAggregateRoot
 
             if (this.Player1.Score == this.TargetScore)
             {
-                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player1.Id, this.Player1.PlayerType));
+                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player1.Id, this.Player1.Username, this.Player2.Id, this.Player2.Username));
                 return;
             }
 
@@ -123,7 +123,7 @@ public class GameAggregate : Entity, IAggregateRoot
 
             if (this.Player2.Score == this.TargetScore)
             {
-                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player2.Id, this.Player2.PlayerType));
+                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player2.Id, this.Player2.Username, this.Player1.Id, this.Player1.Username));
                 return;
             }
 

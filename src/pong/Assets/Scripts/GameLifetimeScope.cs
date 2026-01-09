@@ -41,5 +41,6 @@ public class GameLifetimeScope : LifetimeScope
 
         // Presentation
         builder.RegisterComponentInHierarchy<MainMenuController>();
+        builder.RegisterComponentInHierarchy<InGameHudController>();
     }
 }
