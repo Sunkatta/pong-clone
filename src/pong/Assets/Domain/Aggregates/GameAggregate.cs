@@ -8,7 +8,8 @@ public class GameAggregate : Entity, IAggregateRoot
         BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
-        float paddleLength)
+        float paddleLength,
+        int targetScore)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -20,6 +21,11 @@ public class GameAggregate : Entity, IAggregateRoot
         this.Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player 1 cannot be null");
         this.Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player 2 cannot be null");
         this.Ball = ball ?? throw new ArgumentNullException(nameof(ball), "Ball cannot be null");
+
+        if (paddleSpeed <= 0)
+        {
+            throw new ArgumentException("Paddle speed cannot be less than or equal to 0");
+        }
         
         this.PaddleSpeed = paddleSpeed;
 
@@ -30,6 +36,13 @@ public class GameAggregate : Entity, IAggregateRoot
 
         this.PaddleLength = paddleLength;
 
+        if (targetScore <= 0)
+        {
+            throw new ArgumentException("Target score cannot be less than or equal to 0");
+        }
+
+        this.TargetScore = targetScore;
+
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
     }
 
@@ -38,8 +51,9 @@ public class GameAggregate : Entity, IAggregateRoot
         BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
-        float paddleLength)
-        : this(Guid.NewGuid().ToString(), player1, player2, ball, gameFieldValueObject, paddleSpeed, paddleLength)
+        float paddleLength,
+        int targetScore)
+        : this(Guid.NewGuid().ToString(), player1, player2, ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore)
     {
     }
 
@@ -54,6 +68,8 @@ public class GameAggregate : Entity, IAggregateRoot
     public float PaddleSpeed { get; }
 
     public float PaddleLength { get; }
+
+    public int TargetScore { get; }
 
     public GameFieldValueObject GameFieldValueObject { get; }
 
@@ -85,14 +101,34 @@ public class GameAggregate : Entity, IAggregateRoot
         if (newPosition.X > this.GameFieldValueObject.TopRightCornerPosition.X)
         {
             // Player 1 (left) scored.
+            this.Player1.ScorePoint();
+            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player1, this.Player1.Score));
+
+            if (this.Player1.Score == this.TargetScore)
+            {
+                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player1.Id, this.Player1.PlayerType));
+                return;
+            }
+
             this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
+            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
             return;
         }
 
         if (newPosition.X < this.GameFieldValueObject.TopLeftCornerPosition.X)
         {
             // Player 2 (right) scored.
+            this.Player2.ScorePoint();
+            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player2, this.Player2.Score));
+
+            if (this.Player2.Score == this.TargetScore)
+            {
+                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player2.Id, this.Player2.PlayerType));
+                return;
+            }
+
             this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
+            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
             return;
         }
 

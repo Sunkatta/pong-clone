@@ -26,7 +26,8 @@ public class CreateGameUseCase : ICreateGameUseCase
             ballEntity,
             gameFieldValueObject,
             createGameCommand.PaddleSpeed,
-            createGameCommand.PaddleLength);
+            createGameCommand.PaddleLength,
+            createGameCommand.TargetScore);
 
         this.gameService.Create(gameAggregate);
     }

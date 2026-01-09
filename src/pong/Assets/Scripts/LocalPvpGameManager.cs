@@ -6,9 +6,11 @@ using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
+[RequireComponent(typeof(AudioSource))]
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
     private IObjectResolver resolver;
+    private PlayerWonDomainEventHandler playerWonDomainEventHandler;
 
     public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
@@ -43,9 +45,10 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     [Inject]
-    public void Construct(IObjectResolver resolver)
+    public void Construct(IObjectResolver resolver, PlayerWonDomainEventHandler playerWonDomainEventHandler)
     {
         this.resolver = resolver;
+        this.playerWonDomainEventHandler = playerWonDomainEventHandler;
     }
 
     public void BeginGame()
@@ -102,24 +105,24 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             ScoreChanged(this.Player2Score, PlayerType.Player2);
         }
 
-        if (this.Player1Score == targetScore || this.Player2Score == targetScore)
-        {
-            var winnerType = this.Player1Score == targetScore ? PlayerType.Player1 : PlayerType.Player2;
-            var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
-            var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
+        //if (this.Player1Score == targetScore || this.Player2Score == targetScore)
+        //{
+        //    var winnerType = this.Player1Score == targetScore ? PlayerType.Player1 : PlayerType.Player2;
+        //    var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
+        //    var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
 
-            Destroy(this.ball);
-            this.EndGame(winnerPlayer.Username, loserPlayer.Username);
+        //    Destroy(this.ball);
+        //    this.EndGame(winnerPlayer.Username, loserPlayer.Username);
 
-            return;
-        }
+        //    return;
+        //}
 
         this.SetInitialGameState();
     }
 
     private void Start()
     {
-        this.goalSound = GetComponent<AudioSource>();
+        this.goalSound = this.GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
     }
 
@@ -159,6 +162,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         ScoreChanged(0, PlayerType.Player2);
 
         MainMenuLoaded();
+        this.playerWonDomainEventHandler.PlayerWon -= OnPlayerWon;
 
         Destroy(this.gameObject);
     }
@@ -177,6 +181,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.ballController = this.ball.GetComponent<BallController>();
         this.ballController.BallHit += this.OnBallHit;
         this.ballController.GoalPassed += this.OnPlayerScored;
+        this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
         PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
         this.SetInitialGameState();
@@ -201,6 +206,15 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         {
             return new Vector2(UnityEngine.Random.value < 0.5 ? -1 : 1, UnityEngine.Random.Range(-1f, 1f));
         }
+    }
+
+    private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)
+    {
+        var winnerPlayer = this.players.First(player => player.PlayerType == playerWonDomainEvent.WinnerPlayerType);
+        var loserPlayer = this.players.First(player => player.PlayerType != playerWonDomainEvent.WinnerPlayerType);
+
+        Destroy(this.ball);
+        this.EndGame(winnerPlayer.Username, loserPlayer.Username);
     }
 
     private void GenerateCollidersAcrossScreen()

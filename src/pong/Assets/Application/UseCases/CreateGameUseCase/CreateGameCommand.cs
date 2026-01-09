@@ -10,7 +10,8 @@ public class CreateGameCommand
         (float x, float y) topRightCornerPosition,
         (float x, float y) topLeftCornerPosition,
         float paddleSped,
-        float paddleLength)
+        float paddleLength,
+        int targetScore)
     {
         this.GameId = gameId;
         this.Player1Id = player1Id;
@@ -23,6 +24,7 @@ public class CreateGameCommand
         this.TopLeftCornerPosition = topLeftCornerPosition;
         this.PaddleSpeed = paddleSped;
         this.PaddleLength = paddleLength;
+        this.TargetScore = targetScore;
     }
 
     public string GameId { get; }
@@ -46,4 +48,6 @@ public class CreateGameCommand
     public float PaddleSpeed { get; }
 
     public float PaddleLength { get; }
+
+    public int TargetScore { get; }
 }

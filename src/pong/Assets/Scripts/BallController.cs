@@ -3,12 +3,14 @@ using Unity.Netcode;
 using UnityEngine;
 using VContainer;
 
+[RequireComponent(typeof(AudioSource))]
 public class BallController : NetworkBehaviour
 {
     private IMoveBallUseCase moveBallUseCase;
     private IUpdateBallDirectionUseCase updateBallDirectionUseCase;
     private BallMovedDomainEventHandler ballMovedHandler;
     private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
+    private PlayerScoredDomainEventHandler playerScoredHandler;
 
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
@@ -25,30 +27,34 @@ public class BallController : NetworkBehaviour
     public void Construct(IMoveBallUseCase moveBallUseCase,
         IUpdateBallDirectionUseCase updateBallDirectionUseCase,
         BallMovedDomainEventHandler ballMovedHandler,
-        BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler) 
+        BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler,
+        PlayerScoredDomainEventHandler playerScoredHandler) 
     {
         this.moveBallUseCase = moveBallUseCase;
         this.updateBallDirectionUseCase = updateBallDirectionUseCase;
         this.ballMovedHandler = ballMovedHandler;
         this.ballDirectionUpdatedHandler = ballDirectionUpdatedHandler;
+        this.playerScoredHandler = playerScoredHandler;
     }
 
     private void OnEnable()
     {
         this.ballMovedHandler.BallMoved += OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
+        this.playerScoredHandler.PlayerScored += OnPlayerScored;
     }
 
     private void OnDisable()
     {
         this.ballMovedHandler.BallMoved -= OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
+        this.playerScoredHandler.PlayerScored -= OnPlayerScored;
     }
 
     public void Move()
     {
-        var newPosition = this.CurrentBallSpeed * Time.deltaTime * (Vector3)this.ballDirection;
-        this.moveBallUseCase.Execute(new MoveBallCommand("1", (newPosition.x, newPosition.y)));
+        Vector3 nextPosition = this.transform.position + (Vector3)(this.CurrentBallSpeed * Time.deltaTime * this.ballDirection);
+        this.moveBallUseCase.Execute(new MoveBallCommand("1", (nextPosition.x, nextPosition.y)));
     }
 
     public void UpdateSpeed(float newSpeed)
@@ -75,18 +81,6 @@ public class BallController : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        //if (collision.gameObject.CompareTag(Constants.RightGoal))
-        //{
-        //    this.GoalPassed(PlayerType.Player1);
-        //    return;
-        //}
-
-        //if (collision.gameObject.CompareTag(Constants.LeftGoal))
-        //{
-        //    this.GoalPassed(PlayerType.Player2);
-        //    return;
-        //}
-
         this.bounceSound.Play();
 
         ContactPoint2D contact = collision.GetContact(0);
@@ -96,7 +90,6 @@ public class BallController : NetworkBehaviour
 
         if (collision.gameObject.CompareTag(Constants.Player))
         {
-            // this.BallHit();
             isHitByPlayer = true;
         }
 
@@ -113,12 +106,17 @@ public class BallController : NetworkBehaviour
 
     private void OnBallMoved(BallMovedDomainEvent ballMovedDomainEvent)
     {
-        this.transform.position += new Vector3(ballMovedDomainEvent.NewPosition.X, ballMovedDomainEvent.NewPosition.Y);
+        this.transform.position = new Vector3(ballMovedDomainEvent.NewPosition.X, ballMovedDomainEvent.NewPosition.Y, this.transform.position.z);
     }
 
     private void OnBallDirectionUpdated(BallDirectionUpdatedDomainEvent ballDirectionUpdatedDomainEvent)
     {
         this.ballDirection = new Vector2(ballDirectionUpdatedDomainEvent.NewDirection.X, ballDirectionUpdatedDomainEvent.NewDirection.Y);
         this.CurrentBallSpeed = ballDirectionUpdatedDomainEvent.NewSpeed;
+    }
+
+    private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
+    {
+        this.GoalPassed(playerScoredDomainEvent.PlayerType);
     }
 }
