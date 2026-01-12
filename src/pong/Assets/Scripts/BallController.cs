@@ -8,6 +8,8 @@ public class BallController : NetworkBehaviour
 {
     private IMoveBallUseCase moveBallUseCase;
     private IUpdateBallDirectionUseCase updateBallDirectionUseCase;
+    private IGetBallDirectionQuery getBallDirectionQuery;
+    private PlayerScoredDomainEventHandler playerScoredHandler;
     private BallMovedDomainEventHandler ballMovedHandler;
     private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
 
@@ -25,11 +27,15 @@ public class BallController : NetworkBehaviour
     [Inject]
     public void Construct(IMoveBallUseCase moveBallUseCase,
         IUpdateBallDirectionUseCase updateBallDirectionUseCase,
+        IGetBallDirectionQuery getBallDirectionQuery,
+        PlayerScoredDomainEventHandler playerScoredHandler,
         BallMovedDomainEventHandler ballMovedHandler,
         BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler) 
     {
         this.moveBallUseCase = moveBallUseCase;
         this.updateBallDirectionUseCase = updateBallDirectionUseCase;
+        this.getBallDirectionQuery = getBallDirectionQuery;
+        this.playerScoredHandler = playerScoredHandler;
         this.ballMovedHandler = ballMovedHandler;
         this.ballDirectionUpdatedHandler = ballDirectionUpdatedHandler;
     }
@@ -38,6 +44,9 @@ public class BallController : NetworkBehaviour
     {
         this.ballMovedHandler.BallMoved += OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
+        this.playerScoredHandler.PlayerScored += OnPlayerScored;
+        (float x, float y) = this.getBallDirectionQuery.Execute("1", "1");
+        this.ballDirection = new Vector2(x, y);
     }
 
     private void OnDisable()
@@ -108,5 +117,10 @@ public class BallController : NetworkBehaviour
     {
         this.ballDirection = new Vector2(ballDirectionUpdatedDomainEvent.NewDirection.X, ballDirectionUpdatedDomainEvent.NewDirection.Y);
         this.CurrentBallSpeed = ballDirectionUpdatedDomainEvent.NewSpeed;
+    }
+
+    private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
+    {
+        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand("1", playerScoredDomainEvent.PlayerType));
     }
 }

@@ -31,7 +31,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private bool isMatchRunning;
     
-    private PlayerType? latestScorer;
     private AudioSource goalSound;
     private GameObject ball;
     private BallController ballController;
@@ -73,9 +72,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
     {
         this.goalSound.Play();
-        this.latestScorer = playerScoredDomainEvent.PlayerType;
-
-        this.SetInitialGameState();
     }
 
     private void Start()
@@ -141,28 +137,7 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
         PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
-        this.SetInitialGameState();
         this.isMatchRunning = true;
-    }
-
-    private void SetInitialGameState()
-    {
-        this.ballController.ResetBall();
-        this.ballController.UpdateBallDirection(this.GetBallDirection());
-    }
-
-    private Vector2 GetBallDirection()
-    {
-        if (this.latestScorer != null)
-        {
-            var isPlayer1 = this.latestScorer == PlayerType.Player1;
-
-            return new Vector2(isPlayer1 ? 1 : -1, UnityEngine.Random.Range(-1f, 1f));
-        }
-        else
-        {
-            return new Vector2(UnityEngine.Random.value < 0.5 ? -1 : 1, UnityEngine.Random.Range(-1f, 1f));
-        }
     }
 
     private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)

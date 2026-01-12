@@ -139,4 +139,14 @@ public class GameAggregate : Entity, IAggregateRoot
     {
         this.Ball.UpdateDirection(newDirection, hitByPlayer);
     }
+
+    public Position2DValueObject GetBallDirection(string ballId)
+    {
+        if (this.Ball.Id != ballId)
+        {
+            throw new InvalidOperationException($"Cannot find ball with Id {ballId}");
+        }
+
+        return this.Ball.GetDirection();
+    }
 }

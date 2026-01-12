@@ -9,6 +9,8 @@ public class BallEntity : Entity
             throw new ArgumentNullException(nameof(id), "Id cannot be null, empty or whitespace");
         }
 
+        this.Id = id;
+
         if (initialSpeed <= 0)
         {
             throw new ArgumentException("Initial ball speed cannot be less than or equal to 0");
@@ -60,5 +62,10 @@ public class BallEntity : Entity
     public void UpdateSpeed(float newSpeed)
     {
         this.CurrentSpeed = newSpeed;
+    }
+
+    public Position2DValueObject GetDirection()
+    {
+        return this.Direction;
     }
 }
