@@ -1,3 +1,4 @@
+using System;
 using VContainer;
 using VContainer.Unity;
 
@@ -5,9 +6,16 @@ public class GameLifetimeScope : LifetimeScope
 {
     protected override void Configure(IContainerBuilder builder)
     {
+        builder.RegisterInstance(new Random());
+
         // Application Use Cases
         builder.Register<IMovePlayerUseCase, MovePlayerUseCase>(Lifetime.Transient);
         builder.Register<ICreateGameUseCase, CreateGameUseCase>(Lifetime.Transient);
+        builder.Register<IMoveBallUseCase, MoveBallUseCase>(Lifetime.Transient);
+        builder.Register<IUpdateBallDirectionUseCase, UpdateBallDirectionUseCase>(Lifetime.Transient);
+
+        // Application Queries
+        builder.Register<IGetBallDirectionQuery, GetBallDirectionQuery>(Lifetime.Transient);
 
         // Application Boundaries
         builder.Register<IDomainEventDispatcherService, DomainEventDispatcherService>(Lifetime.Singleton);
@@ -21,7 +29,24 @@ public class GameLifetimeScope : LifetimeScope
             .AsSelf()
             .AsImplementedInterfaces();
 
+        builder.Register<BallMovedDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
+        builder.Register<BallDirectionUpdatedDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
+        builder.Register<PlayerScoredDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
+        builder.Register<PlayerWonDomainEventHandler>(Lifetime.Singleton)
+            .AsSelf()
+            .AsImplementedInterfaces();
+
         // Presentation
         builder.RegisterComponentInHierarchy<MainMenuController>();
+        builder.RegisterComponentInHierarchy<InGameHudController>();
     }
 }

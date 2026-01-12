@@ -7,13 +7,33 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
 
     // The drawback of this is that we need to inject each
     // IEnumerable<IDomainEventHandler<{DomainEvent}>> separately.
-    public DomainEventDispatcherService(IEnumerable<IDomainEventHandler<PlayerMovedDomainEvent>> playerMovedHandlers)
+    public DomainEventDispatcherService(IEnumerable<IDomainEventHandler<PlayerMovedDomainEvent>> playerMovedHandlers,
+        IEnumerable<IDomainEventHandler<BallMovedDomainEvent>> ballMovedHandlers,
+        IEnumerable<IDomainEventHandler<BallDirectionUpdatedDomainEvent>> ballDirectionUpdatedHandlers,
+        IEnumerable<IDomainEventHandler<PlayerScoredDomainEvent>> playerScoredHandlers,
+        IEnumerable<IDomainEventHandler<PlayerWonDomainEvent>> playerWonHandlers)
     {
-        domainEventHandlers = new Dictionary<Type, List<object>>
+        this.domainEventHandlers = new Dictionary<Type, List<object>>
         {
             {
                 typeof(PlayerMovedDomainEvent),
                 new List<object>(playerMovedHandlers)
+            },
+            {
+                typeof(BallMovedDomainEvent),
+                new List<object>(ballMovedHandlers)
+            },
+            {
+                typeof(BallDirectionUpdatedDomainEvent),
+                new List<object>(ballDirectionUpdatedHandlers)
+            },
+            {
+                typeof(PlayerScoredDomainEvent),
+                new List<object>(playerScoredHandlers)
+            },
+            {
+                typeof(PlayerWonDomainEvent),
+                new List<object>(playerWonHandlers)
             }
         };
     }

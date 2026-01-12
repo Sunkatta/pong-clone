@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using VContainer;
 
+[RequireComponent(typeof(AudioSource))]
 public class InGameHudController : MonoBehaviour
 {
+    private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
+
     [SerializeField]
     private RectTransform mainMenuPanel;
 
@@ -42,6 +46,12 @@ public class InGameHudController : MonoBehaviour
 
     private float remainingCountdownTime;
 
+    [Inject]
+    public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler)
+    {
+        this.playerScoredDomainEventHandler = playerScoredDomainEventHandler;
+    }
+
     public void OnUiPrepared(List<PlayerEntity> players)
     {
         this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
@@ -56,11 +66,22 @@ public class InGameHudController : MonoBehaviour
     {
         OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
         OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.ScoreChanged += this.OnScoreChanged;
         LocalPvpGameManager.MatchEnded += this.OnGameEnded;
         LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
 
         this.inGameAudioSource = this.GetComponent<AudioSource>();
+    }
+
+    private void OnEnable()
+    {
+        this.playerScoredDomainEventHandler.PlayerScored += this.OnScoreChanged;
+        this.player1ScoreText.text = "0";
+        this.player2ScoreText.text = "0";
+    }
+
+    private void OnDisable()
+    {
+        this.playerScoredDomainEventHandler.PlayerScored -= this.OnScoreChanged;
     }
 
     private void Update()
@@ -93,6 +114,18 @@ public class InGameHudController : MonoBehaviour
         else
         {
             this.player2ScoreText.text = score.ToString();
+        }
+    }
+
+    private void OnScoreChanged(PlayerScoredDomainEvent playerScoredDomainEvent)
+    {
+        if (playerScoredDomainEvent.PlayerType == PlayerType.Player1)
+        {
+            this.player1ScoreText.text = playerScoredDomainEvent.PlayerNewScore.ToString();
+        }
+        else
+        {
+            this.player2ScoreText.text = playerScoredDomainEvent.PlayerNewScore.ToString();
         }
     }
 

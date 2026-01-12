@@ -6,14 +6,14 @@ public class PlayerEntity : Entity
     {
         if (string.IsNullOrWhiteSpace(id))
         {
-            throw new ArgumentNullException("Id cannot be null, empty or whitespace");
+            throw new ArgumentNullException(nameof(id), "Id cannot be null, empty or whitespace");
         }
 
         this.Id = id;
         
         if (string.IsNullOrWhiteSpace(username))
         {
-            throw new ArgumentNullException("Username cannot be null, empty or whitespace");
+            throw new ArgumentNullException(nameof(username), "Username cannot be null, empty or whitespace");
         }
         
         this.Username = username;

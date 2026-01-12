@@ -96,12 +96,13 @@ public class MainMenuController : MonoBehaviour
             player1.Username,
             player2.Id,
             player2.Username,
-            (-10, -5),
-            (10, -5),
-            (10, 5),
-            (-10, 5),
+            (-9, -5),
+            (9, -5),
+            (9, 5),
+            (-9, 5),
             7,
-            2);
+            2,
+            11);
 
         this.createGameUseCase.Execute(createGameCommand);
 

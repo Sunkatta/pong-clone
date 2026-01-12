@@ -1,24 +1,21 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
+[RequireComponent(typeof(AudioSource))]
 public class LocalPvpGameManager : MonoBehaviour, IGameManager
 {
     private IObjectResolver resolver;
+    private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
+    private PlayerWonDomainEventHandler playerWonDomainEventHandler;
 
     public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action MainMenuLoaded;
-    public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<GameOverStatistics> MatchEnded;
-
-    public int Player1Score { get; set; }
-
-    public int Player2Score { get; set; }
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -34,7 +31,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private bool isMatchRunning;
     
-    private PlayerType? latestScorer;
     private AudioSource goalSound;
     private GameObject ball;
     private BallController ballController;
@@ -43,9 +39,13 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     [Inject]
-    public void Construct(IObjectResolver resolver)
+    public void Construct(IObjectResolver resolver,
+        PlayerScoredDomainEventHandler playerScoredDomainEventHandler,
+        PlayerWonDomainEventHandler playerWonDomainEventHandler)
     {
         this.resolver = resolver;
+        this.playerScoredDomainEventHandler = playerScoredDomainEventHandler;
+        this.playerWonDomainEventHandler = playerWonDomainEventHandler;
     }
 
     public void BeginGame()
@@ -69,57 +69,14 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         throw new NotImplementedException();
     }
 
-    private void EndGame(string winnerName, string loserName)
-    {
-        this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
-    }
-
-    private void OnBallHit()
-    {
-        if (this.ballController.CurrentBallSpeed >= this.maxBallSpeed)
-        {
-            return;
-        }
-
-        var newSpeed = this.ballController.CurrentBallSpeed + 1;
-        this.ballController.UpdateSpeed(newSpeed);
-    }
-
-    private void OnPlayerScored(PlayerType scorer)
+    private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
     {
         this.goalSound.Play();
-
-        this.latestScorer = scorer;
-
-        if (scorer == PlayerType.Player1)
-        {
-            this.Player1Score++;
-            ScoreChanged(this.Player1Score, PlayerType.Player1);
-        }
-        else
-        {
-            this.Player2Score++;
-            ScoreChanged(this.Player2Score, PlayerType.Player2);
-        }
-
-        if (this.Player1Score == targetScore || this.Player2Score == targetScore)
-        {
-            var winnerType = this.Player1Score == targetScore ? PlayerType.Player1 : PlayerType.Player2;
-            var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
-            var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
-
-            Destroy(this.ball);
-            this.EndGame(winnerPlayer.Username, loserPlayer.Username);
-
-            return;
-        }
-
-        this.SetInitialGameState();
     }
 
     private void Start()
     {
-        this.goalSound = GetComponent<AudioSource>();
+        this.goalSound = this.GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
     }
 
@@ -133,6 +90,8 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
     {
+        Destroy(this.ball);
+
         this.isMatchRunning = false;
 
         var gameOverStatistics = new GameOverStatistics
@@ -155,10 +114,9 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             Destroy(edge);
         }
 
-        ScoreChanged(0, PlayerType.Player1);
-        ScoreChanged(0, PlayerType.Player2);
-
         MainMenuLoaded();
+        this.playerWonDomainEventHandler.PlayerWon -= OnPlayerWon;
+        this.playerScoredDomainEventHandler.PlayerScored -= OnPlayerScored;
 
         Destroy(this.gameObject);
     }
@@ -173,79 +131,86 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     private IEnumerator BeginGameCouroutine()
     {
-        this.ball = Instantiate(this.ballPrefab);
+        this.ball = resolver.Instantiate(this.ballPrefab);
         this.ballController = this.ball.GetComponent<BallController>();
-        this.ballController.BallHit += this.OnBallHit;
-        this.ballController.GoalPassed += this.OnPlayerScored;
+        this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
+        this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
         PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
-        this.SetInitialGameState();
         this.isMatchRunning = true;
     }
 
-    private void SetInitialGameState()
+    private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)
     {
-        this.ballController.ResetBall();
-        this.ballController.UpdateBallDirection(this.GetBallDirection());
-    }
-
-    private Vector2 GetBallDirection()
-    {
-        if (this.latestScorer != null)
-        {
-            var isPlayer1 = this.latestScorer == PlayerType.Player1;
-
-            return new Vector2(isPlayer1 ? 1 : -1, UnityEngine.Random.Range(-1f, 1f));
-        }
-        else
-        {
-            return new Vector2(UnityEngine.Random.value < 0.5 ? -1 : 1, UnityEngine.Random.Range(-1f, 1f));
-        }
+        this.StartCoroutine(this.MatchEndedCouroutine(playerWonDomainEvent.WinnerPlayerUsername, playerWonDomainEvent.LoserPlayerUsername));
     }
 
     private void GenerateCollidersAcrossScreen()
     {
         Vector2 lDCorner = Camera.main.ViewportToWorldPoint(new Vector3(0, 0f, Camera.main.nearClipPlane));
         Vector2 rUCorner = Camera.main.ViewportToWorldPoint(new Vector3(1f, 1f, Camera.main.nearClipPlane));
-        Vector2[] colliderpoints;
 
-        var upperEdgeGameObject = new GameObject(Constants.UpperEdge);
-        upperEdgeGameObject.tag = Constants.UpperEdge;
-        EdgeCollider2D upperEdge = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = upperEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, rUCorner.y);
-        upperEdge.points = colliderpoints;
+        var upperEdgeGameObject = new GameObject(Constants.UpperEdge)
+        {
+            tag = Constants.UpperEdge
+        };
+
+        Rigidbody2D upperEdgeRigidbody = upperEdgeGameObject.AddComponent<Rigidbody2D>();
+        upperEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D upperEdgeCollider = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
+        upperEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(upperEdgeGameObject);
 
-        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge);
-        lowerEdgeGameObject.tag = Constants.LowerEdge;
-        EdgeCollider2D lowerEdge = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = lowerEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        lowerEdge.points = colliderpoints;
+        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge)
+        {
+            tag = Constants.LowerEdge
+        };
+
+        Rigidbody2D lowerEdgeRigidbody = lowerEdgeGameObject.AddComponent<Rigidbody2D>();
+        lowerEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D lowerEdgeCollider = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
+        lowerEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(lowerEdgeGameObject);
 
-        var leftGoalGameObject = new GameObject(Constants.LeftGoal);
-        leftGoalGameObject.tag = Constants.LeftGoal;
+        var leftGoalGameObject = new GameObject(Constants.LeftGoal)
+        {
+            tag = Constants.LeftGoal
+        };
+
         EdgeCollider2D leftGoalCollider = leftGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = leftGoalCollider.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
-        leftGoalCollider.points = colliderpoints;
+        leftGoalCollider.isTrigger = true;
+        leftGoalCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(lDCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(leftGoalGameObject);
 
-        var rightGoalGameObject = new GameObject(Constants.RightGoal);
-        rightGoalGameObject.tag = Constants.RightGoal;
+        var rightGoalGameObject = new GameObject(Constants.RightGoal)
+        {
+            tag = Constants.RightGoal
+        };
+
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = rightGoalCollider.points;
-        colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        rightGoalCollider.points = colliderpoints;
+        rightGoalCollider.isTrigger = true;
+        rightGoalCollider.points = new Vector2[]
+        {
+            new Vector2(rUCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(rightGoalGameObject);
     }
