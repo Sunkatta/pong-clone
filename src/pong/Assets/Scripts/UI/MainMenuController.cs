@@ -85,14 +85,13 @@ public class MainMenuController : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        var player1 = new PlayerEntity(Guid.NewGuid().ToString(), "Player 1", PlayerType.Player1);
+        var player1 = new PlayerEntity("Player 1", PlayerType.Player1);
         this.gameManager.OnPlayerJoined(player1);
 
-        var player2 = new PlayerEntity(Guid.NewGuid().ToString(), "Player 2", PlayerType.Player2);
+        var player2 = new PlayerEntity("Player 2", PlayerType.Player2);
         this.gameManager.OnPlayerJoined(player2);
 
-        var createGameCommand = new CreateGameCommand("1",
-            player1.Id,
+        var createGameCommand = new CreateGameCommand(player1.Id,
             player1.Username,
             player2.Id,
             player2.Username,
@@ -104,8 +103,9 @@ public class MainMenuController : MonoBehaviour
             2,
             11);
 
-        this.createGameUseCase.Execute(createGameCommand);
-
+        var gameModel = this.createGameUseCase.Execute(createGameCommand);
+        GameManager.Instance.SetGameId(gameModel.GameId);
+        GameManager.Instance.SetBallId(gameModel.BallId);
         this.gameManager.BeginGame();
 
         this.gameObject.SetActive(false);

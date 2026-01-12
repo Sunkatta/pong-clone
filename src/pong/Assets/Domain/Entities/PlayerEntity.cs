@@ -20,6 +20,11 @@ public class PlayerEntity : Entity
         this.PlayerType = playerType;
     }
 
+    public PlayerEntity(string username, PlayerType playerType)
+        : this(Guid.NewGuid().ToString(), username, playerType)
+    {
+    }
+
     public string Id { get; }
 
     public string Username { get; }

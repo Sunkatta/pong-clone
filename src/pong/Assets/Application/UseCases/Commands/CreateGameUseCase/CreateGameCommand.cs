@@ -1,7 +1,6 @@
 public class CreateGameCommand
 {
-    public CreateGameCommand(string gameId,
-        string player1Id,
+    public CreateGameCommand(string player1Id,
         string player1Username,
         string player2Id,
         string player2Username,
@@ -13,7 +12,6 @@ public class CreateGameCommand
         float paddleLength,
         int targetScore)
     {
-        this.GameId = gameId;
         this.Player1Id = player1Id;
         this.Player1Username = player1Username;
         this.Player2Id = player2Id;
@@ -26,8 +24,6 @@ public class CreateGameCommand
         this.PaddleLength = paddleLength;
         this.TargetScore = targetScore;
     }
-
-    public string GameId { get; }
 
     public string Player1Id { get; }
 

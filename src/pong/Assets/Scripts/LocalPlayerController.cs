@@ -54,7 +54,7 @@ public class LocalPlayerController : MonoBehaviour
         }
 
         float newY = this.rb.position.y + inputAxis * speed * Time.fixedDeltaTime;
-        var movePlayerCommand = new MovePlayerCommand("1", Id, newY);
+        var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, Id, newY);
         movePlayerUseCase.Execute(movePlayerCommand);
     }
 

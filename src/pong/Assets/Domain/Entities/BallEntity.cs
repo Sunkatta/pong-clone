@@ -30,6 +30,14 @@ public class BallEntity : Entity
         this.Position = initialPosition;
     }
 
+    public BallEntity(float initialSpeed,
+        float maxSpeed,
+        Position2DValueObject initialDirection,
+        Position2DValueObject initialPosition)
+        : this(Guid.NewGuid().ToString(), initialSpeed, maxSpeed, initialDirection, initialPosition)
+    {
+    }
+
     public string Id { get; }
 
     public float InitialSpeed { get; }

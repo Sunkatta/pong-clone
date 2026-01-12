@@ -1,4 +1,4 @@
 public interface ICreateGameUseCase
 {
-    void Execute(CreateGameCommand createGameCommand);
+    GameModel Execute(CreateGameCommand createGameCommand);
 }

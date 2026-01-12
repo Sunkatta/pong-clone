@@ -45,7 +45,7 @@ public class BallController : NetworkBehaviour
         this.ballMovedHandler.BallMoved += OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
         this.playerScoredHandler.PlayerScored += OnPlayerScored;
-        (float x, float y) = this.getBallDirectionQuery.Execute("1", "1");
+        (float x, float y) = this.getBallDirectionQuery.Execute(GameManager.Instance.CurrentGameId, GameManager.Instance.CurrentBallId);
         this.ballDirection = new Vector2(x, y);
     }
 
@@ -58,7 +58,7 @@ public class BallController : NetworkBehaviour
     public void Move()
     {
         Vector3 nextPosition = this.transform.position + (Vector3)(this.CurrentBallSpeed * Time.deltaTime * this.ballDirection);
-        this.moveBallUseCase.Execute(new MoveBallCommand("1", (nextPosition.x, nextPosition.y)));
+        this.moveBallUseCase.Execute(new MoveBallCommand(GameManager.Instance.CurrentGameId, (nextPosition.x, nextPosition.y)));
     }
 
     public void UpdateSpeed(float newSpeed)
@@ -97,7 +97,7 @@ public class BallController : NetworkBehaviour
             isHitByPlayer = true;
         }
 
-        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand("1", (newDirection.x, newDirection.y), isHitByPlayer));
+        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand(GameManager.Instance.CurrentGameId, (newDirection.x, newDirection.y), isHitByPlayer));
     }
 
     private void OnDrawGizmosSelected()
@@ -121,6 +121,6 @@ public class BallController : NetworkBehaviour
 
     private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
     {
-        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand("1", playerScoredDomainEvent.PlayerType));
+        this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand(GameManager.Instance.CurrentGameId, playerScoredDomainEvent.PlayerType));
     }
 }
