@@ -21,5 +21,5 @@ public class UpdateBallDirectionCommand
 
     public bool IsHitByPlayer { get; }
 
-    public PlayerType? Scorer { get; set; }
+    public PlayerType? Scorer { get; }
 }
