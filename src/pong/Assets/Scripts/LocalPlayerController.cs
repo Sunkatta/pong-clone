@@ -11,9 +11,6 @@ public class LocalPlayerController : MonoBehaviour
 
     public string Id { get; set; }
 
-    [SerializeField]
-    private float speed;
-
     private Rigidbody2D rb;
     private float inputAxis;
 
@@ -53,7 +50,7 @@ public class LocalPlayerController : MonoBehaviour
             return;
         }
 
-        float newY = this.rb.position.y + inputAxis * speed * Time.fixedDeltaTime;
+        float newY = this.rb.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
         var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, Id, newY);
         movePlayerUseCase.Execute(movePlayerCommand);
     }

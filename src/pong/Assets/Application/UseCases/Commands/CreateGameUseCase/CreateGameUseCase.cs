@@ -21,7 +21,10 @@ public class CreateGameUseCase : ICreateGameUseCase
         // Randomise the ball direction on game start.
         var initialDirection = new Position2DValueObject(this.random.NextDouble() < 0.5 ? -1 : 1, (float)(this.random.NextDouble() * 2.0 - 1.0));
 
-        var ballEntity = new BallEntity(6, 15, initialDirection, new Position2DValueObject(0, 0));
+        var ballEntity = new BallEntity(createGameCommand.BallInitialSpeed,
+            createGameCommand.BallMaximumSpeed,
+            initialDirection,
+            new Position2DValueObject(0, 0));
 
         var gameFieldValueObject = new GameFieldValueObject(
             new Position2DValueObject(createGameCommand.BottomLeftCornerPosition.X, createGameCommand.BottomLeftCornerPosition.Y),

@@ -16,9 +16,6 @@ public class BallController : NetworkBehaviour
     public event Action<PlayerType> GoalPassed;
     public event Action BallHit;
 
-    [SerializeField]
-    private float initialBallSpeed;
-
     private AudioSource bounceSound;
     private Vector2 ballDirection;
 
@@ -73,14 +70,14 @@ public class BallController : NetworkBehaviour
 
     public void ResetBall()
     {
-        this.CurrentBallSpeed = this.initialBallSpeed;
+        this.CurrentBallSpeed = GameManager.Instance.BallInitialSpeed;
         this.transform.position = Vector3.zero;
     }
 
     private void Start()
     {
         this.bounceSound = this.GetComponent<AudioSource>();
-        this.CurrentBallSpeed = initialBallSpeed;
+        this.CurrentBallSpeed = GameManager.Instance.BallInitialSpeed;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

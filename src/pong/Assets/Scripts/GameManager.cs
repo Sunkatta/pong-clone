@@ -7,6 +7,26 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class GameManager : MonoBehaviour
 {
+    [SerializeField]
+    private float paddleSpeed;
+
+    [SerializeField]
+    private int targetScore;
+
+    [SerializeField]
+    private float ballInitialSpeed;
+
+    [SerializeField]
+    private float ballMaximumSpeed;
+
+    public float PaddleSpeed => paddleSpeed;
+
+    public int TargetScore => targetScore;
+
+    public float BallInitialSpeed => ballInitialSpeed;
+
+    public float BallMaximumSpeed => ballMaximumSpeed;
+    
     // Singleton instance
     public static GameManager Instance { get; private set; }
 

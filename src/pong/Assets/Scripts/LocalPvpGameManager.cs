@@ -23,12 +23,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     [SerializeField]
     private GameObject playerPrefab;
 
-    [SerializeField]
-    private float maxBallSpeed;
-
-    [SerializeField]
-    private int targetScore;
-
     private bool isMatchRunning;
     
     private AudioSource goalSound;

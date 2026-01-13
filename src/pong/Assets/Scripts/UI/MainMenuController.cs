@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -99,9 +98,11 @@ public class MainMenuController : MonoBehaviour
             (9, -5),
             (9, 5),
             (-9, 5),
-            7,
+            GameManager.Instance.PaddleSpeed,
             2,
-            11);
+            GameManager.Instance.TargetScore,
+            GameManager.Instance.BallInitialSpeed,
+            GameManager.Instance.BallMaximumSpeed);
 
         var gameModel = this.createGameUseCase.Execute(createGameCommand);
         GameManager.Instance.SetGameId(gameModel.GameId);

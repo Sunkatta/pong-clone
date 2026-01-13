@@ -8,9 +8,11 @@ public class CreateGameCommand
         (float x, float y) bottomRightCornerPosition,
         (float x, float y) topRightCornerPosition,
         (float x, float y) topLeftCornerPosition,
-        float paddleSped,
+        float paddleSpeed,
         float paddleLength,
-        int targetScore)
+        int targetScore,
+        float ballInitialSpeed,
+        float ballMaximumSpeed)
     {
         this.Player1Id = player1Id;
         this.Player1Username = player1Username;
@@ -20,9 +22,11 @@ public class CreateGameCommand
         this.BottomRightCornerPosition = bottomRightCornerPosition;
         this.TopRightCornerPosition = topRightCornerPosition;
         this.TopLeftCornerPosition = topLeftCornerPosition;
-        this.PaddleSpeed = paddleSped;
+        this.PaddleSpeed = paddleSpeed;
         this.PaddleLength = paddleLength;
         this.TargetScore = targetScore;
+        this.BallInitialSpeed = ballInitialSpeed;
+        this.BallMaximumSpeed = ballMaximumSpeed;
     }
 
     public string Player1Id { get; }
@@ -46,4 +50,8 @@ public class CreateGameCommand
     public float PaddleLength { get; }
 
     public int TargetScore { get; }
+
+    public float BallInitialSpeed { get; }
+
+    public float BallMaximumSpeed { get; }
 }
