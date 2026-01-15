@@ -2,7 +2,7 @@ using System;
 
 public class PlayerEntity : Entity
 {
-    public PlayerEntity(string id, string username, PlayerType playerType)
+    public PlayerEntity(string id, string username, PlayerType playerType = default)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -20,7 +20,7 @@ public class PlayerEntity : Entity
         this.PlayerType = playerType;
     }
 
-    public PlayerEntity(string username, PlayerType playerType)
+    public PlayerEntity(string username, PlayerType playerType = default)
         : this(Guid.NewGuid().ToString(), username, playerType)
     {
     }
@@ -29,13 +29,18 @@ public class PlayerEntity : Entity
 
     public string Username { get; }
 
-    public PlayerType PlayerType { get; }
+    public PlayerType PlayerType { get; private set; }
 
     public int Score { get; private set; }
 
     public Position2DValueObject PaddlePosition { get; private set; }
 
     public void ScorePoint() => this.Score++;
+
+    public void SetType(PlayerType playerType)
+    {
+        this.PlayerType = playerType;
+    }
 
     public void UpdatePosition(Position2DValueObject position)
     {

@@ -35,12 +35,6 @@ public class CreateGameUseCase : ICreateGameUseCase
             createGameCommand.PaddleLength,
             createGameCommand.TargetScore);
 
-        var player1Entity = new PlayerEntity(createGameCommand.Player1Id, createGameCommand.Player1Username, PlayerType.Player1);
-        gameAggregate.AddPlayer(player1Entity);
-
-        var player2Entity = new PlayerEntity(createGameCommand.Player2Id, createGameCommand.Player2Username, PlayerType.Player2);
-        gameAggregate.AddPlayer(player2Entity);
-
         var gameId = this.gameService.Create(gameAggregate);
         this.domainEventDispatcherService.Dispatch(gameAggregate);
 

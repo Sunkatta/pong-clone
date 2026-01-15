@@ -5820,7 +5820,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   paddleSpeed: 7
   targetScore: 11
-  ballInitialSpeed: 1
+  ballInitialSpeed: 6
   ballMaximumSpeed: 15
   playerPrefab: {fileID: 9164971107830190795, guid: 2456c79492699fa48a53cbe7ffc2aeaf, type: 3}
 --- !u!4 &1834313717

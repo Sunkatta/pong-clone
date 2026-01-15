@@ -79,6 +79,16 @@ public class GameAggregate : Entity, IAggregateRoot
             throw new InvalidOperationException("Limit of players already reached");
         }
 
+        if (this.players.Count == 0)
+        {
+            player.SetType(PlayerType.Player1);
+        }
+
+        if (this.players.Count == 1)
+        {
+            player.SetType(PlayerType.Player2);
+        }
+
         this.players.Add(player);
         this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id, player.Username, player.PlayerType));
     }
