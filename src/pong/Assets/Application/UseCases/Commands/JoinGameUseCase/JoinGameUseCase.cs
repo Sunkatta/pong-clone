@@ -1,17 +1,17 @@
 using System;
 
-public class JoinMatchUseCase : IJoinMatchUseCase
+public class JoinGameUseCase : IJoinGameUseCase
 {
     private readonly IGameService gameService;
     private readonly IDomainEventDispatcherService domainEventDispatcherService;
 
-    public JoinMatchUseCase(IGameService gameService, IDomainEventDispatcherService domainEventDispatcherService)
+    public JoinGameUseCase(IGameService gameService, IDomainEventDispatcherService domainEventDispatcherService)
     {
         this.gameService = gameService;
         this.domainEventDispatcherService = domainEventDispatcherService;
     }
 
-    public void Execute(JoinMatchCommand joinMatchCommand)
+    public void Execute(JoinGameCommand joinMatchCommand)
     {
         GameAggregate gameAggregate = this.gameService.GetById(joinMatchCommand.GameId)
             ?? throw new InvalidOperationException($"Game with Id {joinMatchCommand.GameId} not found");

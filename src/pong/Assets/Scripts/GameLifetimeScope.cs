@@ -13,7 +13,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<ICreateGameUseCase, CreateGameUseCase>(Lifetime.Transient);
         builder.Register<IMoveBallUseCase, MoveBallUseCase>(Lifetime.Transient);
         builder.Register<IUpdateBallDirectionUseCase, UpdateBallDirectionUseCase>(Lifetime.Transient);
-        builder.Register<IJoinMatchUseCase, JoinMatchUseCase>(Lifetime.Transient);
+        builder.Register<IJoinGameUseCase, JoinGameUseCase>(Lifetime.Transient);
 
         // Application Queries
         builder.Register<IGetBallDirectionQuery, GetBallDirectionQuery>(Lifetime.Transient);

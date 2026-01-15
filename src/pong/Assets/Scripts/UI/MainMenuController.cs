@@ -10,7 +10,7 @@ public class MainMenuController : MonoBehaviour
 {
     private IObjectResolver objectResolver;
     private ICreateGameUseCase createGameUseCase;
-    private IJoinMatchUseCase joinMatchUseCase;
+    private IJoinGameUseCase joinMatchUseCase;
     private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     [SerializeField]
@@ -42,7 +42,7 @@ public class MainMenuController : MonoBehaviour
     [Inject]
     public void Construct(IObjectResolver objectResolver,
         ICreateGameUseCase createGameUseCase,
-        IJoinMatchUseCase joinMatchUseCase,
+        IJoinGameUseCase joinMatchUseCase,
         PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
     {
         this.objectResolver = objectResolver;
@@ -110,8 +110,8 @@ public class MainMenuController : MonoBehaviour
         GameManager.Instance.SetGameId(gameModel.GameId);
         GameManager.Instance.SetBallId(gameModel.BallId);
 
-        this.joinMatchUseCase.Execute(new JoinMatchCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
-        this.joinMatchUseCase.Execute(new JoinMatchCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
+        this.joinMatchUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
+        this.joinMatchUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
         
         this.gameManager.BeginGame();
 
