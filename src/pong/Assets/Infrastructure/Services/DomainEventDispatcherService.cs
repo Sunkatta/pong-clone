@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public class DomainEventDispatcherService : IDomainEventDispatcherService
 {
@@ -11,7 +12,8 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
         IEnumerable<IDomainEventHandler<BallMovedDomainEvent>> ballMovedHandlers,
         IEnumerable<IDomainEventHandler<BallDirectionUpdatedDomainEvent>> ballDirectionUpdatedHandlers,
         IEnumerable<IDomainEventHandler<PlayerScoredDomainEvent>> playerScoredHandlers,
-        IEnumerable<IDomainEventHandler<PlayerWonDomainEvent>> playerWonHandlers)
+        IEnumerable<IDomainEventHandler<PlayerWonDomainEvent>> playerWonHandlers,
+        IEnumerable<IDomainEventHandler<PlayerJoinedDomainEvent>> playerJoinedHandlers)
     {
         this.domainEventHandlers = new Dictionary<Type, List<object>>
         {
@@ -34,6 +36,10 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
             {
                 typeof(PlayerWonDomainEvent),
                 new List<object>(playerWonHandlers)
+            },
+            {
+                typeof(PlayerJoinedDomainEvent),
+                new List<object>(playerJoinedHandlers)
             }
         };
     }
@@ -43,11 +49,13 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
         List<IDomainEvent> domainEvents = new List<IDomainEvent>(aggregate.DomainEvents);
         aggregate.ClearDomainEvents();
 
+        // TODO: If entities hold entities, consider making this loop recursive.
         foreach (var property in aggregate.GetType().GetProperties())
         {
-            // TODO: This only works for top level entities in the aggregate root.
-            // In the future support for collection of entities could be added if the need arises.
-            if (typeof(Entity).IsAssignableFrom(property.PropertyType))
+            var propertyType = property.PropertyType;
+
+            // Handle single Entity property
+            if (typeof(Entity).IsAssignableFrom(propertyType))
             {
                 if (property.GetValue(aggregate) is Entity entity)
                 {
@@ -55,7 +63,26 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
                     entity.ClearDomainEvents();
                 }
 
-                // TODO: If entities hold entities, consider making this loop recursive.
+                continue;
+            }
+
+            // Handle a collection of Entities property
+            var enumerableInterface = propertyType
+                .GetInterfaces()
+                .FirstOrDefault(interfaceType =>
+                    interfaceType.IsGenericType &&
+                    interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>) &&
+                    typeof(Entity).IsAssignableFrom(interfaceType.GetGenericArguments()[0]));
+
+            if (enumerableInterface != null)
+            {
+                var entityCollection = property.GetValue(aggregate) as IEnumerable<Entity>;
+
+                foreach (var entity in entityCollection)
+                {
+                    domainEvents.AddRange(entity.DomainEvents);
+                    entity.ClearDomainEvents();
+                }
             }
         }
 

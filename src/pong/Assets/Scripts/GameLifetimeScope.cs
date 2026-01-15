@@ -45,8 +45,13 @@ public class GameLifetimeScope : LifetimeScope
             .AsSelf()
             .AsImplementedInterfaces();
 
+        builder.Register<PlayerJoinedDomainEventHandler>(Lifetime.Singleton)
+           .AsSelf()
+           .AsImplementedInterfaces();
+
         // Presentation
         builder.RegisterComponentInHierarchy<MainMenuController>();
         builder.RegisterComponentInHierarchy<InGameHudController>();
+        builder.RegisterComponentInHierarchy<GameManager>();
     }
 }

@@ -1,15 +1,20 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 public class GameAggregate : Entity, IAggregateRoot
 {
+    private const int MaxPlayersCount = 2;
+
+    private readonly ICollection<PlayerEntity> players;
+
     public GameAggregate(string id,
-        PlayerEntity player1,
-        PlayerEntity player2,
         BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength,
-        int targetScore)
+        int targetScore,
+        ICollection<PlayerEntity> players = null)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -17,9 +22,6 @@ public class GameAggregate : Entity, IAggregateRoot
         }
 
         this.Id = id;
-
-        this.Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player 1 cannot be null");
-        this.Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player 2 cannot be null");
         this.Ball = ball ?? throw new ArgumentNullException(nameof(ball), "Ball cannot be null");
 
         if (paddleSpeed <= 0)
@@ -44,24 +46,21 @@ public class GameAggregate : Entity, IAggregateRoot
         this.TargetScore = targetScore;
 
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
+        this.players = players ?? new List<PlayerEntity>();
     }
 
-    public GameAggregate(PlayerEntity player1,
-        PlayerEntity player2,
-        BallEntity ball,
+    public GameAggregate(BallEntity ball,
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength,
         int targetScore)
-        : this(Guid.NewGuid().ToString(), player1, player2, ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore)
+        : this(Guid.NewGuid().ToString(), ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore)
     {
     }
 
     public string Id { get;}
 
-    public PlayerEntity Player1 { get; }
-
-    public PlayerEntity Player2 { get; }
+    public IReadOnlyCollection<PlayerEntity> Players => new List<PlayerEntity>(this.players).AsReadOnly();
 
     public BallEntity Ball { get; }
 
@@ -73,6 +72,26 @@ public class GameAggregate : Entity, IAggregateRoot
 
     public GameFieldValueObject GameFieldValueObject { get; }
 
+    public void AddPlayer(PlayerEntity player)
+    {
+        if (this.players.Count == MaxPlayersCount)
+        {
+            throw new InvalidOperationException("Limit of players already reached");
+        }
+
+        this.players.Add(player);
+        this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id, player.Username, player.PlayerType));
+    }
+
+    public void RemovePlayer(string playerId)
+    {
+        var player = this.players.FirstOrDefault(player => player.Id == playerId)
+            ?? throw new ArgumentException($"Player with Id {playerId} not found");
+
+        this.players.Remove(player);
+        this.AddDomainEvent(new PlayerLeftDomainEvent(player.Id, player.Username));
+    }
+
     public void MovePlayer(string playerId, float newY)
     {
         if (newY < this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2) || newY > this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2))
@@ -82,18 +101,10 @@ public class GameAggregate : Entity, IAggregateRoot
             return;
         }
 
-        if (playerId == this.Player1.Id)
-        {
-            this.Player1.UpdatePosition(new Position2DValueObject(this.Player1.PaddlePosition.X, newY));
-        }
-        else if (playerId == Player2.Id)
-        {
-            this.Player2.UpdatePosition(new Position2DValueObject(this.Player2.PaddlePosition.X, newY));
-        }
-        else
-        {
-            throw new ArgumentException($"Player with Id {playerId} not found");
-        }
+        var player = this.players.FirstOrDefault(player => player.Id == playerId)
+            ?? throw new ArgumentException($"Player with Id {playerId} not found");
+
+        player.UpdatePosition(new Position2DValueObject(player.PaddlePosition.X, newY));
     }
 
     public void MoveBall(Position2DValueObject newPosition)
@@ -101,12 +112,17 @@ public class GameAggregate : Entity, IAggregateRoot
         if (newPosition.X > this.GameFieldValueObject.TopRightCornerPosition.X)
         {
             // Player 1 (left) scored.
-            this.Player1.ScorePoint();
-            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player1, this.Player1.Score));
+            var player1 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1)
+                ?? throw new ArgumentException($"Player with Type {PlayerType.Player1} not found");
+            var player2 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2)
+                ?? throw new ArgumentException($"Player with Type {PlayerType.Player2} not found");
 
-            if (this.Player1.Score == this.TargetScore)
+            player1.ScorePoint();
+            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player1, player1.Score));
+
+            if (player1.Score == this.TargetScore)
             {
-                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player1.Id, this.Player1.Username, this.Player2.Id, this.Player2.Username));
+                this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
                 return;
             }
 
@@ -118,12 +134,17 @@ public class GameAggregate : Entity, IAggregateRoot
         if (newPosition.X < this.GameFieldValueObject.TopLeftCornerPosition.X)
         {
             // Player 2 (right) scored.
-            this.Player2.ScorePoint();
-            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player2, this.Player2.Score));
+            var player1 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1)
+                ?? throw new ArgumentException($"Player with Type {PlayerType.Player1} not found");
+            var player2 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2)
+                ?? throw new ArgumentException($"Player with Type {PlayerType.Player2} not found");
 
-            if (this.Player2.Score == this.TargetScore)
+            player2.ScorePoint();
+            this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player2, player2.Score));
+
+            if (player2.Score == this.TargetScore)
             {
-                this.AddDomainEvent(new PlayerWonDomainEvent(this.Player2.Id, this.Player2.Username, this.Player1.Id, this.Player1.Username));
+                this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
                 return;
             }
 

@@ -77,6 +77,13 @@ public class InGameHudController : MonoBehaviour
         this.playerScoredDomainEventHandler.PlayerScored += this.OnScoreChanged;
         this.player1ScoreText.text = "0";
         this.player2ScoreText.text = "0";
+
+        this.player1UsernameText.text = GameManager.Instance.CurrentPlayer1Username;
+        this.player2UsernameText.text = GameManager.Instance.CurrentPlayer2Username;
+
+        this.countdownTimerText.gameObject.SetActive(true);
+        this.shouldBeginCountdown = true;
+        this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
     }
 
     private void OnDisable()

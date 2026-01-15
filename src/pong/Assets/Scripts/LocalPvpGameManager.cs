@@ -44,18 +44,12 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
 
     public void BeginGame()
     {
-        StartCoroutine(this.BeginGameCouroutine());
+        StartCoroutine(this.BeginGameCoroutine());
     }
 
     public void OnPlayerJoined(PlayerEntity player)
     {
-        this.players.Add(player);
-
-        var playerGameObject = resolver.Instantiate(this.playerPrefab);
-        var playerInstanceController = playerGameObject.GetComponent<LocalPlayerController>();
-        playerInstanceController.Type = player.PlayerType;
-        playerInstanceController.Id = player.Id;
-        playerGameObject.transform.position = this.GetPlayerPosition(player);
+        throw new NotImplementedException();
     }
 
     public void LeaveGame()
@@ -115,21 +109,13 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         Destroy(this.gameObject);
     }
 
-    private Vector3 GetPlayerPosition(PlayerEntity player)
-    {
-        Vector3 screenLeftSide = Camera.main.ScreenToWorldPoint(new Vector2(0, Screen.height / 2));
-        Vector3 screenRightSide = Camera.main.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height / 2));
-
-        return player.PlayerType == PlayerType.Player1 ? new Vector3(screenLeftSide.x + .5f, 0) : new Vector3(screenRightSide.x - .5f, 0);
-    }
-
-    private IEnumerator BeginGameCouroutine()
+    private IEnumerator BeginGameCoroutine()
     {
         this.ball = resolver.Instantiate(this.ballPrefab);
         this.ballController = this.ball.GetComponent<BallController>();
         this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
         this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
-        PrepareInGameUi(this.players);
+        //PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
         this.isMatchRunning = true;
     }

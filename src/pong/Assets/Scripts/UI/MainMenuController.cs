@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,6 +10,7 @@ public class MainMenuController : MonoBehaviour
 {
     private IObjectResolver objectResolver;
     private ICreateGameUseCase createGameUseCase;
+    private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     [SerializeField]
     private GameObject localPvpGameManager;
@@ -37,10 +39,13 @@ public class MainMenuController : MonoBehaviour
     private IGameManager gameManager;
 
     [Inject]
-    public void Construct(IObjectResolver objectResolver, ICreateGameUseCase createGameUseCase)
+    public void Construct(IObjectResolver objectResolver,
+        ICreateGameUseCase createGameUseCase,
+        PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
     {
         this.objectResolver = objectResolver;
         this.createGameUseCase = createGameUseCase;
+        this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
     }
 
     private void Start()
@@ -70,6 +75,13 @@ public class MainMenuController : MonoBehaviour
     {
         var eventSystem = EventSystem.current.GetComponent<EventSystem>();
         eventSystem.SetSelectedGameObject(this.localPvpBtn.gameObject);
+
+        this.playerJoinedDomainEventHandler.PlayerJoined += OnPlayerJoined;
+    }
+
+    private void OnDisable()
+    {
+        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
     }
 
     private IEnumerator LocalPvpCoroutine()
@@ -79,21 +91,12 @@ public class MainMenuController : MonoBehaviour
         var localPvpGameManager = this.objectResolver.Instantiate(this.localPvpGameManager);
         this.gameManager = localPvpGameManager.GetComponent<IGameManager>();
 
-        var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
-        this.gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
-
         yield return new WaitForSeconds(0.1f);
 
-        var player1 = new PlayerEntity("Player 1", PlayerType.Player1);
-        this.gameManager.OnPlayerJoined(player1);
-
-        var player2 = new PlayerEntity("Player 2", PlayerType.Player2);
-        this.gameManager.OnPlayerJoined(player2);
-
-        var createGameCommand = new CreateGameCommand(player1.Id,
-            player1.Username,
-            player2.Id,
-            player2.Username,
+        var createGameCommand = new CreateGameCommand(Guid.NewGuid().ToString(),
+            "Player 1",
+            Guid.NewGuid().ToString(),
+            "Player 2",
             (-9, -5),
             (9, -5),
             (9, 5),
@@ -134,5 +137,18 @@ public class MainMenuController : MonoBehaviour
         this.quitGameBtn.GetComponent<AudioSource>().Play();
         yield return new WaitForSeconds(0.2f);
         Application.Quit();
+    }
+
+    private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
+    {
+        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player1)
+        {
+            GameManager.Instance.SetPlayer1(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
+        }
+
+        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player2)
+        {
+            GameManager.Instance.SetPlayer2(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
+        }
     }
 }
