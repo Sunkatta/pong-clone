@@ -9,6 +9,7 @@ using VContainer;
 public class InGameHudController : MonoBehaviour
 {
     private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
+    private PlayerWonDomainEventHandler playerWonDomainEventHandler;
 
     [SerializeField]
     private RectTransform mainMenuPanel;
@@ -47,9 +48,11 @@ public class InGameHudController : MonoBehaviour
     private float remainingCountdownTime;
 
     [Inject]
-    public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler)
+    public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler,
+        PlayerWonDomainEventHandler playerWonDomainEventHandler)
     {
         this.playerScoredDomainEventHandler = playerScoredDomainEventHandler;
+        this.playerWonDomainEventHandler = playerWonDomainEventHandler;
     }
 
     public void OnUiPrepared(List<PlayerEntity> players)
@@ -66,14 +69,13 @@ public class InGameHudController : MonoBehaviour
     {
         OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
         OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
 
         this.inGameAudioSource = this.GetComponent<AudioSource>();
     }
 
     private void OnEnable()
     {
+        this.playerWonDomainEventHandler.PlayerWon += this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored += this.OnScoreChanged;
         this.player1ScoreText.text = "0";
         this.player2ScoreText.text = "0";
@@ -88,6 +90,7 @@ public class InGameHudController : MonoBehaviour
 
     private void OnDisable()
     {
+        this.playerWonDomainEventHandler.PlayerWon -= this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored -= this.OnScoreChanged;
     }
 
@@ -148,6 +151,18 @@ public class InGameHudController : MonoBehaviour
         this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
     }
 
+    private void OnGameEnded(PlayerWonDomainEvent playerWonDomainEvent)
+    {
+        var gameOverStatistics = new GameOverStatistics
+        {
+            WinnerName = playerWonDomainEvent.WinnerPlayerUsername,
+            LoserName = playerWonDomainEvent.LoserPlayerUsername,
+            NavigatingToMessage = Constants.ReturningToMainMenuText,
+        };
+
+        this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
+    }
+
     private IEnumerator ShowEndGamePanelCoroutine(GameOverStatistics gameOverStatistics)
     {
         yield return new WaitForSeconds(0.2f);
@@ -156,5 +171,9 @@ public class InGameHudController : MonoBehaviour
         this.endGameText.text = $"{gameOverStatistics.WinnerName} WINS!\n {gameOverStatistics.LoserName}, WANT A REMATCH?";
         this.navigatingToText.text = gameOverStatistics.NavigatingToMessage;
         this.endGamePanel.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(5);
+
+        OnMainMenuLoaded();
     }
 }
