@@ -10,7 +10,7 @@ public class MainMenuController : MonoBehaviour
 {
     private IObjectResolver objectResolver;
     private ICreateGameUseCase createGameUseCase;
-    private IJoinGameUseCase joinMatchUseCase;
+    private IJoinGameUseCase joinGameUseCase;
     private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     [SerializeField]
@@ -42,12 +42,12 @@ public class MainMenuController : MonoBehaviour
     [Inject]
     public void Construct(IObjectResolver objectResolver,
         ICreateGameUseCase createGameUseCase,
-        IJoinGameUseCase joinMatchUseCase,
+        IJoinGameUseCase joinGameUseCase,
         PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
     {
         this.objectResolver = objectResolver;
         this.createGameUseCase = createGameUseCase;
-        this.joinMatchUseCase = joinMatchUseCase;
+        this.joinGameUseCase = joinGameUseCase;
         this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
     }
 
@@ -110,8 +110,8 @@ public class MainMenuController : MonoBehaviour
         GameManager.Instance.SetGameId(gameModel.GameId);
         GameManager.Instance.SetBallId(gameModel.BallId);
 
-        this.joinMatchUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
-        this.joinMatchUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
+        this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
+        this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
         
         this.gameManager.BeginGame();
 
