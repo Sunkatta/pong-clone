@@ -57,7 +57,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public void BeginGame()
     {
-        StartCoroutine(this.BeginGameCouroutine());
+        StartCoroutine(this.BeginGameCoroutine());
     }
 
     public void OnPlayerJoined(PlayerEntity player)
@@ -239,7 +239,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         base.OnDestroy();
     }
 
-    private IEnumerator BeginGameCouroutine()
+    private IEnumerator BeginGameCoroutine()
     {
         if (this.IsServer)
         {
@@ -299,10 +299,10 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public void EndGame(string winnerName, string loserName)
     {
-        this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
+        this.StartCoroutine(this.MatchEndedCoroutine(winnerName, loserName));
     }
 
-    private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
+    private IEnumerator MatchEndedCoroutine(string winnerName, string loserName)
     {
         var gameOverStatistics = new GameOverStatistics
         {
