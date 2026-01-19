@@ -1,13 +1,37 @@
 using Unity.Netcode;
 using UnityEngine;
+using VContainer;
 
+[RequireComponent(typeof(Rigidbody2D))]
 public class OnlinePlayerController : NetworkBehaviour
 {
-    [SerializeField]
-    private float speed;
+    private IMovePlayerUseCase movePlayerUseCase;
+    private PlayerMovedDomainEventHandler playerMovedHandler;
 
-    private bool canMoveUp = true;
-    private bool canMoveDown = true;
+    private Rigidbody2D rb;
+    private float inputAxis;
+
+    [Inject]
+    public void Construct(IMovePlayerUseCase movePlayerUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
+    {
+        this.movePlayerUseCase = movePlayerUseCase;
+        this.playerMovedHandler = playerMovedHandler;
+    }
+
+    private void Awake()
+    {
+        this.rb = this.GetComponent<Rigidbody2D>();
+    }
+
+    private void OnEnable()
+    {
+        playerMovedHandler.PlayerMoved += OnPlayerMoved;
+    }
+
+    private void OnDisable()
+    {
+        playerMovedHandler.PlayerMoved -= OnPlayerMoved;
+    }
 
     private void Update()
     {
@@ -16,30 +40,31 @@ public class OnlinePlayerController : NetworkBehaviour
             return;
         }
 
-        var playerAxis = Input.GetAxis("Player1");
-
-        if (playerAxis > 0 && this.canMoveUp)
-        {
-            this.transform.position += speed * Time.deltaTime * Vector3.up;
-            this.canMoveDown = true;
-        }
-        else if (playerAxis < 0 && this.canMoveDown)
-        {
-            this.transform.position -= speed * Time.deltaTime * Vector3.up;
-            this.canMoveUp = true;
-        }
+        this.inputAxis = Input.GetAxisRaw("Player1");
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void FixedUpdate()
     {
-        if (collision.gameObject.CompareTag(Constants.UpperEdge))
+        if (inputAxis == 0f)
         {
-            this.canMoveUp = false;
+            return;
         }
 
-        if (collision.gameObject.CompareTag(Constants.LowerEdge))
+        float newY = this.rb.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
+        var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, GameManager.Instance.CurrentPlayer1Id, newY);
+        movePlayerUseCase.Execute(movePlayerCommand);
+    }
+
+    private void OnPlayerMoved(PlayerMovedDomainEvent domainEvent)
+    {
+        if (!this.IsOwner)
         {
-            this.canMoveDown = false;
+            return;
         }
+
+        Vector2 newPosition = this.rb.position;
+        newPosition.y = domainEvent.NewPlayerPosition.Y;
+
+        this.rb.MovePosition(newPosition);
     }
 }

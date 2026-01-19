@@ -7,9 +7,16 @@ using Unity.Services.Core;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
 public class LobbyManager : MonoBehaviour
 {
+    private IObjectResolver objectResolver;
+    private ICreateGameUseCase createGameUseCase;
+    private IJoinGameUseCase joinGameUseCase;
+    private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
+
     public event Action<bool> ShouldShowCountdownUi;
     public event Action UpdateLobbyUi;
 
@@ -38,11 +45,33 @@ public class LobbyManager : MonoBehaviour
 
     public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
+    [Inject]
+    public void Construct(IObjectResolver objectResolver,
+        ICreateGameUseCase createGameUseCase,
+        IJoinGameUseCase joinGameUseCase,
+        PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
+    {
+        this.objectResolver = objectResolver;
+        this.createGameUseCase = createGameUseCase;
+        this.joinGameUseCase = joinGameUseCase;
+        this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
+    }
+
+    private void OnEnable()
+    {
+        this.playerJoinedDomainEventHandler.PlayerJoined += OnPlayerJoined;
+    }
+
+    private void OnDisable()
+    {
+        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
+    }
+
     private void Update()
     {
         if (this.shouldPing)
         {
-            this.HandleLobbyHearbeat();
+            this.HandleLobbyHeartbeat();
         }
         
         if (this.shouldStartBeginGameCountdown)
@@ -107,17 +136,37 @@ public class LobbyManager : MonoBehaviour
 
             var localPlayer = new PlayerEntity(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
 
+            var createGameCommand = new CreateGameCommand(GameType.OnlinePvp,
+                (-9, -5),
+                (9, -5),
+                (9, 5),
+                (-9, 5),
+                GameManager.Instance.PaddleSpeed,
+                2,
+                GameManager.Instance.TargetScore,
+                GameManager.Instance.BallInitialSpeed,
+                GameManager.Instance.BallMaximumSpeed);
+
+            var gameModel = this.createGameUseCase.Execute(createGameCommand);
+            GameManager.Instance.SetGameId(gameModel.GameId);
+            GameManager.Instance.SetBallId(gameModel.BallId);
+            GameManager.Instance.SetGameType(GameType.OnlinePvp);
+
+            this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile));
+
+            var onlinePvpGameManager = this.objectResolver.Instantiate(this.onlinePvpGameManager);
+
             string relayJoinCode = await this.relayManager.CreateRelay();
 
             this.localLobby = await LobbyService.Instance.UpdateLobbyAsync(this.localLobby.Id, new UpdateLobbyOptions
             {
                 Data = new Dictionary<string, DataObject>
                 {
-                    { "relayCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode) }
+                    { "relayCode", new DataObject(DataObject.VisibilityOptions.Member, relayJoinCode) },
+                    { "gameId", new DataObject(DataObject.VisibilityOptions.Member, gameModel.GameId) }
                 }
             });
 
-            var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
             this.gameManager.OnPlayerJoined(localPlayer);
@@ -170,6 +219,8 @@ public class LobbyManager : MonoBehaviour
 
                     await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
 
+                    GameManager.Instance.SetGameId(this.localLobby.Data["gameId"].Value);
+                    GameManager.Instance.SetPlayer2(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value);
                     this.gameManager.OnPlayerJoined(localPlayer);
                 }
             }
@@ -221,7 +272,7 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    private async void HandleLobbyHearbeat()
+    private async void HandleLobbyHeartbeat()
     {
         if (this.localLobby != null)
         {
@@ -313,5 +364,18 @@ public class LobbyManager : MonoBehaviour
         };
 
         await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
+    }
+
+    private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
+    {
+        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player1)
+        {
+            GameManager.Instance.SetPlayer1(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
+        }
+
+        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player2)
+        {
+            GameManager.Instance.SetPlayer2(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
+        }
     }
 }

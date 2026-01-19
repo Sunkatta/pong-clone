@@ -1,12 +1,26 @@
-using System;
+using Unity.Netcode;
+using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 public class GameLifetimeScope : LifetimeScope
 {
+    [SerializeField]
+    private NetworkManager networkManager;
+
+    [SerializeField]
+    private GameObject onlinePlayerPrefab;
+
+    protected override void Awake()
+    {
+        base.Awake();
+
+        RegisterNetworkPrefabHandlers();
+    }
+
     protected override void Configure(IContainerBuilder builder)
     {
-        builder.RegisterInstance(new Random());
+        builder.RegisterInstance(new System.Random());
 
         // Application Use Cases
         builder.Register<IMovePlayerUseCase, MovePlayerUseCase>(Lifetime.Transient);
@@ -54,5 +68,19 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterComponentInHierarchy<MainMenuController>();
         builder.RegisterComponentInHierarchy<InGameHudController>();
         builder.RegisterComponentInHierarchy<GameManager>();
+        builder.RegisterComponentInHierarchy<LobbyManager>();
+    }
+
+    private void RegisterNetworkPrefabHandlers()
+    {
+        var resolver = Container;
+
+        var handler = new VContainerNetworkPrefabHandler(
+            resolver,
+            onlinePlayerPrefab);
+
+        this.networkManager.PrefabHandler.AddHandler(
+            onlinePlayerPrefab,
+            handler);
     }
 }

@@ -1909,6 +1909,8 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  networkManager: {fileID: 955768165}
+  onlinePlayerPrefab: {fileID: 9164971107830190795, guid: 9302692166a205942975d27a1062bd0a, type: 3}
 --- !u!4 &546830440
 Transform:
   m_ObjectHideFlags: 0
@@ -5822,7 +5824,8 @@ MonoBehaviour:
   targetScore: 11
   ballInitialSpeed: 6
   ballMaximumSpeed: 15
-  playerPrefab: {fileID: 9164971107830190795, guid: 2456c79492699fa48a53cbe7ffc2aeaf, type: 3}
+  localPlayerPrefab: {fileID: 9164971107830190795, guid: 2456c79492699fa48a53cbe7ffc2aeaf, type: 3}
+  onlinePlayerPrefab: {fileID: 9164971107830190795, guid: 9302692166a205942975d27a1062bd0a, type: 3}
 --- !u!4 &1834313717
 Transform:
   m_ObjectHideFlags: 0
