@@ -14,6 +14,7 @@ public class GameAggregate : Entity, IAggregateRoot
         float paddleSpeed,
         float paddleLength,
         int targetScore,
+        GameType gameType,
         ICollection<PlayerEntity> players = null)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -44,6 +45,7 @@ public class GameAggregate : Entity, IAggregateRoot
         }
 
         this.TargetScore = targetScore;
+        this.GameType = gameType;
 
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
         this.players = players ?? new List<PlayerEntity>();
@@ -53,8 +55,9 @@ public class GameAggregate : Entity, IAggregateRoot
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength,
-        int targetScore)
-        : this(Guid.NewGuid().ToString(), ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore)
+        int targetScore,
+        GameType gameType)
+        : this(Guid.NewGuid().ToString(), ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore, gameType)
     {
     }
 
@@ -71,6 +74,8 @@ public class GameAggregate : Entity, IAggregateRoot
     public int TargetScore { get; }
 
     public GameFieldValueObject GameFieldValueObject { get; }
+
+    public GameType GameType { get; }
 
     public void AddPlayer(PlayerEntity player)
     {
@@ -132,6 +137,8 @@ public class GameAggregate : Entity, IAggregateRoot
 
             if (player1.Score == this.TargetScore)
             {
+                this.Ball.UpdateSpeed(0);
+                this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
                 this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
                 return;
             }
@@ -154,6 +161,8 @@ public class GameAggregate : Entity, IAggregateRoot
 
             if (player2.Score == this.TargetScore)
             {
+                this.Ball.UpdateSpeed(0);
+                this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
                 this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
                 return;
             }

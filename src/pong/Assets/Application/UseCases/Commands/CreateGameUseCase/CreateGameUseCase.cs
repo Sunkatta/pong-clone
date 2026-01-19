@@ -33,7 +33,8 @@ public class CreateGameUseCase : ICreateGameUseCase
             gameFieldValueObject,
             createGameCommand.PaddleSpeed,
             createGameCommand.PaddleLength,
-            createGameCommand.TargetScore);
+            createGameCommand.TargetScore,
+            createGameCommand.GameType);
 
         var gameId = this.gameService.Create(gameAggregate);
         this.domainEventDispatcherService.Dispatch(gameAggregate);

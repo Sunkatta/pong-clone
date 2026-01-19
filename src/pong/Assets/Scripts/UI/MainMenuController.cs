@@ -96,7 +96,8 @@ public class MainMenuController : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
 
-        var createGameCommand = new CreateGameCommand((-9, -5),
+        var createGameCommand = new CreateGameCommand(GameType.LocalPvp,
+            (-9, -5),
             (9, -5),
             (9, 5),
             (-9, 5),
@@ -109,6 +110,7 @@ public class MainMenuController : MonoBehaviour
         var gameModel = this.createGameUseCase.Execute(createGameCommand);
         GameManager.Instance.SetGameId(gameModel.GameId);
         GameManager.Instance.SetBallId(gameModel.BallId);
+        GameManager.Instance.SetGameType(GameType.LocalPvp);
 
         this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
         this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
