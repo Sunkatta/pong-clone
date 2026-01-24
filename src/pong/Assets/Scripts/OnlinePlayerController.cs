@@ -3,43 +3,39 @@ using UnityEngine;
 using VContainer;
 
 [RequireComponent(typeof(Rigidbody2D))]
+[RequireComponent(typeof(PlayerRpcBridgeService))]
 public class OnlinePlayerController : NetworkBehaviour
 {
-    private IMovePlayerUseCase movePlayerUseCase;
-    private PlayerMovedDomainEventHandler playerMovedHandler;
+    private PlayerService playerService;
+    private PlayerRpcBridgeService rpcBridge;
 
     private Rigidbody2D rb;
     private float inputAxis;
 
     [Inject]
-    public void Construct(IMovePlayerUseCase movePlayerUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
+    public void Construct(PlayerService playerService)
     {
-        this.movePlayerUseCase = movePlayerUseCase;
-        this.playerMovedHandler = playerMovedHandler;
+        this.playerService = playerService;
     }
 
-    private void Awake()
+    public override void OnNetworkSpawn()
     {
         this.rb = this.GetComponent<Rigidbody2D>();
+        this.rpcBridge = this.GetComponent<PlayerRpcBridgeService>();
+
+        this.playerService.PlayerPositionUpdated += OnPlayerMoved;
     }
 
-    private void OnEnable()
+    public override void OnNetworkDespawn()
     {
-        playerMovedHandler.PlayerMoved += OnPlayerMoved;
-    }
-
-    private void OnDisable()
-    {
-        playerMovedHandler.PlayerMoved -= OnPlayerMoved;
+        if (this.playerService != null)
+        {
+            this.playerService.PlayerPositionUpdated -= OnPlayerMoved;
+        }
     }
 
     private void Update()
     {
-        if (!this.IsOwner)
-        {
-            return;
-        }
-
         this.inputAxis = Input.GetAxisRaw("Player1");
     }
 
@@ -50,20 +46,18 @@ public class OnlinePlayerController : NetworkBehaviour
             return;
         }
 
-        float newY = this.rb.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
-        var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, GameManager.Instance.CurrentPlayer1Id, newY);
-        movePlayerUseCase.Execute(movePlayerCommand);
-    }
-
-    private void OnPlayerMoved(PlayerMovedDomainEvent domainEvent)
-    {
         if (!this.IsOwner)
         {
             return;
         }
 
+        this.rpcBridge.SubmitMoveInputServerRpc(this.inputAxis);
+    }
+
+    private void OnPlayerMoved(float newY)
+    {
         Vector2 newPosition = this.rb.position;
-        newPosition.y = domainEvent.NewPlayerPosition.Y;
+        newPosition.y = newY;
 
         this.rb.MovePosition(newPosition);
     }

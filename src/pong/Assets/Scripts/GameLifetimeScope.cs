@@ -14,7 +14,6 @@ public class GameLifetimeScope : LifetimeScope
     protected override void Awake()
     {
         base.Awake();
-
         RegisterNetworkPrefabHandlers();
     }
 
@@ -64,11 +63,17 @@ public class GameLifetimeScope : LifetimeScope
            .AsSelf()
            .AsImplementedInterfaces();
 
+        builder.Register<GameCreatedDomainEventHandler>(Lifetime.Transient)
+           .AsSelf()
+           .AsImplementedInterfaces();
+
         // Presentation
         builder.RegisterComponentInHierarchy<MainMenuController>();
         builder.RegisterComponentInHierarchy<InGameHudController>();
         builder.RegisterComponentInHierarchy<GameManager>();
         builder.RegisterComponentInHierarchy<LobbyManager>();
+
+        builder.Register<PlayerService>(Lifetime.Singleton);
     }
 
     private void RegisterNetworkPrefabHandlers()

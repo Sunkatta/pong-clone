@@ -4,9 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using VContainer;
 
 public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
+    private IJoinGameUseCase joinGameUseCase;
+    private PlayerService playerService;
+
+    [Inject]
+    public void Construct(IJoinGameUseCase joinGameUseCase, PlayerService playerService)
+    {
+        this.joinGameUseCase = joinGameUseCase;
+        this.playerService = playerService; 
+    }
+
     public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action LobbyLoaded;
@@ -42,7 +53,12 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public override void OnNetworkSpawn()
     {
-        this.ClientConnectedRpc();
+        if (!this.IsServer)
+        {
+            return;
+        }
+
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
 
         this.Player1Score.OnValueChanged += (int previousValue, int newValue) =>
         {
@@ -182,8 +198,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         }
     }
 
-    [Rpc(SendTo.Server)]
-    private void ClientConnectedRpc(RpcParams rpcParams = default)
+    private void OnClientConnected(ulong clientId)
     {
         var player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1);
 
@@ -192,10 +207,14 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
             player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2);
         }
 
+        this.playerService.RegisterPlayerId(player.Id, clientId);
+
         NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
-            ownerClientId: rpcParams.Receive.SenderClientId,
+            ownerClientId: clientId,
             isPlayerObject: true,
             position: this.GetPlayerPosition(player.PlayerType));
+
+        this.joinGameUseCase.Execute(new JoinGameCommand(GameManager.Instance.CurrentGameId, player.Id, player.Username));
 
         if (player.PlayerType == PlayerType.Player2)
         {

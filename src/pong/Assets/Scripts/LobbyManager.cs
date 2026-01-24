@@ -12,9 +12,8 @@ using VContainer.Unity;
 
 public class LobbyManager : MonoBehaviour
 {
-    private IObjectResolver objectResolver;
+    private IObjectResolver resolver;
     private ICreateGameUseCase createGameUseCase;
-    private IJoinGameUseCase joinGameUseCase;
     private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     public event Action<bool> ShouldShowCountdownUi;
@@ -46,14 +45,12 @@ public class LobbyManager : MonoBehaviour
     public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
     [Inject]
-    public void Construct(IObjectResolver objectResolver,
+    public void Construct(IObjectResolver resolver,
         ICreateGameUseCase createGameUseCase,
-        IJoinGameUseCase joinGameUseCase,
         PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
     {
-        this.objectResolver = objectResolver;
+        this.resolver = resolver;
         this.createGameUseCase = createGameUseCase;
-        this.joinGameUseCase = joinGameUseCase;
         this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
     }
 
@@ -152,9 +149,7 @@ public class LobbyManager : MonoBehaviour
             GameManager.Instance.SetBallId(gameModel.BallId);
             GameManager.Instance.SetGameType(GameType.OnlinePvp);
 
-            this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile));
-
-            var onlinePvpGameManager = this.objectResolver.Instantiate(this.onlinePvpGameManager);
+            var onlinePvpGameManager = this.resolver.Instantiate(this.onlinePvpGameManager);
 
             string relayJoinCode = await this.relayManager.CreateRelay();
 
@@ -203,7 +198,7 @@ public class LobbyManager : MonoBehaviour
             this.localLobby = await LobbyService.Instance.JoinLobbyByCodeAsync(lobbyCode, lobbyOptions);
             await this.SubscribeToLobbyEvents(this.localLobby);
 
-            var onlinePvpGameManager = Instantiate(this.onlinePvpGameManager);
+            var onlinePvpGameManager = this.resolver.Instantiate(this.onlinePvpGameManager);
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
             this.gameManager.PlayerDisconnected += async (playerId, _) =>
@@ -220,6 +215,7 @@ public class LobbyManager : MonoBehaviour
                     await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
 
                     GameManager.Instance.SetGameId(this.localLobby.Data["gameId"].Value);
+                    GameManager.Instance.SetGameType(GameType.OnlinePvp);
                     GameManager.Instance.SetPlayer2(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value);
                     this.gameManager.OnPlayerJoined(localPlayer);
                 }
