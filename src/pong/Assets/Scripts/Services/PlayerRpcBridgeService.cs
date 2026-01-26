@@ -23,12 +23,6 @@ public class PlayerRpcBridgeService : NetworkBehaviour
     }
 
     [ServerRpc]
-    public void SubmitJoinGameServerRpc()
-    {
-
-    }
-
-    [ServerRpc]
     public void SubmitMoveInputServerRpc(float inputAxis, ServerRpcParams rpcParams = default)
     {
         var clientId = rpcParams.Receive.SenderClientId;

@@ -6,7 +6,6 @@ using VContainer;
 public class PlayerService : IDisposable
 {
     private IMovePlayerUseCase movePlayerUseCase;
-    private IJoinGameUseCase joinGameUseCase;
     private PlayerMovedDomainEventHandler playerMovedHandler;
 
     private static readonly Dictionary<ulong, Rigidbody2D> clientIdToRigidbodyMapping = new Dictionary<ulong, Rigidbody2D>();
@@ -15,18 +14,12 @@ public class PlayerService : IDisposable
     public event Action<float> PlayerPositionUpdated;
 
     [Inject]
-    public void Construct(IMovePlayerUseCase movePlayerUseCase, IJoinGameUseCase joinGameUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
+    public void Construct(IMovePlayerUseCase movePlayerUseCase, PlayerMovedDomainEventHandler playerMovedHandler)
     {
         this.movePlayerUseCase = movePlayerUseCase;
-        this.joinGameUseCase = joinGameUseCase;
         this.playerMovedHandler = playerMovedHandler;
 
         this.playerMovedHandler.PlayerMoved += OnPlayerMoved;
-    }
-
-    public void HandleJoinGameRequest()
-    {
-        //var joinGameCommand = new JoinGameCommand();
     }
 
     public void HandleMoveInput(ulong clientId, Rigidbody2D rb, float inputAxis)
