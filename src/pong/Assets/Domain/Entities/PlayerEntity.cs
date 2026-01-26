@@ -44,11 +44,6 @@ public class PlayerEntity : Entity
 
     public void UpdatePosition(Position2DValueObject position)
     {
-        if (position.X == this.PaddlePosition.X && position.Y == this.PaddlePosition.Y)
-        {
-            return;
-        }
-
         this.PaddlePosition = new Position2DValueObject(position.X, position.Y);
         this.AddDomainEvent(new PlayerMovedDomainEvent(this.Id, this.PaddlePosition));
     }

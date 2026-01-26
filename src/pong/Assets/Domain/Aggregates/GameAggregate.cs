@@ -109,12 +109,11 @@ public class GameAggregate : Entity, IAggregateRoot
 
     public void MovePlayer(string playerId, float newY)
     {
-        if (newY < this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2) || newY > this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2))
-        {
-            // Player is outside the bounds of the game field. Do nothing.
-            // Consider resetting them inside the game field.
-            return;
-        }
+        float minY = this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2);
+        float maxY = this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2);
+
+        // Clamp newY to the game field bounds
+        newY = Math.Clamp(newY, minY, maxY);
 
         var player = this.players.FirstOrDefault(player => player.Id == playerId)
             ?? throw new ArgumentException($"Player with Id {playerId} not found");
