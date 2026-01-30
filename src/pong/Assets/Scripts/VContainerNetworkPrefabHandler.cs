@@ -35,6 +35,9 @@ public class VContainerNetworkPrefabHandler : INetworkPrefabInstanceHandler
 
     public void Destroy(NetworkObject networkObject)
     {
-        Object.Destroy(networkObject);
+        if (networkObject != null)
+        {
+            Object.Destroy(networkObject.gameObject);
+        }
     }
 }
