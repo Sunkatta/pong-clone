@@ -8,7 +8,6 @@ public class PlayerService : IDisposable
     private IMovePlayerUseCase movePlayerUseCase;
     private PlayerMovedDomainEventHandler playerMovedHandler;
 
-    private static readonly Dictionary<ulong, Transform> clientIdToTransformMapping = new Dictionary<ulong, Transform>();
     private static readonly Dictionary<ulong, string> clientIdToPlayerIdMapping = new Dictionary<ulong, string>();
 
     public event Action<float, ulong> PlayerPositionUpdated;
@@ -27,11 +26,6 @@ public class PlayerService : IDisposable
         if (!clientIdToPlayerIdMapping.TryGetValue(clientId, out string playerId))
         {
             throw new InvalidOperationException($"Cannot find corresponding Player Id for client with Id {clientId}");
-        }
-
-        if (!clientIdToTransformMapping.ContainsKey(clientId))
-        {
-            clientIdToTransformMapping[clientId] = transform;
         }
 
         float newY = transform.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
