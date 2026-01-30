@@ -11,6 +11,9 @@ public class OnlinePlayerController : NetworkBehaviour
     private AnticipatedNetworkTransform anticipatedTransform;
     private float inputAxis;
 
+    float allowedMinY;
+    float allowedMaxY;
+
     [Inject]
     public void Construct(PlayerService playerService)
     {
@@ -47,6 +50,16 @@ public class OnlinePlayerController : NetworkBehaviour
 
     private void FixedUpdate()
     {
+        if (this.allowedMinY == 0f)
+        {
+            this.allowedMinY = GameManager.Instance.GetPlayerLimits().BottomLeftCornerPositionY;
+        }
+
+        if (this.allowedMaxY == 0f)
+        {
+            this.allowedMaxY = GameManager.Instance.GetPlayerLimits().TopLeftCornerPositionY;
+        }
+
         if (inputAxis == 0f)
         {
             return;
@@ -66,6 +79,7 @@ public class OnlinePlayerController : NetworkBehaviour
 
         // Move Client locally so that it doesn't rely on receiving RPC response, resulting in feeling slow.
         var newY = this.transform.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
+        newY = Mathf.Clamp(newY, this.allowedMinY, this.allowedMaxY);
         this.anticipatedTransform.AnticipateMove(new Vector3(this.transform.position.x, newY));
 
         // Send input to server asynchronously

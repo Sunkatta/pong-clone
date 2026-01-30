@@ -95,7 +95,11 @@ public class GameAggregate : Entity, IAggregateRoot
         }
 
         this.players.Add(player);
-        this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id, player.Username, player.PlayerType));
+        this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id,
+            player.Username,
+            player.PlayerType,
+            this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2),
+            this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2)));
     }
 
     public void RemovePlayer(string playerId)

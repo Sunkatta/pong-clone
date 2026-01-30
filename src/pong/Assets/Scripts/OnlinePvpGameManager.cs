@@ -6,15 +6,18 @@ using Unity.Netcode;
 using UnityEngine;
 using VContainer;
 
+[RequireComponent(typeof(AudioSource))]
 public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 {
     private IJoinGameUseCase joinGameUseCase;
+    private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
     private PlayerService playerService;
 
     [Inject]
-    public void Construct(IJoinGameUseCase joinGameUseCase, PlayerService playerService)
+    public void Construct(IJoinGameUseCase joinGameUseCase, PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler, PlayerService playerService)
     {
         this.joinGameUseCase = joinGameUseCase;
+        this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
         this.playerService = playerService; 
     }
 
@@ -59,6 +62,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         }
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        this.playerJoinedDomainEventHandler.PlayerJoined += OnPlayerJoined;
 
         this.Player1Score.OnValueChanged += (int previousValue, int newValue) =>
         {
@@ -97,6 +101,17 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     public void LeaveGame()
     {
         NetworkManager.Singleton.Shutdown();
+    }
+
+    private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
+    {
+        this.SyncGameInfoWithClientRpc(playerJoinedDomainEvent.PlayerPositionMinY, playerJoinedDomainEvent.PlayerPositionMaxY);
+    }
+
+    [ClientRpc]
+    private void SyncGameInfoWithClientRpc(float playerPositionMinY, float playerPositionMaxY, ClientRpcParams _ = default)
+    {
+        GameManager.Instance.SetPlayerLimits(playerPositionMinY, playerPositionMaxY);
     }
 
     private void OnPlayerLeft(ulong _)
@@ -238,7 +253,7 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     private void Start()
     {
-        this.goalSound = GetComponent<AudioSource>();
+        this.goalSound = this.GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
 
         NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;

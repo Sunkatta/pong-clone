@@ -48,6 +48,11 @@ public class GameManager : MonoBehaviour
 
     public string CurrentPlayer2Username { get; private set; }
 
+    // These two are used only by the online clients
+    public float PlayerPositionMinY { get; private set; }
+
+    public float PlayerPositionMaxY { get; private set; }
+
     [Inject]
     public void Construct(IObjectResolver resolver)
     {
@@ -128,6 +133,14 @@ public class GameManager : MonoBehaviour
             this.InstantiateLocalPlayer(player2Id, PlayerType.Player2);
         }
     }
+
+    public void SetPlayerLimits(float playerPositionMinY, float playerPositionMaxY)
+    {
+        this.PlayerPositionMinY = playerPositionMinY;
+        this.PlayerPositionMaxY = playerPositionMaxY;
+    }
+
+    public (float BottomLeftCornerPositionY, float TopLeftCornerPositionY) GetPlayerLimits() => (this.PlayerPositionMinY, this.PlayerPositionMaxY);
 
     public void LoadScene(string sceneName)
     {
