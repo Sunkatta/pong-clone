@@ -142,6 +142,8 @@ public class GameAggregate : Entity, IAggregateRoot
             {
                 this.Ball.UpdateSpeed(0);
                 this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+                player1.ResetScore();
+                player2.ResetScore();
                 this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
                 return;
             }
@@ -166,6 +168,8 @@ public class GameAggregate : Entity, IAggregateRoot
             {
                 this.Ball.UpdateSpeed(0);
                 this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+                player1.ResetScore();
+                player2.ResetScore();
                 this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
                 return;
             }

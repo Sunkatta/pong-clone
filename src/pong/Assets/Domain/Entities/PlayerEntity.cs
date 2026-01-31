@@ -37,6 +37,11 @@ public class PlayerEntity : Entity
 
     public void ScorePoint() => this.Score++;
 
+    public void ResetScore()
+    {
+        this.Score = 0;
+    }
+
     public void SetType(PlayerType playerType)
     {
         this.PlayerType = playerType;
