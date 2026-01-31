@@ -11,12 +11,12 @@ public class JoinGameUseCase : IJoinGameUseCase
         this.domainEventDispatcherService = domainEventDispatcherService;
     }
 
-    public void Execute(JoinGameCommand joinMatchCommand)
+    public void Execute(JoinGameCommand joinGameCommand)
     {
-        GameAggregate gameAggregate = this.gameService.GetById(joinMatchCommand.GameId)
-            ?? throw new InvalidOperationException($"Game with Id {joinMatchCommand.GameId} not found");
+        GameAggregate gameAggregate = this.gameService.GetById(joinGameCommand.GameId)
+            ?? throw new InvalidOperationException($"Game with Id {joinGameCommand.GameId} not found");
 
-        var playerEntity = new PlayerEntity(joinMatchCommand.PlayerId, joinMatchCommand.Username);
+        var playerEntity = new PlayerEntity(joinGameCommand.PlayerId, joinGameCommand.Username);
 
         gameAggregate.AddPlayer(playerEntity);
         this.domainEventDispatcherService.Dispatch(gameAggregate);
