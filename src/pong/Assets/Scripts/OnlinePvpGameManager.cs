@@ -275,10 +275,10 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)
     {
+        this.isMatchRunning = false;
         this.ball.Despawn();
 
         this.MatchEndedRpc(playerWonDomainEvent.WinnerPlayerUsername, playerWonDomainEvent.LoserPlayerUsername);
-        this.isMatchRunning = false;
     }
 
     [Rpc(SendTo.ClientsAndHost)]

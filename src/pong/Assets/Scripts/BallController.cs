@@ -1,4 +1,3 @@
-using System;
 using Unity.Netcode;
 using UnityEngine;
 using VContainer;
@@ -12,9 +11,6 @@ public class BallController : NetworkBehaviour
     private PlayerScoredDomainEventHandler playerScoredHandler;
     private BallMovedDomainEventHandler ballMovedHandler;
     private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
-
-    public event Action<PlayerType> GoalPassed;
-    public event Action BallHit;
 
     private AudioSource bounceSound;
     private Vector2 ballDirection;
@@ -48,23 +44,9 @@ public class BallController : NetworkBehaviour
         base.OnNetworkSpawn();
     }
 
-    public override void OnNetworkDespawn()
-    {
-        if (!this.IsServer)
-        {
-            return;
-        }
-
-        this.ballMovedHandler.BallMoved -= OnBallMoved;
-        this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
-        this.playerScoredHandler.PlayerScored -= OnPlayerScored;
-
-        base.OnNetworkDespawn();
-    }
-
     private void OnEnable()
     {
-        if (!this.IsServer)
+        if (this.NoOnlineAuthority())
         {
             return;
         }
@@ -74,7 +56,7 @@ public class BallController : NetworkBehaviour
 
     private void OnDisable()
     {
-        if (!this.IsServer)
+        if (this.NoOnlineAuthority())
         {
             return;
         }
@@ -86,7 +68,7 @@ public class BallController : NetworkBehaviour
 
     public void Move()
     {
-        if (!this.IsServer)
+        if (this.NoOnlineAuthority())
         {
             return;
         }
@@ -112,7 +94,7 @@ public class BallController : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (!this.IsServer)
+        if (this.NoOnlineAuthority())
         {
             return;
         }
@@ -131,6 +113,8 @@ public class BallController : NetworkBehaviour
 
         this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand(GameManager.Instance.CurrentGameId, (newDirection.x, newDirection.y), isHitByPlayer));
     }
+
+    private bool NoOnlineAuthority() => GameManager.Instance.CurrentGameType == GameType.OnlinePvp && !this.IsServer;
 
     private void OnDrawGizmosSelected()
     {
