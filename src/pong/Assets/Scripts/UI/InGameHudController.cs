@@ -57,9 +57,6 @@ public class InGameHudController : MonoBehaviour
 
     public void OnUiPrepared(List<PlayerEntity> players)
     {
-        this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
-        this.player2UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2).Username;
-
         this.countdownTimerText.gameObject.SetActive(true);
         this.shouldBeginCountdown = true;
         this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
