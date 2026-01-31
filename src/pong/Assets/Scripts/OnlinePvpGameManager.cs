@@ -269,6 +269,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public override void OnDestroy()
     {
+        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
+        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerLeft;
         base.OnDestroy();
     }
