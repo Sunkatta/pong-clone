@@ -267,6 +267,9 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         this.isMatchRunning = false;
         this.ball.Despawn();
 
+        this.playerScoredDomainEventHandler.PlayerScored -= this.OnPlayerScored;
+        this.playerWonDomainEventHandler.PlayerWon -= OnPlayerWon;
+
         this.MatchEndedRpc(playerWonDomainEvent.WinnerPlayerUsername, playerWonDomainEvent.LoserPlayerUsername);
     }
 
