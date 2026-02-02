@@ -36,12 +36,11 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     public event Action<List<PlayerEntity>> PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
     public static event Action LobbyLoaded;
-    public static event Action<int, PlayerType> ScoreChanged;
     public static event Action<GameOverStatistics> MatchEnded;
 
-    public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
+    public static NetworkVariable<int> Player1Score { get; private set; } = new NetworkVariable<int>();
 
-    public NetworkVariable<int> Player2Score { get; set; } = new NetworkVariable<int>();
+    public static NetworkVariable<int> Player2Score { get; private set; } = new NetworkVariable<int>();
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -61,16 +60,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public override void OnNetworkSpawn()
     {
-        this.Player1Score.OnValueChanged += (int previousValue, int newValue) =>
-        {
-            ScoreChanged(newValue, PlayerType.Player1);
-        };
-
-        this.Player2Score.OnValueChanged += (int previousValue, int newValue) =>
-        {
-            ScoreChanged(newValue, PlayerType.Player2);
-        };
-
         if (!this.IsServer)
         {
             return;
@@ -177,11 +166,11 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         {
             if (playerScoredDomainEvent.PlayerType == PlayerType.Player1)
             {
-                this.Player1Score.Value++;
+                Player1Score.Value = playerScoredDomainEvent.PlayerNewScore;
             }
             else
             {
-                this.Player2Score.Value++;
+                Player2Score.Value = playerScoredDomainEvent.PlayerNewScore;
             }
         }
     }
@@ -306,8 +295,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
         if (this.IsServer)
         {
-            this.Player1Score.Value = 0;
-            this.Player2Score.Value = 0;
+            Player1Score.Value = 0;
+            Player2Score.Value = 0;
         }
 
         LobbyLoaded();

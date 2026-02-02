@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using VContainer;
@@ -64,7 +63,6 @@ public class InGameHudController : MonoBehaviour
 
     private void Start()
     {
-        OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
         OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
 
         this.inGameAudioSource = this.GetComponent<AudioSource>();
@@ -74,6 +72,13 @@ public class InGameHudController : MonoBehaviour
     {
         this.playerWonDomainEventHandler.PlayerWon += this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored += this.OnScoreChanged;
+        
+        if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
+        {
+            OnlinePvpGameManager.Player1Score.OnValueChanged += (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            OnlinePvpGameManager.Player2Score.OnValueChanged += (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+        }
+        
         this.player1ScoreText.text = "0";
         this.player2ScoreText.text = "0";
 
@@ -89,6 +94,12 @@ public class InGameHudController : MonoBehaviour
     {
         this.playerWonDomainEventHandler.PlayerWon -= this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored -= this.OnScoreChanged;
+
+        if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
+        {
+            OnlinePvpGameManager.Player1Score.OnValueChanged -= (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            OnlinePvpGameManager.Player2Score.OnValueChanged -= (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+        }
     }
 
     private void Update()
@@ -109,18 +120,6 @@ public class InGameHudController : MonoBehaviour
             int seconds = Mathf.FloorToInt(this.remainingCountdownTime % 60);
 
             this.countdownTimerText.text = $"{seconds}";
-        }
-    }
-
-    private void OnScoreChanged(int score, PlayerType playerType)
-    {
-        if (playerType == PlayerType.Player1)
-        {
-            this.player1ScoreText.text = score.ToString();
-        }
-        else
-        {
-            this.player2ScoreText.text = score.ToString();
         }
     }
 
