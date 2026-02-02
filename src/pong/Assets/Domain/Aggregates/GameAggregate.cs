@@ -138,18 +138,16 @@ public class GameAggregate : Entity, IAggregateRoot
             player1.ScorePoint();
             this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player1, player1.Score));
 
+            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
+            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+
             if (player1.Score == this.TargetScore)
             {
-                this.Ball.UpdateSpeed(0);
-                this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
                 player1.ResetScore();
                 player2.ResetScore();
                 this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
-                return;
             }
 
-            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
-            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
             return;
         }
 
@@ -164,18 +162,16 @@ public class GameAggregate : Entity, IAggregateRoot
             player2.ScorePoint();
             this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player2, player2.Score));
 
+            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
+            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+
             if (player2.Score == this.TargetScore)
             {
-                this.Ball.UpdateSpeed(0);
-                this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
                 player1.ResetScore();
                 player2.ResetScore();
                 this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
-                return;
             }
 
-            this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
-            this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
             return;
         }
 
