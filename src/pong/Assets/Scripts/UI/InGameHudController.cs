@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using VContainer;
@@ -54,7 +53,7 @@ public class InGameHudController : MonoBehaviour
         this.playerWonDomainEventHandler = playerWonDomainEventHandler;
     }
 
-    public void OnUiPrepared(List<PlayerEntity> players)
+    public void OnUiPrepared()
     {
         this.countdownTimerText.gameObject.SetActive(true);
         this.shouldBeginCountdown = true;

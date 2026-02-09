@@ -37,7 +37,7 @@ public class MainMenuController : MonoBehaviour
     [SerializeField]
     private Button quitGameBtn;
 
-    private IGameManager gameManager;
+    private LocalPvpGameManager gameManager;
 
     [Inject]
     public void Construct(IObjectResolver objectResolver,
@@ -92,7 +92,7 @@ public class MainMenuController : MonoBehaviour
         this.localPvpBtn.GetComponent<AudioSource>().Play();
 
         var localPvpGameManager = this.objectResolver.Instantiate(this.localPvpGameManager);
-        this.gameManager = localPvpGameManager.GetComponent<IGameManager>();
+        this.gameManager = localPvpGameManager.GetComponent<LocalPvpGameManager>();
 
         yield return new WaitForSeconds(0.1f);
 

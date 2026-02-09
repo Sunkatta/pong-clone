@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,14 +5,11 @@ using VContainer;
 using VContainer.Unity;
 
 [RequireComponent(typeof(AudioSource))]
-public class LocalPvpGameManager : MonoBehaviour, IGameManager
+public class LocalPvpGameManager : MonoBehaviour
 {
     private IObjectResolver resolver;
     private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
     private PlayerWonDomainEventHandler playerWonDomainEventHandler;
-
-    public event Action<List<PlayerEntity>> PrepareInGameUi;
-    public event Action<string, bool> PlayerDisconnected;
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -42,16 +38,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     public void BeginGame()
     {
         StartCoroutine(this.BeginGameCoroutine());
-    }
-
-    public void OnPlayerJoined(PlayerEntity player)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void LeaveGame()
-    {
-        throw new NotImplementedException();
     }
 
     private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)

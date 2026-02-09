@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -173,7 +172,7 @@ public class LobbyController : MonoBehaviour
         }
     }
 
-    private void OnUiPrepared(List<PlayerEntity> players)
+    private void OnUiPrepared()
     {
         this.gameObject.SetActive(false);
         this.countdownTimerText.gameObject.SetActive(false);
