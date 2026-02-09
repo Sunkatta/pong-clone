@@ -46,6 +46,34 @@ public class PlayerService : IDisposable
         }
     }
 
+    public ulong? GetClientIdByPlayerId(string playerId)
+    {
+        foreach (var kvp in clientIdToPlayerIdMapping)
+        {
+            if (kvp.Value == playerId)
+            {
+                return kvp.Key;
+            }
+        }
+
+        return null;
+    }
+
+    public string GetPlayerIdByClientId(ulong clientId)
+    {
+        if (clientIdToPlayerIdMapping.TryGetValue(clientId, out string playerId))
+        {
+            return playerId;
+        }
+
+        return null;
+    }
+
+    public void RemoveClient(ulong clientId)
+    {
+        clientIdToPlayerIdMapping.Remove(clientId);
+    }
+
     public void Dispose()
     {
         if (this.playerMovedHandler != null)

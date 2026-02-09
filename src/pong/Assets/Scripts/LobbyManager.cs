@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Unity.Netcode;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Lobbies;
@@ -14,7 +15,6 @@ public class LobbyManager : MonoBehaviour
 {
     private IObjectResolver resolver;
     private ICreateGameUseCase createGameUseCase;
-    private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     public event Action<bool> ShouldShowCountdownUi;
     public event Action UpdateLobbyUi;
@@ -45,23 +45,10 @@ public class LobbyManager : MonoBehaviour
     public Player LocalPlayer => this.localLobby.Players.FirstOrDefault(player => player.Id == AuthenticationService.Instance.PlayerId);
 
     [Inject]
-    public void Construct(IObjectResolver resolver,
-        ICreateGameUseCase createGameUseCase,
-        PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
+    public void Construct(IObjectResolver resolver, ICreateGameUseCase createGameUseCase)
     {
         this.resolver = resolver;
         this.createGameUseCase = createGameUseCase;
-        this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
-    }
-
-    private void OnEnable()
-    {
-        this.playerJoinedDomainEventHandler.PlayerJoined += OnPlayerJoined;
-    }
-
-    private void OnDisable()
-    {
-        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
     }
 
     private void Update()
@@ -131,8 +118,6 @@ public class LobbyManager : MonoBehaviour
 
             await this.SubscribeToLobbyEvents(this.localLobby);
 
-            var localPlayer = new PlayerEntity(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile, PlayerType.Player1);
-
             var createGameCommand = new CreateGameCommand(GameType.OnlinePvp,
                 (-9, -5),
                 (9, -5),
@@ -148,6 +133,7 @@ public class LobbyManager : MonoBehaviour
             GameManager.Instance.SetGameId(gameModel.GameId);
             GameManager.Instance.SetBallId(gameModel.BallId);
             GameManager.Instance.SetGameType(GameType.OnlinePvp);
+            GameManager.Instance.SetPlayer1(AuthenticationService.Instance.PlayerId, AuthenticationService.Instance.Profile);
 
             var onlinePvpGameManager = this.resolver.Instantiate(this.onlinePvpGameManager);
 
@@ -164,7 +150,7 @@ public class LobbyManager : MonoBehaviour
 
             this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
 
-            this.gameManager.OnPlayerJoined(localPlayer);
+            NetworkManager.Singleton.StartHost();
 
             this.gameManager.PlayerDisconnected += async (playerId, _) =>
             {
@@ -210,14 +196,12 @@ public class LobbyManager : MonoBehaviour
             {
                 if (lobbyPlayer.Id != this.localLobby.HostId)
                 {
-                    var localPlayer = new PlayerEntity(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
-
                     await this.relayManager.JoinRelay(this.localLobby.Data["relayCode"].Value);
 
                     GameManager.Instance.SetGameId(this.localLobby.Data["gameId"].Value);
                     GameManager.Instance.SetGameType(GameType.OnlinePvp);
                     GameManager.Instance.SetPlayer2(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value);
-                    this.gameManager.OnPlayerJoined(localPlayer);
+                    NetworkManager.Singleton.StartClient();
                 }
             }
 
@@ -353,25 +337,11 @@ public class LobbyManager : MonoBehaviour
             {
                 var lobbyPlayer = playerChange.Player;
                 this.localLobby.Players.Add(lobbyPlayer);
-                var localPlayer = new PlayerEntity(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value, PlayerType.Player2);
-                this.gameManager.OnPlayerJoined(localPlayer);
+                GameManager.Instance.SetPlayer2(lobbyPlayer.Id, lobbyPlayer.Data["playerName"].Value);
                 this.UpdateLobbyUi();
             }
         };
 
         await LobbyService.Instance.SubscribeToLobbyEventsAsync(lobby.Id, callbacks);
-    }
-
-    private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
-    {
-        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player1)
-        {
-            GameManager.Instance.SetPlayer1(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
-        }
-
-        if (playerJoinedDomainEvent.PlayerType == PlayerType.Player2)
-        {
-            GameManager.Instance.SetPlayer2(playerJoinedDomainEvent.PlayerId, playerJoinedDomainEvent.Username);
-        }
     }
 }
