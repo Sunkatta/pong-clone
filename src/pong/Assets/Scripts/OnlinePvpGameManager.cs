@@ -83,6 +83,81 @@ public class OnlinePvpGameManager : NetworkBehaviour
         NetworkManager.Singleton.Shutdown();
     }
 
+    public override void OnNetworkDespawn()
+    {
+        var playerId = this.playerService.GetPlayerIdByClientId(NetworkManager.Singleton.LocalClientId);
+
+        if (this.IsClient)
+        {
+            playerId = GameManager.Instance.CurrentPlayer2Id;
+        }
+
+        this.PlayerDisconnected(playerId, true);
+
+        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+
+        foreach (var edge in this.fieldEdges)
+        {
+            Destroy(edge);
+        }
+
+        Destroy(this.gameObject);
+
+        base.OnNetworkDespawn();
+    }
+
+    public override void OnDestroy()
+    {
+        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
+        this.playerLeftDomainEventHandler.PlayerLeft -= OnPlayerLeft;
+        base.OnDestroy();
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        var playerId = GameManager.Instance.CurrentPlayer1Id;
+        var playerUsername = GameManager.Instance.CurrentPlayer1Username;
+        var playerType = PlayerType.Player1;
+
+        if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
+        {
+            playerId = GameManager.Instance.CurrentPlayer2Id;
+            playerUsername = GameManager.Instance.CurrentPlayer2Username;
+            playerType = PlayerType.Player2;
+        }
+
+        this.playerService.RegisterPlayerId(playerId, clientId);
+
+        NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
+            ownerClientId: clientId,
+            isPlayerObject: true,
+            position: this.GetPlayerPosition(playerType));
+
+        this.joinGameUseCase.Execute(new JoinGameCommand(GameManager.Instance.CurrentGameId, playerId, playerUsername));
+
+        if (playerType == PlayerType.Player2)
+        {
+            // This works for now, but only with 2 players. If/when more players are added, every new client
+            // will need to sync the previously joined players.
+            var localPlayerNetworkModel = new LocalPlayerNetworkModel(GameManager.Instance.CurrentPlayer1Id,
+                GameManager.Instance.CurrentPlayer1Username,
+                PlayerType.Player1);
+
+            this.SyncPlayerWithClientsRpc(localPlayerNetworkModel);
+        }
+    }
+
+    [Rpc(SendTo.NotServer)]
+    private void SyncPlayerWithClientsRpc(LocalPlayerNetworkModel localPlayerNetworkModel)
+    {
+        var localPlayer = new PlayerEntity(localPlayerNetworkModel.GetId(),
+            localPlayerNetworkModel.GetUsername(),
+            localPlayerNetworkModel.GetPlayerType());
+
+        GameManager.Instance.SetPlayer1(localPlayer.Id, localPlayer.Username);
+    }
+
     private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
     {
         this.SyncGameInfoWithClientRpc(playerJoinedDomainEvent.PlayerPositionMinY, playerJoinedDomainEvent.PlayerPositionMaxY);
@@ -92,6 +167,24 @@ public class OnlinePvpGameManager : NetworkBehaviour
     private void SyncGameInfoWithClientRpc(float playerPositionMinY, float playerPositionMaxY, ClientRpcParams _ = default)
     {
         GameManager.Instance.SetPlayerLimits(playerPositionMinY, playerPositionMaxY);
+    }
+
+    private IEnumerator BeginGameCoroutine()
+    {
+        if (this.IsServer)
+        {
+            var ballInstance = this.resolver.Instantiate(this.ballPrefab);
+            var ballInstanceNetworkObject = ballInstance.GetComponent<NetworkObject>();
+            ballInstanceNetworkObject.Spawn();
+            yield return new WaitForSeconds(1);
+            this.ball = ballInstanceNetworkObject;
+            this.ballController = this.ball.GetComponent<BallController>();
+            this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
+            this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
+            this.PrepareInGameUiRpc();
+            yield return new WaitForSeconds(5);
+            this.isMatchRunning = true;
+        }
     }
 
     private void OnClientDisconnected(ulong clientId)
@@ -155,50 +248,6 @@ public class OnlinePvpGameManager : NetworkBehaviour
         }
     }
 
-    private void OnClientConnected(ulong clientId)
-    {
-        var playerId = GameManager.Instance.CurrentPlayer1Id;
-        var playerUsername = GameManager.Instance.CurrentPlayer1Username;
-        var playerType = PlayerType.Player1;
-
-        if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
-        {
-            playerId = GameManager.Instance.CurrentPlayer2Id;
-            playerUsername = GameManager.Instance.CurrentPlayer2Username;
-            playerType = PlayerType.Player2;
-        }
-
-        this.playerService.RegisterPlayerId(playerId, clientId);
-
-        NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
-            ownerClientId: clientId,
-            isPlayerObject: true,
-            position: this.GetPlayerPosition(playerType));
-
-        this.joinGameUseCase.Execute(new JoinGameCommand(GameManager.Instance.CurrentGameId, playerId, playerUsername));
-
-        if (playerType == PlayerType.Player2)
-        {
-            // This works for now, but only with 2 players. If/when more players are added, every new client
-            // will need to sync the previously joined players.
-            var localPlayerNetworkModel = new LocalPlayerNetworkModel(GameManager.Instance.CurrentPlayer1Id,
-                GameManager.Instance.CurrentPlayer1Username,
-                PlayerType.Player1);
-
-            this.SyncPlayerWithClientsRpc(localPlayerNetworkModel);
-        }
-    }
-
-    [Rpc(SendTo.NotServer)]
-    private void SyncPlayerWithClientsRpc(LocalPlayerNetworkModel localPlayerNetworkModel)
-    {
-        var localPlayer = new PlayerEntity(localPlayerNetworkModel.GetId(),
-            localPlayerNetworkModel.GetUsername(),
-            localPlayerNetworkModel.GetPlayerType());
-
-        GameManager.Instance.SetPlayer1(localPlayer.Id, localPlayer.Username);
-    }
-
     private void Start()
     {
         this.goalSound = this.GetComponent<AudioSource>();
@@ -212,55 +261,6 @@ public class OnlinePvpGameManager : NetworkBehaviour
         if (this.isMatchRunning && this.IsServer)
         {
             this.ballController.Move();
-        }
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        var playerId = this.playerService.GetPlayerIdByClientId(NetworkManager.Singleton.LocalClientId);
-        
-        if (this.IsClient)
-        {
-            playerId = GameManager.Instance.CurrentPlayer2Id;
-        }
-
-        this.PlayerDisconnected(playerId, true);
-
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
-
-        foreach (var edge in this.fieldEdges)
-        {
-            Destroy(edge);
-        }
-
-        Destroy(this.gameObject);
-
-        base.OnNetworkDespawn();
-    }
-
-    public override void OnDestroy()
-    {
-        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
-        this.playerLeftDomainEventHandler.PlayerLeft -= OnPlayerLeft;
-        base.OnDestroy();
-    }
-
-    private IEnumerator BeginGameCoroutine()
-    {
-        if (this.IsServer)
-        {
-            var ballInstance = this.resolver.Instantiate(this.ballPrefab);
-            var ballInstanceNetworkObject = ballInstance.GetComponent<NetworkObject>();
-            ballInstanceNetworkObject.Spawn();
-            yield return new WaitForSeconds(1);
-            this.ball = ballInstanceNetworkObject;
-            this.ballController = this.ball.GetComponent<BallController>();
-            this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
-            this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
-            this.PrepareInGameUiRpc();
-            yield return new WaitForSeconds(5);
-            this.isMatchRunning = true;
         }
     }
 
