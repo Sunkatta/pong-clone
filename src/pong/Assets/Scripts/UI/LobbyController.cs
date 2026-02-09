@@ -45,6 +45,7 @@ public class LobbyController : MonoBehaviour
 
     private GameObject localPlayerTile;
     private OnlinePvpGameManager gameManager;
+    private InGameHudController inGameHudController;
 
     private void OnEnable()
     {
@@ -53,23 +54,18 @@ public class LobbyController : MonoBehaviour
 
         var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
         this.gameManager = gameManagerGameObject.GetComponent<OnlinePvpGameManager>();
-        var inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
+        this.inGameHudController = this.inGameHudPanel.GetComponent<InGameHudController>();
 
-        this.gameManager.PrepareInGameUi += inGameHudController.OnUiPrepared;
+        this.gameManager.PrepareInGameUi += this.inGameHudController.OnUiPrepared;
         this.gameManager.PrepareInGameUi += this.OnUiPrepared;
         this.gameManager.PlayerDisconnected += this.OnDisconnected;
-    }
-
-    private void OnDisable()
-    {
-        this.gameManager = null;
+        this.gameManager.LobbyLoaded += this.OnLobbyLoaded;
     }
 
     private void Start()
     {
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShouldShowCountdownUi += this.OnShouldShowCountdownUi;
-        this.gameManager.LobbyLoaded += this.OnLobbyLoaded;
 
         this.readyBtn.onClick.AddListener(async () =>
         {
@@ -143,6 +139,11 @@ public class LobbyController : MonoBehaviour
         this.readyBtn.GetComponentInChildren<TMP_Text>().text = Constants.PlayerReadyText;
         this.inGameHudPanel.gameObject.SetActive(false);
         this.endGamePanel.gameObject.SetActive(false);
+
+        // Need to unsubscribe just before visualising the panel because
+        // it will trigger OnEnable which will pick a fresh gameManager reference.
+        // There's probably a better way to solve this.
+        this.gameManager.LobbyLoaded -= this.OnLobbyLoaded;
         this.gameObject.SetActive(true);
     }
 
@@ -182,8 +183,15 @@ public class LobbyController : MonoBehaviour
     private IEnumerator LeaveGameCoroutine()
     {
         this.leaveBtn.GetComponent<AudioSource>().Play();
+        this.gameManager.PrepareInGameUi -= this.inGameHudController.OnUiPrepared;
+        this.gameManager.PrepareInGameUi -= this.OnUiPrepared;
+        this.gameManager.PlayerDisconnected -= this.OnDisconnected;
+        this.gameManager.LobbyLoaded -= this.OnLobbyLoaded;
+
         yield return new WaitForSeconds(0.1f);
         this.gameManager.LeaveGame();
+        this.inGameHudController = null;
+        this.gameManager = null;
         this.gameObject.SetActive(false);
         this.onlinePvpPanel.gameObject.SetActive(true);
     }
