@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,16 +5,11 @@ using VContainer;
 using VContainer.Unity;
 
 [RequireComponent(typeof(AudioSource))]
-public class LocalPvpGameManager : MonoBehaviour, IGameManager
+public class LocalPvpGameManager : MonoBehaviour
 {
     private IObjectResolver resolver;
     private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
     private PlayerWonDomainEventHandler playerWonDomainEventHandler;
-
-    public event Action<List<PlayerEntity>> PrepareInGameUi;
-    public event Action<string, bool> PlayerDisconnected;
-    public static event Action MainMenuLoaded;
-    public static event Action<GameOverStatistics> MatchEnded;
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -29,7 +23,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     private GameObject ball;
     private BallController ballController;
 
-    private readonly List<PlayerEntity> players = new List<PlayerEntity>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
     [Inject]
@@ -45,16 +38,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
     public void BeginGame()
     {
         StartCoroutine(this.BeginGameCoroutine());
-    }
-
-    public void OnPlayerJoined(PlayerEntity player)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void LeaveGame()
-    {
-        throw new NotImplementedException();
     }
 
     private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
@@ -76,21 +59,13 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         }
     }
 
-    private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
+    private IEnumerator MatchEndedCoroutine()
     {
-        Destroy(this.ball);
-
         this.isMatchRunning = false;
 
-        var gameOverStatistics = new GameOverStatistics
-        {
-            WinnerName = winnerName,
-            LoserName = loserName,
-            NavigatingToMessage = Constants.ReturningToMainMenuText,
-        };
+        yield return new WaitForSeconds(0.2f);
 
-        MatchEnded(gameOverStatistics);
-        yield return new WaitForSeconds(5);
+        Destroy(this.ball);
 
         foreach (var player in FindObjectsByType<LocalPlayerController>(FindObjectsSortMode.None))
         {
@@ -102,7 +77,6 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
             Destroy(edge);
         }
 
-        MainMenuLoaded();
         this.playerWonDomainEventHandler.PlayerWon -= OnPlayerWon;
         this.playerScoredDomainEventHandler.PlayerScored -= OnPlayerScored;
 
@@ -115,14 +89,13 @@ public class LocalPvpGameManager : MonoBehaviour, IGameManager
         this.ballController = this.ball.GetComponent<BallController>();
         this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
         this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
-        //PrepareInGameUi(this.players);
         yield return new WaitForSeconds(5);
         this.isMatchRunning = true;
     }
 
-    private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)
+    private void OnPlayerWon(PlayerWonDomainEvent _)
     {
-        this.StartCoroutine(this.MatchEndedCouroutine(playerWonDomainEvent.WinnerPlayerUsername, playerWonDomainEvent.LoserPlayerUsername));
+        this.StartCoroutine(this.MatchEndedCoroutine());
     }
 
     private void GenerateCollidersAcrossScreen()

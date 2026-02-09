@@ -1,4 +1,3 @@
-using System;
 using Unity.Netcode;
 using UnityEngine;
 using VContainer;
@@ -12,9 +11,6 @@ public class BallController : NetworkBehaviour
     private PlayerScoredDomainEventHandler playerScoredHandler;
     private BallMovedDomainEventHandler ballMovedHandler;
     private BallDirectionUpdatedDomainEventHandler ballDirectionUpdatedHandler;
-
-    public event Action<PlayerType> GoalPassed;
-    public event Action BallHit;
 
     private AudioSource bounceSound;
     private Vector2 ballDirection;
@@ -37,41 +33,57 @@ public class BallController : NetworkBehaviour
         this.ballDirectionUpdatedHandler = ballDirectionUpdatedHandler;
     }
 
+    public override void OnNetworkSpawn()
+    {
+        if (!this.IsServer)
+        {
+            return;
+        }
+
+        this.Setup();
+        base.OnNetworkSpawn();
+    }
+
     private void OnEnable()
+    {
+        if (this.NoOnlineAuthority())
+        {
+            return;
+        }
+
+        this.Setup();
+    }
+
+    private void OnDisable()
+    {
+        if (this.NoOnlineAuthority())
+        {
+            return;
+        }
+
+        this.ballMovedHandler.BallMoved -= OnBallMoved;
+        this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
+        this.playerScoredHandler.PlayerScored -= OnPlayerScored;
+    }
+
+    public void Move()
+    {
+        if (this.NoOnlineAuthority())
+        {
+            return;
+        }
+
+        Vector3 nextPosition = this.transform.position + (Vector3)(this.CurrentBallSpeed * Time.deltaTime * this.ballDirection);
+        this.moveBallUseCase.Execute(new MoveBallCommand(GameManager.Instance.CurrentGameId, (nextPosition.x, nextPosition.y)));
+    }
+
+    private void Setup()
     {
         this.ballMovedHandler.BallMoved += OnBallMoved;
         this.ballDirectionUpdatedHandler.BallDirectionUpdated += OnBallDirectionUpdated;
         this.playerScoredHandler.PlayerScored += OnPlayerScored;
         (float x, float y) = this.getBallDirectionQuery.Execute(GameManager.Instance.CurrentGameId, GameManager.Instance.CurrentBallId);
         this.ballDirection = new Vector2(x, y);
-    }
-
-    private void OnDisable()
-    {
-        this.ballMovedHandler.BallMoved -= OnBallMoved;
-        this.ballDirectionUpdatedHandler.BallDirectionUpdated -= OnBallDirectionUpdated;
-    }
-
-    public void Move()
-    {
-        Vector3 nextPosition = this.transform.position + (Vector3)(this.CurrentBallSpeed * Time.deltaTime * this.ballDirection);
-        this.moveBallUseCase.Execute(new MoveBallCommand(GameManager.Instance.CurrentGameId, (nextPosition.x, nextPosition.y)));
-    }
-
-    public void UpdateSpeed(float newSpeed)
-    {
-        this.CurrentBallSpeed = newSpeed;
-    }
-
-    public void UpdateBallDirection(Vector2 newDirection)
-    {
-        this.ballDirection = newDirection;
-    }
-
-    public void ResetBall()
-    {
-        this.CurrentBallSpeed = GameManager.Instance.BallInitialSpeed;
-        this.transform.position = Vector3.zero;
     }
 
     private void Start()
@@ -82,6 +94,11 @@ public class BallController : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        if (this.NoOnlineAuthority())
+        {
+            return;
+        }
+
         this.bounceSound.Play();
 
         ContactPoint2D contact = collision.GetContact(0);
@@ -96,6 +113,8 @@ public class BallController : NetworkBehaviour
 
         this.updateBallDirectionUseCase.Execute(new UpdateBallDirectionCommand(GameManager.Instance.CurrentGameId, (newDirection.x, newDirection.y), isHitByPlayer));
     }
+
+    private bool NoOnlineAuthority() => GameManager.Instance.CurrentGameType == GameType.OnlinePvp && !this.IsServer;
 
     private void OnDrawGizmosSelected()
     {

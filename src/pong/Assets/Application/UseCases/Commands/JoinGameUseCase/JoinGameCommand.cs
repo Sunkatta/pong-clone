@@ -1,6 +1,6 @@
-public class JoinMatchCommand
+public class JoinGameCommand
 {
-    public JoinMatchCommand(string gameId, string playerId, string username)
+    public JoinGameCommand(string gameId, string playerId, string username)
     {
         this.GameId = gameId;
         this.PlayerId = playerId;

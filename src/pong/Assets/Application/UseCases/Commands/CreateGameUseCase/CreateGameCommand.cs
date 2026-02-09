@@ -1,6 +1,8 @@
 public class CreateGameCommand
 {
-    public CreateGameCommand((float x, float y) bottomLeftCornerPosition,
+    public CreateGameCommand(
+        GameType gameType,
+        (float x, float y) bottomLeftCornerPosition,
         (float x, float y) bottomRightCornerPosition,
         (float x, float y) topRightCornerPosition,
         (float x, float y) topLeftCornerPosition,
@@ -10,6 +12,7 @@ public class CreateGameCommand
         float ballInitialSpeed,
         float ballMaximumSpeed)
     {
+        this.GameType = gameType;
         this.BottomLeftCornerPosition = bottomLeftCornerPosition;
         this.BottomRightCornerPosition = bottomRightCornerPosition;
         this.TopRightCornerPosition = topRightCornerPosition;
@@ -20,6 +23,8 @@ public class CreateGameCommand
         this.BallInitialSpeed = ballInitialSpeed;
         this.BallMaximumSpeed = ballMaximumSpeed;
     }
+
+    public GameType GameType { get; }
 
     public (float X, float Y) BottomLeftCornerPosition { get; }
 

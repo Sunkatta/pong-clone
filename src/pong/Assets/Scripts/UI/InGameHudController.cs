@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using UnityEngine;
 using VContainer;
@@ -9,6 +7,7 @@ using VContainer;
 public class InGameHudController : MonoBehaviour
 {
     private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
+    private PlayerWonDomainEventHandler playerWonDomainEventHandler;
 
     [SerializeField]
     private RectTransform mainMenuPanel;
@@ -46,17 +45,18 @@ public class InGameHudController : MonoBehaviour
 
     private float remainingCountdownTime;
 
+    private OnlinePvpGameManager gameManager;
+
     [Inject]
-    public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler)
+    public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler,
+        PlayerWonDomainEventHandler playerWonDomainEventHandler)
     {
         this.playerScoredDomainEventHandler = playerScoredDomainEventHandler;
+        this.playerWonDomainEventHandler = playerWonDomainEventHandler;
     }
 
-    public void OnUiPrepared(List<PlayerEntity> players)
+    public void OnUiPrepared()
     {
-        this.player1UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1).Username;
-        this.player2UsernameText.text = players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2).Username;
-
         this.countdownTimerText.gameObject.SetActive(true);
         this.shouldBeginCountdown = true;
         this.remainingCountdownTime = Constants.CountdownTimeInSeconds;
@@ -64,17 +64,24 @@ public class InGameHudController : MonoBehaviour
 
     private void Start()
     {
-        OnlinePvpGameManager.ScoreChanged += this.OnScoreChanged;
-        OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.MatchEnded += this.OnGameEnded;
-        LocalPvpGameManager.MainMenuLoaded += this.OnMainMenuLoaded;
-
         this.inGameAudioSource = this.GetComponent<AudioSource>();
     }
 
     private void OnEnable()
     {
+        this.playerWonDomainEventHandler.PlayerWon += this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored += this.OnScoreChanged;
+        
+        if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
+        {
+            var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
+            this.gameManager = gameManagerGameObject.GetComponent<OnlinePvpGameManager>();
+
+            this.gameManager.Player1Score.OnValueChanged += (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            this.gameManager.Player2Score.OnValueChanged += (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            this.gameManager.MatchEnded += this.OnGameEnded;
+        }
+        
         this.player1ScoreText.text = "0";
         this.player2ScoreText.text = "0";
 
@@ -88,7 +95,15 @@ public class InGameHudController : MonoBehaviour
 
     private void OnDisable()
     {
+        this.playerWonDomainEventHandler.PlayerWon -= this.OnGameEnded;
         this.playerScoredDomainEventHandler.PlayerScored -= this.OnScoreChanged;
+
+        if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
+        {
+            this.gameManager.Player1Score.OnValueChanged -= (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            this.gameManager.Player2Score.OnValueChanged -= (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            this.gameManager.MatchEnded -= this.OnGameEnded;
+        }
     }
 
     private void Update()
@@ -109,18 +124,6 @@ public class InGameHudController : MonoBehaviour
             int seconds = Mathf.FloorToInt(this.remainingCountdownTime % 60);
 
             this.countdownTimerText.text = $"{seconds}";
-        }
-    }
-
-    private void OnScoreChanged(int score, PlayerType playerType)
-    {
-        if (playerType == PlayerType.Player1)
-        {
-            this.player1ScoreText.text = score.ToString();
-        }
-        else
-        {
-            this.player2ScoreText.text = score.ToString();
         }
     }
 
@@ -148,6 +151,18 @@ public class InGameHudController : MonoBehaviour
         this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
     }
 
+    private void OnGameEnded(PlayerWonDomainEvent playerWonDomainEvent)
+    {
+        var gameOverStatistics = new GameOverStatistics
+        {
+            WinnerName = playerWonDomainEvent.WinnerPlayerUsername,
+            LoserName = playerWonDomainEvent.LoserPlayerUsername,
+            NavigatingToMessage = Constants.ReturningToMainMenuText,
+        };
+
+        this.StartCoroutine(this.ShowEndGamePanelCoroutine(gameOverStatistics));
+    }
+
     private IEnumerator ShowEndGamePanelCoroutine(GameOverStatistics gameOverStatistics)
     {
         yield return new WaitForSeconds(0.2f);
@@ -156,5 +171,9 @@ public class InGameHudController : MonoBehaviour
         this.endGameText.text = $"{gameOverStatistics.WinnerName} WINS!\n {gameOverStatistics.LoserName}, WANT A REMATCH?";
         this.navigatingToText.text = gameOverStatistics.NavigatingToMessage;
         this.endGamePanel.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(5);
+
+        OnMainMenuLoaded();
     }
 }

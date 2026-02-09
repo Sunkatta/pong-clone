@@ -1,21 +1,51 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using VContainer;
+using VContainer.Unity;
 
-public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
+[RequireComponent(typeof(AudioSource))]
+public class OnlinePvpGameManager : NetworkBehaviour
 {
-    public event Action<List<PlayerEntity>> PrepareInGameUi;
+    private IObjectResolver resolver;
+    private IJoinGameUseCase joinGameUseCase;
+    private ILeaveGameUseCase leaveGameUseCase;
+    private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
+    private PlayerLeftDomainEventHandler playerLeftDomainEventHandler;
+    private PlayerScoredDomainEventHandler playerScoredDomainEventHandler;
+    private PlayerWonDomainEventHandler playerWonDomainEventHandler;
+    private PlayerService playerService;
+
+    [Inject]
+    public void Construct(IObjectResolver resolver,
+        IJoinGameUseCase joinGameUseCase,
+        ILeaveGameUseCase leaveGameUseCase,
+        PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler,
+        PlayerLeftDomainEventHandler playerLeftDomainEventHandler,
+        PlayerScoredDomainEventHandler playerScoredDomainEventHandler,
+        PlayerWonDomainEventHandler playerWonDomainEventHandler,
+        PlayerService playerService)
+    {
+        this.resolver = resolver;
+        this.joinGameUseCase = joinGameUseCase;
+        this.leaveGameUseCase = leaveGameUseCase;
+        this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
+        this.playerLeftDomainEventHandler = playerLeftDomainEventHandler;
+        this.playerScoredDomainEventHandler = playerScoredDomainEventHandler;
+        this.playerWonDomainEventHandler = playerWonDomainEventHandler;
+        this.playerService = playerService;
+    }
+
+    public event Action PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
-    public static event Action LobbyLoaded;
-    public static event Action<int, PlayerType> ScoreChanged;
-    public static event Action<GameOverStatistics> MatchEnded;
+    public event Action LobbyLoaded;
+    public event Action<GameOverStatistics> MatchEnded;
 
-    public NetworkVariable<int> Player1Score { get; set; } = new NetworkVariable<int>();
+    public NetworkVariable<int> Player1Score { get; private set; } = new NetworkVariable<int>();
 
-    public NetworkVariable<int> Player2Score { get; set; } = new NetworkVariable<int>();
+    public NetworkVariable<int> Player2Score { get; private set; } = new NetworkVariable<int>();
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -23,59 +53,29 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     [SerializeField]
     private NetworkObject playerPrefab;
 
-    [SerializeField]
-    private float maxBallSpeed;
-
-    [SerializeField]
-    private int targetScore;
-
-    private readonly List<PlayerEntity> players = new List<PlayerEntity>();
     private readonly List<GameObject> fieldEdges = new List<GameObject>();
 
-    private PlayerType? latestScorer;
     private AudioSource goalSound;
     private BallController ballController;
     private bool isMatchRunning;
-    private PlayerEntity localPlayer;
 
     private NetworkObject ball;
 
     public override void OnNetworkSpawn()
     {
-        this.ClientConnectedRpc();
-
-        this.Player1Score.OnValueChanged += (int previousValue, int newValue) =>
+        if (!this.IsServer)
         {
-            ScoreChanged(newValue, PlayerType.Player1);
-        };
+            return;
+        }
 
-        this.Player2Score.OnValueChanged += (int previousValue, int newValue) =>
-        {
-            ScoreChanged(newValue, PlayerType.Player2);
-        };
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        this.playerJoinedDomainEventHandler.PlayerJoined += OnPlayerJoined;
+        this.playerLeftDomainEventHandler.PlayerLeft += OnPlayerLeft;
     }
 
     public void BeginGame()
     {
-        StartCoroutine(this.BeginGameCouroutine());
-    }
-
-    public void OnPlayerJoined(PlayerEntity player)
-    {
-        this.players.Add(player);
-        this.localPlayer = player;
-
-        switch (player.PlayerType)
-        {
-            case PlayerType.Player1:
-                NetworkManager.Singleton.StartHost();
-                break;
-            case PlayerType.Player2:
-                NetworkManager.Singleton.StartClient();
-                break;
-            default:
-                break;
-        }        
+        StartCoroutine(this.BeginGameCoroutine());
     }
 
     public void LeaveGame()
@@ -83,126 +83,108 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         NetworkManager.Singleton.Shutdown();
     }
 
-    private void OnPlayerLeft(ulong _)
+    private void OnPlayerJoined(PlayerJoinedDomainEvent playerJoinedDomainEvent)
     {
-        if (this.IsServer)
+        this.SyncGameInfoWithClientRpc(playerJoinedDomainEvent.PlayerPositionMinY, playerJoinedDomainEvent.PlayerPositionMaxY);
+    }
+
+    [ClientRpc]
+    private void SyncGameInfoWithClientRpc(float playerPositionMinY, float playerPositionMaxY, ClientRpcParams _ = default)
+    {
+        GameManager.Instance.SetPlayerLimits(playerPositionMinY, playerPositionMaxY);
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (!this.IsServer)
         {
-            var player2 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2);
+            return;
+        }
 
-            if (player2 == null)
+        if (clientId == this.OwnerClientId)
+        {
+            foreach (var clientIdToDisconnect in NetworkManager.Singleton.ConnectedClientsIds)
             {
-                this.PlayerDisconnected(this.localPlayer.Id, true);
+                var playerIdToDisconnect = this.playerService.GetPlayerIdByClientId(clientIdToDisconnect);
 
-                NetworkManager.Singleton.Shutdown();
-
-                foreach (var edge in this.fieldEdges)
+                if (playerIdToDisconnect == null || clientIdToDisconnect == clientId)
                 {
-                    Destroy(edge);
+                    continue;
                 }
 
-                Destroy(this.gameObject);
-                return;
-            }
-
-            this.players.Remove(player2);
-            this.PlayerDisconnected(player2.Id, false);
-
-            if (this.isMatchRunning)
-            {
-                var winnerPlayer = this.players.First();
-                var loserPlayer = player2;
-
-                this.ball.Despawn();
-
-                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
-                this.isMatchRunning = false;
+                this.leaveGameUseCase.Execute(new LeaveGameCommand(GameManager.Instance.CurrentGameId, playerIdToDisconnect));
             }
         }
-        else
+
+        var targetPlayerIdToDisconnect = this.playerService.GetPlayerIdByClientId(clientId);
+        this.leaveGameUseCase.Execute(new LeaveGameCommand(GameManager.Instance.CurrentGameId, targetPlayerIdToDisconnect));
+    }
+
+    private void OnPlayerLeft(PlayerLeftDomainEvent playerLeftDomainEvent)
+    {
+        var clientId = this.playerService.GetClientIdByPlayerId(playerLeftDomainEvent.PlayerId);
+
+        if (clientId != null)
         {
-            this.PlayerDisconnected(this.localPlayer.Id, true);
+            this.playerService.RemoveClient(clientId.Value);
+        }
 
-            NetworkManager.Singleton.Shutdown();
+        if (this.isMatchRunning)
+        {
+            this.ball.Despawn();
 
-            foreach (var edge in this.fieldEdges)
-            {
-                Destroy(edge);
-            }
-
-            Destroy(this.gameObject);
+            this.MatchEndedRpc(GameManager.Instance.CurrentPlayer1Username, GameManager.Instance.CurrentPlayer2Username);
+            this.isMatchRunning = false;
         }
     }
 
-    private void OnPlayerScored(PlayerType scorer)
+    private void OnPlayerScored(PlayerScoredDomainEvent playerScoredDomainEvent)
     {
         this.goalSound.Play();
 
         if (this.IsServer)
         {
-            this.latestScorer = scorer;
-
-            if (scorer == PlayerType.Player1)
+            if (playerScoredDomainEvent.PlayerType == PlayerType.Player1)
             {
-                this.Player1Score.Value++;
+                Player1Score.Value = playerScoredDomainEvent.PlayerNewScore;
             }
             else
             {
-                this.Player2Score.Value++;
+                Player2Score.Value = playerScoredDomainEvent.PlayerNewScore;
             }
-
-            if (this.Player1Score.Value == targetScore || this.Player2Score.Value == targetScore)
-            {
-                var winnerType = this.Player1Score.Value == targetScore ? PlayerType.Player1 : PlayerType.Player2;
-                var winnerPlayer = this.players.First(player => player.PlayerType == winnerType);
-                var loserPlayer = this.players.First(player => player.PlayerType != winnerType);
-
-                this.ball.Despawn();
-
-                this.MatchEndedRpc(winnerPlayer.Username, loserPlayer.Username);
-                this.isMatchRunning = false;
-
-                return;
-            }
-
-            this.SetInitialGameState();
         }
     }
 
-    private void OnBallHit()
+    private void OnClientConnected(ulong clientId)
     {
-        if (this.IsServer)
-        {
-            if (this.ballController.CurrentBallSpeed >= this.maxBallSpeed)
-            {
-                return;
-            }
-
-            var newSpeed = this.ballController.CurrentBallSpeed + 1;
-            this.ballController.UpdateSpeed(newSpeed);
-        }
-    }
-
-    [Rpc(SendTo.Server)]
-    private void ClientConnectedRpc(RpcParams rpcParams = default)
-    {
-        var player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1);
+        var playerId = GameManager.Instance.CurrentPlayer1Id;
+        var playerUsername = GameManager.Instance.CurrentPlayer1Username;
+        var playerType = PlayerType.Player1;
 
         if (NetworkManager.ConnectedClients.Count == Constants.MaxPlayersCount)
         {
-            player = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player2);
+            playerId = GameManager.Instance.CurrentPlayer2Id;
+            playerUsername = GameManager.Instance.CurrentPlayer2Username;
+            playerType = PlayerType.Player2;
         }
 
-        NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
-            ownerClientId: rpcParams.Receive.SenderClientId,
-            isPlayerObject: true,
-            position: this.GetPlayerPosition(player.PlayerType));
+        this.playerService.RegisterPlayerId(playerId, clientId);
 
-        if (player.PlayerType == PlayerType.Player2)
+        NetworkManager.SpawnManager.InstantiateAndSpawn(this.playerPrefab,
+            ownerClientId: clientId,
+            isPlayerObject: true,
+            position: this.GetPlayerPosition(playerType));
+
+        this.joinGameUseCase.Execute(new JoinGameCommand(GameManager.Instance.CurrentGameId, playerId, playerUsername));
+
+        if (playerType == PlayerType.Player2)
         {
             // This works for now, but only with 2 players. If/when more players are added, every new client
             // will need to sync the previously joined players.
-            var player1 = this.players.FirstOrDefault(player => player.PlayerType == PlayerType.Player1);
-            var localPlayerNetworkModel = new LocalPlayerNetworkModel(player1.Id, player1.Username, player1.PlayerType);
+            var localPlayerNetworkModel = new LocalPlayerNetworkModel(GameManager.Instance.CurrentPlayer1Id,
+                GameManager.Instance.CurrentPlayer1Username,
+                PlayerType.Player1);
+
             this.SyncPlayerWithClientsRpc(localPlayerNetworkModel);
         }
     }
@@ -214,15 +196,15 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
             localPlayerNetworkModel.GetUsername(),
             localPlayerNetworkModel.GetPlayerType());
 
-        this.players.Add(localPlayer);
+        GameManager.Instance.SetPlayer1(localPlayer.Id, localPlayer.Username);
     }
 
     private void Start()
     {
-        this.goalSound = GetComponent<AudioSource>();
+        this.goalSound = this.GetComponent<AudioSource>();
         this.GenerateCollidersAcrossScreen();
 
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnPlayerLeft;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
 
     private void Update()
@@ -233,76 +215,79 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
         }
     }
 
+    public override void OnNetworkDespawn()
+    {
+        var playerId = this.playerService.GetPlayerIdByClientId(NetworkManager.Singleton.LocalClientId);
+        
+        if (this.IsClient)
+        {
+            playerId = GameManager.Instance.CurrentPlayer2Id;
+        }
+
+        this.PlayerDisconnected(playerId, true);
+
+        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+
+        foreach (var edge in this.fieldEdges)
+        {
+            Destroy(edge);
+        }
+
+        Destroy(this.gameObject);
+
+        base.OnNetworkDespawn();
+    }
+
     public override void OnDestroy()
     {
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnPlayerLeft;
+        this.playerJoinedDomainEventHandler.PlayerJoined -= OnPlayerJoined;
+        this.playerLeftDomainEventHandler.PlayerLeft -= OnPlayerLeft;
         base.OnDestroy();
     }
 
-    private IEnumerator BeginGameCouroutine()
+    private IEnumerator BeginGameCoroutine()
     {
         if (this.IsServer)
         {
-            var ballInstance = Instantiate(this.ballPrefab);
+            var ballInstance = this.resolver.Instantiate(this.ballPrefab);
             var ballInstanceNetworkObject = ballInstance.GetComponent<NetworkObject>();
             ballInstanceNetworkObject.Spawn();
             yield return new WaitForSeconds(1);
-            this.BallSpawnedRpc(ballInstanceNetworkObject);
+            this.ball = ballInstanceNetworkObject;
+            this.ballController = this.ball.GetComponent<BallController>();
+            this.playerScoredDomainEventHandler.PlayerScored += this.OnPlayerScored;
+            this.playerWonDomainEventHandler.PlayerWon += OnPlayerWon;
             this.PrepareInGameUiRpc();
             yield return new WaitForSeconds(5);
-            this.SetInitialGameState();
             this.isMatchRunning = true;
         }
     }
 
     [Rpc(SendTo.ClientsAndHost)]
-    private void BallSpawnedRpc(NetworkObjectReference ballNetworkObject)
-    {
-        this.ball = ballNetworkObject;
-        this.ballController = this.ball.GetComponent<BallController>();
-        ballController.BallHit += this.OnBallHit;
-        ballController.GoalPassed += this.OnPlayerScored;
-    }
-
-    [Rpc(SendTo.ClientsAndHost)]
     private void PrepareInGameUiRpc()
     {
-        PrepareInGameUi(this.players);
+        PrepareInGameUi();
     }
 
-    private void SetInitialGameState()
+    private void OnPlayerWon(PlayerWonDomainEvent playerWonDomainEvent)
     {
-        this.ballController.ResetBall();
-        this.ballController.UpdateBallDirection(this.GetBallDirection());
-    }
+        this.isMatchRunning = false;
+        this.ball.Despawn();
 
-    private Vector2 GetBallDirection()
-    {
-        if (this.latestScorer != null)
-        {
-            var isPlayer1 = this.latestScorer == PlayerType.Player1;
+        this.playerScoredDomainEventHandler.PlayerScored -= this.OnPlayerScored;
+        this.playerWonDomainEventHandler.PlayerWon -= OnPlayerWon;
 
-            return new Vector2(isPlayer1 ? 1 : -1, UnityEngine.Random.Range(-1f, 1f));
-        }
-        else
-        {
-            return new Vector2(UnityEngine.Random.value < 0.5 ? -1 : 1, UnityEngine.Random.Range(-1f, 1f));
-        }
+        this.MatchEndedRpc(playerWonDomainEvent.WinnerPlayerUsername, playerWonDomainEvent.LoserPlayerUsername);
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     private void MatchEndedRpc(string winnerName, string loserName)
     {
-        this.EndGame(winnerName, loserName);
-        
+        this.StartCoroutine(this.MatchEndedCoroutine(winnerName, loserName));
     }
 
-    public void EndGame(string winnerName, string loserName)
-    {
-        this.StartCoroutine(this.MatchEndedCouroutine(winnerName, loserName));
-    }
-
-    private IEnumerator MatchEndedCouroutine(string winnerName, string loserName)
+    private IEnumerator MatchEndedCoroutine(string winnerName, string loserName)
     {
         var gameOverStatistics = new GameOverStatistics
         {
@@ -316,10 +301,8 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
         if (this.IsServer)
         {
-            this.Player1Score.Value = 0;
-            this.Player2Score.Value = 0;
-
-            this.latestScorer = null;
+            Player1Score.Value = 0;
+            Player2Score.Value = 0;
         }
 
         LobbyLoaded();
@@ -337,45 +320,68 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     {
         Vector2 lDCorner = Camera.main.ViewportToWorldPoint(new Vector3(0, 0f, Camera.main.nearClipPlane));
         Vector2 rUCorner = Camera.main.ViewportToWorldPoint(new Vector3(1f, 1f, Camera.main.nearClipPlane));
-        Vector2[] colliderpoints;
 
-        var upperEdgeGameObject = new GameObject(Constants.UpperEdge);
-        upperEdgeGameObject.tag = Constants.UpperEdge;
-        EdgeCollider2D upperEdge = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = upperEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, rUCorner.y);
-        upperEdge.points = colliderpoints;
+        var upperEdgeGameObject = new GameObject(Constants.UpperEdge)
+        {
+            tag = Constants.UpperEdge
+        };
+
+        Rigidbody2D upperEdgeRigidbody = upperEdgeGameObject.AddComponent<Rigidbody2D>();
+        upperEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D upperEdgeCollider = upperEdgeGameObject.AddComponent<EdgeCollider2D>();
+        upperEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(upperEdgeGameObject);
 
-        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge);
-        lowerEdgeGameObject.tag = Constants.LowerEdge;
-        EdgeCollider2D lowerEdge = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = lowerEdge.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        lowerEdge.points = colliderpoints;
+        var lowerEdgeGameObject = new GameObject(Constants.LowerEdge)
+        {
+            tag = Constants.LowerEdge
+        };
+
+        Rigidbody2D lowerEdgeRigidbody = lowerEdgeGameObject.AddComponent<Rigidbody2D>();
+        lowerEdgeRigidbody.bodyType = RigidbodyType2D.Static;
+
+        EdgeCollider2D lowerEdgeCollider = lowerEdgeGameObject.AddComponent<EdgeCollider2D>();
+        lowerEdgeCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(lowerEdgeGameObject);
 
-        var leftGoalGameObject = new GameObject(Constants.LeftGoal);
-        leftGoalGameObject.tag = Constants.LeftGoal;
+        var leftGoalGameObject = new GameObject(Constants.LeftGoal)
+        {
+            tag = Constants.LeftGoal
+        };
+
         EdgeCollider2D leftGoalCollider = leftGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = leftGoalCollider.points;
-        colliderpoints[0] = new Vector2(lDCorner.x, lDCorner.y);
-        colliderpoints[1] = new Vector2(lDCorner.x, rUCorner.y);
-        leftGoalCollider.points = colliderpoints;
+        leftGoalCollider.isTrigger = true;
+        leftGoalCollider.points = new Vector2[]
+        {
+            new Vector2(lDCorner.x, lDCorner.y),
+            new Vector2(lDCorner.x, rUCorner.y)
+        };
 
         this.fieldEdges.Add(leftGoalGameObject);
 
-        var rightGoalGameObject = new GameObject(Constants.RightGoal);
-        rightGoalGameObject.tag = Constants.RightGoal;
+        var rightGoalGameObject = new GameObject(Constants.RightGoal)
+        {
+            tag = Constants.RightGoal
+        };
+
         EdgeCollider2D rightGoalCollider = rightGoalGameObject.AddComponent<EdgeCollider2D>();
-        colliderpoints = rightGoalCollider.points;
-        colliderpoints[0] = new Vector2(rUCorner.x, rUCorner.y);
-        colliderpoints[1] = new Vector2(rUCorner.x, lDCorner.y);
-        rightGoalCollider.points = colliderpoints;
+        rightGoalCollider.isTrigger = true;
+        rightGoalCollider.points = new Vector2[]
+        {
+            new Vector2(rUCorner.x, rUCorner.y),
+            new Vector2(rUCorner.x, lDCorner.y)
+        };
 
         this.fieldEdges.Add(rightGoalGameObject);
     }

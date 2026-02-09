@@ -28,12 +28,12 @@ public class LocalPlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        playerMovedHandler.PlayerMoved += OnPlayerMoved;
+        this.playerMovedHandler.PlayerMoved += OnPlayerMoved;
     }
 
     private void OnDisable()
     {
-        playerMovedHandler.PlayerMoved -= OnPlayerMoved;
+        this.playerMovedHandler.PlayerMoved -= OnPlayerMoved;
     }
 
     private void Update()
@@ -52,7 +52,7 @@ public class LocalPlayerController : MonoBehaviour
 
         float newY = this.rb.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
         var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, Id, newY);
-        movePlayerUseCase.Execute(movePlayerCommand);
+        this.movePlayerUseCase.Execute(movePlayerCommand);
     }
 
     private void OnPlayerMoved(PlayerMovedDomainEvent domainEvent)

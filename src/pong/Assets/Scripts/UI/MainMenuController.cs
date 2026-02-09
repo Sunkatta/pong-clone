@@ -10,7 +10,7 @@ public class MainMenuController : MonoBehaviour
 {
     private IObjectResolver objectResolver;
     private ICreateGameUseCase createGameUseCase;
-    private IJoinMatchUseCase joinMatchUseCase;
+    private IJoinGameUseCase joinGameUseCase;
     private PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler;
 
     [SerializeField]
@@ -37,17 +37,17 @@ public class MainMenuController : MonoBehaviour
     [SerializeField]
     private Button quitGameBtn;
 
-    private IGameManager gameManager;
+    private LocalPvpGameManager gameManager;
 
     [Inject]
     public void Construct(IObjectResolver objectResolver,
         ICreateGameUseCase createGameUseCase,
-        IJoinMatchUseCase joinMatchUseCase,
+        IJoinGameUseCase joinGameUseCase,
         PlayerJoinedDomainEventHandler playerJoinedDomainEventHandler)
     {
         this.objectResolver = objectResolver;
         this.createGameUseCase = createGameUseCase;
-        this.joinMatchUseCase = joinMatchUseCase;
+        this.joinGameUseCase = joinGameUseCase;
         this.playerJoinedDomainEventHandler = playerJoinedDomainEventHandler;
     }
 
@@ -92,11 +92,12 @@ public class MainMenuController : MonoBehaviour
         this.localPvpBtn.GetComponent<AudioSource>().Play();
 
         var localPvpGameManager = this.objectResolver.Instantiate(this.localPvpGameManager);
-        this.gameManager = localPvpGameManager.GetComponent<IGameManager>();
+        this.gameManager = localPvpGameManager.GetComponent<LocalPvpGameManager>();
 
         yield return new WaitForSeconds(0.1f);
 
-        var createGameCommand = new CreateGameCommand((-9, -5),
+        var createGameCommand = new CreateGameCommand(GameType.LocalPvp,
+            (-9, -5),
             (9, -5),
             (9, 5),
             (-9, 5),
@@ -109,9 +110,10 @@ public class MainMenuController : MonoBehaviour
         var gameModel = this.createGameUseCase.Execute(createGameCommand);
         GameManager.Instance.SetGameId(gameModel.GameId);
         GameManager.Instance.SetBallId(gameModel.BallId);
+        GameManager.Instance.SetGameType(GameType.LocalPvp);
 
-        this.joinMatchUseCase.Execute(new JoinMatchCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
-        this.joinMatchUseCase.Execute(new JoinMatchCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
+        this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 1"));
+        this.joinGameUseCase.Execute(new JoinGameCommand(gameModel.GameId, Guid.NewGuid().ToString(), "Player 2"));
         
         this.gameManager.BeginGame();
 

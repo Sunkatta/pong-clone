@@ -1,45 +1,116 @@
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
+using VContainer;
 
+[RequireComponent(typeof(AnticipatedNetworkTransform))]
 public class OnlinePlayerController : NetworkBehaviour
 {
-    [SerializeField]
-    private float speed;
+    private PlayerService playerService;
 
-    private bool canMoveUp = true;
-    private bool canMoveDown = true;
+    private AnticipatedNetworkTransform anticipatedTransform;
+    private float inputAxis;
+
+    float allowedMinY;
+    float allowedMaxY;
+
+    [Inject]
+    public void Construct(PlayerService playerService)
+    {
+        this.playerService = playerService;
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        this.anticipatedTransform = this.GetComponent<AnticipatedNetworkTransform>();
+        this.anticipatedTransform.enabled = IsOwner;
+
+        this.playerService.PlayerPositionUpdated += OnPlayerMoved;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (this.playerService != null)
+        {
+            this.playerService.PlayerPositionUpdated -= OnPlayerMoved;
+        }
+    }
+
+    [ServerRpc]
+    public void SubmitMoveInputServerRpc(float inputAxis, ServerRpcParams rpcParams = default)
+    {
+        var clientId = rpcParams.Receive.SenderClientId;
+        this.playerService.HandleMoveInput(clientId, this.transform, inputAxis);
+    }
 
     private void Update()
     {
+        this.inputAxis = Input.GetAxisRaw("Player1");
+    }
+
+    private void FixedUpdate()
+    {
+        if (this.allowedMinY == 0f)
+        {
+            this.allowedMinY = GameManager.Instance.GetPlayerLimits().BottomLeftCornerPositionY;
+        }
+
+        if (this.allowedMaxY == 0f)
+        {
+            this.allowedMaxY = GameManager.Instance.GetPlayerLimits().TopLeftCornerPositionY;
+        }
+
+        if (inputAxis == 0f)
+        {
+            return;
+        }
+
         if (!this.IsOwner)
         {
             return;
         }
 
-        var playerAxis = Input.GetAxis("Player1");
+        if (this.IsHost)
+        {
+            // If this is running on the Host (Server), skip RPC requests.
+            this.playerService.HandleMoveInput(NetworkManager.Singleton.LocalClientId, this.transform, this.inputAxis);
+            return;
+        }
 
-        if (playerAxis > 0 && this.canMoveUp)
-        {
-            this.transform.position += speed * Time.deltaTime * Vector3.up;
-            this.canMoveDown = true;
-        }
-        else if (playerAxis < 0 && this.canMoveDown)
-        {
-            this.transform.position -= speed * Time.deltaTime * Vector3.up;
-            this.canMoveUp = true;
-        }
+        // Move Client locally so that it doesn't rely on receiving RPC response, resulting in feeling slow.
+        var newY = this.transform.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
+        newY = Mathf.Clamp(newY, this.allowedMinY, this.allowedMaxY);
+        this.anticipatedTransform.AnticipateMove(new Vector3(this.transform.position.x, newY));
+
+        // Send input to server asynchronously
+        this.SubmitMoveInputServerRpc(this.inputAxis);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnPlayerMoved(float newY, ulong clientId)
     {
-        if (collision.gameObject.CompareTag(Constants.UpperEdge))
+        if (OwnerClientId != clientId)
         {
-            this.canMoveUp = false;
+            return;
         }
 
-        if (collision.gameObject.CompareTag(Constants.LowerEdge))
+        // Case 2: Host owner (local host player)
+        if (IsServer && IsOwner)
         {
-            this.canMoveDown = false;
+            // Apply authoritative domain event directly
+            var pos = this.transform.position;
+            pos.y = newY;
+            this.transform.position = pos;
+            return;
+        }
+
+        // Case 3: Non-host owner (client)
+        if (!IsHost && IsOwner)
+        {
+            // Reconcile predicted ANT position
+            var authoritative = this.anticipatedTransform.AuthoritativeState;
+            authoritative.Position = new Vector3(authoritative.Position.x, newY, authoritative.Position.z);
+            this.anticipatedTransform.AnticipateState(authoritative);
+            return;
         }
     }
 }

@@ -14,6 +14,7 @@ public class GameAggregate : Entity, IAggregateRoot
         float paddleSpeed,
         float paddleLength,
         int targetScore,
+        GameType gameType,
         ICollection<PlayerEntity> players = null)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -44,6 +45,7 @@ public class GameAggregate : Entity, IAggregateRoot
         }
 
         this.TargetScore = targetScore;
+        this.GameType = gameType;
 
         this.GameFieldValueObject = gameFieldValueObject ?? throw new ArgumentNullException(nameof(gameFieldValueObject), "Game field cannot be null");
         this.players = players ?? new List<PlayerEntity>();
@@ -53,8 +55,9 @@ public class GameAggregate : Entity, IAggregateRoot
         GameFieldValueObject gameFieldValueObject,
         float paddleSpeed,
         float paddleLength,
-        int targetScore)
-        : this(Guid.NewGuid().ToString(), ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore)
+        int targetScore,
+        GameType gameType)
+        : this(Guid.NewGuid().ToString(), ball, gameFieldValueObject, paddleSpeed, paddleLength, targetScore, gameType)
     {
     }
 
@@ -71,6 +74,8 @@ public class GameAggregate : Entity, IAggregateRoot
     public int TargetScore { get; }
 
     public GameFieldValueObject GameFieldValueObject { get; }
+
+    public GameType GameType { get; }
 
     public void AddPlayer(PlayerEntity player)
     {
@@ -90,7 +95,11 @@ public class GameAggregate : Entity, IAggregateRoot
         }
 
         this.players.Add(player);
-        this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id, player.Username, player.PlayerType));
+        this.AddDomainEvent(new PlayerJoinedDomainEvent(player.Id,
+            player.Username,
+            player.PlayerType,
+            this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2),
+            this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2)));
     }
 
     public void RemovePlayer(string playerId)
@@ -104,12 +113,11 @@ public class GameAggregate : Entity, IAggregateRoot
 
     public void MovePlayer(string playerId, float newY)
     {
-        if (newY < this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2) || newY > this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2))
-        {
-            // Player is outside the bounds of the game field. Do nothing.
-            // Consider resetting them inside the game field.
-            return;
-        }
+        float minY = this.GameFieldValueObject.BottomLeftCornerPosition.Y + (this.PaddleLength / 2);
+        float maxY = this.GameFieldValueObject.TopLeftCornerPosition.Y - (this.PaddleLength / 2);
+
+        // Clamp newY to the game field bounds
+        newY = Math.Clamp(newY, minY, maxY);
 
         var player = this.players.FirstOrDefault(player => player.Id == playerId)
             ?? throw new ArgumentException($"Player with Id {playerId} not found");
@@ -130,14 +138,16 @@ public class GameAggregate : Entity, IAggregateRoot
             player1.ScorePoint();
             this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player1, player1.Score));
 
-            if (player1.Score == this.TargetScore)
-            {
-                this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
-                return;
-            }
-
             this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
             this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+
+            if (player1.Score == this.TargetScore)
+            {
+                player1.ResetScore();
+                player2.ResetScore();
+                this.AddDomainEvent(new PlayerWonDomainEvent(player1.Id, player1.Username, player2.Id, player2.Username));
+            }
+
             return;
         }
 
@@ -152,14 +162,16 @@ public class GameAggregate : Entity, IAggregateRoot
             player2.ScorePoint();
             this.AddDomainEvent(new PlayerScoredDomainEvent(PlayerType.Player2, player2.Score));
 
-            if (player2.Score == this.TargetScore)
-            {
-                this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
-                return;
-            }
-
             this.Ball.UpdateSpeed(this.Ball.InitialSpeed);
             this.Ball.UpdatePosition(new Position2DValueObject(0, 0));
+
+            if (player2.Score == this.TargetScore)
+            {
+                player1.ResetScore();
+                player2.ResetScore();
+                this.AddDomainEvent(new PlayerWonDomainEvent(player2.Id, player2.Username, player1.Id, player1.Username));
+            }
+
             return;
         }
 

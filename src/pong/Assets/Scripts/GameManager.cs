@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     private float ballMaximumSpeed;
 
     [SerializeField]
-    private GameObject playerPrefab;
+    private GameObject localPlayerPrefab;
 
     public float PaddleSpeed => paddleSpeed;
 
@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviour
     // Global game state
     public string CurrentGameId { get; private set; }
 
+    public GameType CurrentGameType { get; private set; }
+
     public string CurrentBallId { get; private set; }
 
     public string CurrentPlayer1Id { get; private set; }
@@ -45,6 +47,11 @@ public class GameManager : MonoBehaviour
     public string CurrentPlayer2Id { get; private set; }
 
     public string CurrentPlayer2Username { get; private set; }
+
+    // These two are used only by the online clients
+    public float PlayerPositionMinY { get; private set; }
+
+    public float PlayerPositionMaxY { get; private set; }
 
     [Inject]
     public void Construct(IObjectResolver resolver)
@@ -75,6 +82,16 @@ public class GameManager : MonoBehaviour
         this.CurrentGameId = newGameId;
     }
 
+    public void SetGameType(GameType newGameType)
+    {
+        if (this.CurrentGameType == newGameType)
+        {
+            return;
+        }
+
+        this.CurrentGameType = newGameType;
+    }
+
     public void SetBallId(string newBallId)
     {
         if (this.CurrentGameId == newBallId)
@@ -95,7 +112,10 @@ public class GameManager : MonoBehaviour
         this.CurrentPlayer1Id = player1Id;
         this.CurrentPlayer1Username = player1Username;
 
-        this.InstantiatePlayer(player1Id, PlayerType.Player1);
+        if (this.CurrentGameType == GameType.LocalPvp)
+        {
+            this.InstantiateLocalPlayer(player1Id, PlayerType.Player1);
+        }
     }
 
     public void SetPlayer2(string player2Id, string player2Username)
@@ -108,28 +128,23 @@ public class GameManager : MonoBehaviour
         this.CurrentPlayer2Id = player2Id;
         this.CurrentPlayer2Username = player2Username;
 
-        this.InstantiatePlayer(player2Id, PlayerType.Player2);
-    }
-
-    public void LoadScene(string sceneName)
-    {
-        if (string.IsNullOrEmpty(sceneName))
+        if (this.CurrentGameType == GameType.LocalPvp)
         {
-            Debug.LogWarning("GameManager: Scene name is empty!");
-            return;
+            this.InstantiateLocalPlayer(player2Id, PlayerType.Player2);
         }
-        SceneManager.LoadScene(sceneName);
     }
 
-    public void ResetGame()
+    public void SetPlayerLimits(float playerPositionMinY, float playerPositionMaxY)
     {
-        CurrentGameId = null;
-        Debug.Log("GameManager: ResetGame called");
+        this.PlayerPositionMinY = playerPositionMinY;
+        this.PlayerPositionMaxY = playerPositionMaxY;
     }
 
-    private void InstantiatePlayer(string playerId, PlayerType playerType)
+    public (float BottomLeftCornerPositionY, float TopLeftCornerPositionY) GetPlayerLimits() => (this.PlayerPositionMinY, this.PlayerPositionMaxY);
+
+    private void InstantiateLocalPlayer(string playerId, PlayerType playerType)
     {
-        var playerGameObject = this.resolver.Instantiate(this.playerPrefab);
+        var playerGameObject = this.resolver.Instantiate(this.localPlayerPrefab);
         var playerInstanceController = playerGameObject.GetComponent<LocalPlayerController>();
         playerInstanceController.Type = playerType;
         playerInstanceController.Id = playerId;

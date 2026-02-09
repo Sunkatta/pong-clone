@@ -13,7 +13,8 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
         IEnumerable<IDomainEventHandler<BallDirectionUpdatedDomainEvent>> ballDirectionUpdatedHandlers,
         IEnumerable<IDomainEventHandler<PlayerScoredDomainEvent>> playerScoredHandlers,
         IEnumerable<IDomainEventHandler<PlayerWonDomainEvent>> playerWonHandlers,
-        IEnumerable<IDomainEventHandler<PlayerJoinedDomainEvent>> playerJoinedHandlers)
+        IEnumerable<IDomainEventHandler<PlayerJoinedDomainEvent>> playerJoinedHandlers,
+        IEnumerable<IDomainEventHandler<PlayerLeftDomainEvent>> playerLeftHandlers)
     {
         this.domainEventHandlers = new Dictionary<Type, List<object>>
         {
@@ -40,6 +41,10 @@ public class DomainEventDispatcherService : IDomainEventDispatcherService
             {
                 typeof(PlayerJoinedDomainEvent),
                 new List<object>(playerJoinedHandlers)
+            },
+            {
+                typeof(PlayerLeftDomainEvent),
+                new List<object>(playerLeftHandlers)
             }
         };
     }

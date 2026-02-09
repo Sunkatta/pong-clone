@@ -37,6 +37,11 @@ public class PlayerEntity : Entity
 
     public void ScorePoint() => this.Score++;
 
+    public void ResetScore()
+    {
+        this.Score = 0;
+    }
+
     public void SetType(PlayerType playerType)
     {
         this.PlayerType = playerType;
@@ -44,11 +49,6 @@ public class PlayerEntity : Entity
 
     public void UpdatePosition(Position2DValueObject position)
     {
-        if (position.X == this.PaddlePosition.X && position.Y == this.PaddlePosition.Y)
-        {
-            return;
-        }
-
         this.PaddlePosition = new Position2DValueObject(position.X, position.Y);
         this.AddDomainEvent(new PlayerMovedDomainEvent(this.Id, this.PaddlePosition));
     }

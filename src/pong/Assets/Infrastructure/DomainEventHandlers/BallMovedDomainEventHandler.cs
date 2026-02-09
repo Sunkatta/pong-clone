@@ -6,6 +6,6 @@ public class BallMovedDomainEventHandler : IDomainEventHandler<BallMovedDomainEv
 
     public void Handle(BallMovedDomainEvent domainEvent)
     {
-        this.BallMoved(domainEvent);
+        this.BallMoved?.Invoke(domainEvent);
     }
 }

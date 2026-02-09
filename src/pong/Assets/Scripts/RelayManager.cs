@@ -15,8 +15,6 @@ public class RelayManager : MonoBehaviour
 
 			string joinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
 
-            NetworkManager.Singleton.NetworkConfig.TickRate = 60;
-
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetHostRelayData(
 				allocation.RelayServer.IpV4,
 				(ushort)allocation.RelayServer.Port,
@@ -38,8 +36,6 @@ public class RelayManager : MonoBehaviour
 		try
 		{
 			JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
-
-            NetworkManager.Singleton.NetworkConfig.TickRate = 60;
 
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetClientRelayData(
                 joinAllocation.RelayServer.IpV4,
