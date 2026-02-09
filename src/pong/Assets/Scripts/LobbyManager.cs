@@ -34,7 +34,7 @@ public class LobbyManager : MonoBehaviour
     private float heartbeatTimer;
     private float lobbyUpdateTimer = LobbyUpdateIntervalInSeconds;
     private float beginGameCountdownTimer = Constants.CountdownTimeInSeconds;
-    private IGameManager gameManager;
+    private OnlinePvpGameManager gameManager;
 
     public string LobbyCode => this.localLobby.LobbyCode;
 
@@ -148,7 +148,7 @@ public class LobbyManager : MonoBehaviour
                 }
             });
 
-            this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
+            this.gameManager = onlinePvpGameManager.GetComponent<OnlinePvpGameManager>();
 
             NetworkManager.Singleton.StartHost();
 
@@ -185,7 +185,7 @@ public class LobbyManager : MonoBehaviour
             await this.SubscribeToLobbyEvents(this.localLobby);
 
             var onlinePvpGameManager = this.resolver.Instantiate(this.onlinePvpGameManager);
-            this.gameManager = onlinePvpGameManager.GetComponent<IGameManager>();
+            this.gameManager = onlinePvpGameManager.GetComponent<OnlinePvpGameManager>();
 
             this.gameManager.PlayerDisconnected += async (playerId, _) =>
             {

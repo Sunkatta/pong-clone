@@ -7,7 +7,7 @@ using VContainer;
 using VContainer.Unity;
 
 [RequireComponent(typeof(AudioSource))]
-public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
+public class OnlinePvpGameManager : NetworkBehaviour
 {
     private IObjectResolver resolver;
     private IJoinGameUseCase joinGameUseCase;
@@ -40,12 +40,12 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
 
     public event Action PrepareInGameUi;
     public event Action<string, bool> PlayerDisconnected;
-    public static event Action LobbyLoaded;
-    public static event Action<GameOverStatistics> MatchEnded;
+    public event Action LobbyLoaded;
+    public event Action<GameOverStatistics> MatchEnded;
 
-    public static NetworkVariable<int> Player1Score { get; private set; } = new NetworkVariable<int>();
+    public NetworkVariable<int> Player1Score { get; private set; } = new NetworkVariable<int>();
 
-    public static NetworkVariable<int> Player2Score { get; private set; } = new NetworkVariable<int>();
+    public NetworkVariable<int> Player2Score { get; private set; } = new NetworkVariable<int>();
 
     [SerializeField]
     private GameObject ballPrefab;
@@ -76,11 +76,6 @@ public class OnlinePvpGameManager : NetworkBehaviour, IGameManager
     public void BeginGame()
     {
         StartCoroutine(this.BeginGameCoroutine());
-    }
-
-    public void OnPlayerJoined(PlayerEntity player)
-    {
-
     }
 
     public void LeaveGame()

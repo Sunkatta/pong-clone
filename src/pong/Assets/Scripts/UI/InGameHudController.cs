@@ -45,6 +45,8 @@ public class InGameHudController : MonoBehaviour
 
     private float remainingCountdownTime;
 
+    private OnlinePvpGameManager gameManager;
+
     [Inject]
     public void Construct(PlayerScoredDomainEventHandler playerScoredDomainEventHandler,
         PlayerWonDomainEventHandler playerWonDomainEventHandler)
@@ -62,8 +64,6 @@ public class InGameHudController : MonoBehaviour
 
     private void Start()
     {
-        OnlinePvpGameManager.MatchEnded += this.OnGameEnded;
-
         this.inGameAudioSource = this.GetComponent<AudioSource>();
     }
 
@@ -74,8 +74,12 @@ public class InGameHudController : MonoBehaviour
         
         if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
         {
-            OnlinePvpGameManager.Player1Score.OnValueChanged += (_, newValue) => this.player1ScoreText.text = newValue.ToString();
-            OnlinePvpGameManager.Player2Score.OnValueChanged += (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            var gameManagerGameObject = GameObject.Find("OnlinePvpGameManager(Clone)");
+            this.gameManager = gameManagerGameObject.GetComponent<OnlinePvpGameManager>();
+
+            this.gameManager.Player1Score.OnValueChanged += (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            this.gameManager.Player2Score.OnValueChanged += (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            this.gameManager.MatchEnded += this.OnGameEnded;
         }
         
         this.player1ScoreText.text = "0";
@@ -96,8 +100,9 @@ public class InGameHudController : MonoBehaviour
 
         if (GameManager.Instance.CurrentGameType == GameType.OnlinePvp)
         {
-            OnlinePvpGameManager.Player1Score.OnValueChanged -= (_, newValue) => this.player1ScoreText.text = newValue.ToString();
-            OnlinePvpGameManager.Player2Score.OnValueChanged -= (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            this.gameManager.Player1Score.OnValueChanged -= (_, newValue) => this.player1ScoreText.text = newValue.ToString();
+            this.gameManager.Player2Score.OnValueChanged -= (_, newValue) => this.player2ScoreText.text = newValue.ToString();
+            this.gameManager.MatchEnded -= this.OnGameEnded;
         }
     }
 

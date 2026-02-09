@@ -142,22 +142,6 @@ public class GameManager : MonoBehaviour
 
     public (float BottomLeftCornerPositionY, float TopLeftCornerPositionY) GetPlayerLimits() => (this.PlayerPositionMinY, this.PlayerPositionMaxY);
 
-    public void LoadScene(string sceneName)
-    {
-        if (string.IsNullOrEmpty(sceneName))
-        {
-            Debug.LogWarning("GameManager: Scene name is empty!");
-            return;
-        }
-        SceneManager.LoadScene(sceneName);
-    }
-
-    public void ResetGame()
-    {
-        CurrentGameId = null;
-        Debug.Log("GameManager: ResetGame called");
-    }
-
     private void InstantiateLocalPlayer(string playerId, PlayerType playerType)
     {
         var playerGameObject = this.resolver.Instantiate(this.localPlayerPrefab);

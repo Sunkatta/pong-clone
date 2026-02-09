@@ -44,7 +44,7 @@ public class LobbyController : MonoBehaviour
     private float remainingCountdownTime;
 
     private GameObject localPlayerTile;
-    private IGameManager gameManager;
+    private OnlinePvpGameManager gameManager;
 
     private void OnEnable()
     {
@@ -69,7 +69,7 @@ public class LobbyController : MonoBehaviour
     {
         this.lobbyManager.UpdateLobbyUi += this.OnLobbyUiUpdated;
         this.lobbyManager.ShouldShowCountdownUi += this.OnShouldShowCountdownUi;
-        OnlinePvpGameManager.LobbyLoaded += this.OnLobbyLoaded;
+        this.gameManager.LobbyLoaded += this.OnLobbyLoaded;
 
         this.readyBtn.onClick.AddListener(async () =>
         {
