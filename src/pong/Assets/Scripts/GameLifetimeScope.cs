@@ -27,7 +27,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<IMoveBallUseCase, MoveBallUseCase>(Lifetime.Transient);
         builder.Register<IUpdateBallDirectionUseCase, UpdateBallDirectionUseCase>(Lifetime.Transient);
         builder.Register<IJoinGameUseCase, JoinGameUseCase>(Lifetime.Transient);
-        builder.Register<ILeaveGameUseCase, LeaveGameUseCase > (Lifetime.Transient);
+        builder.Register<ILeaveGameUseCase, LeaveGameUseCase>(Lifetime.Transient);
 
         // Application Queries
         builder.Register<IGetBallDirectionQuery, GetBallDirectionQuery>(Lifetime.Transient);
@@ -61,10 +61,6 @@ public class GameLifetimeScope : LifetimeScope
             .AsImplementedInterfaces();
 
         builder.Register<PlayerJoinedDomainEventHandler>(Lifetime.Singleton)
-           .AsSelf()
-           .AsImplementedInterfaces();
-
-        builder.Register<GameCreatedDomainEventHandler>(Lifetime.Transient)
            .AsSelf()
            .AsImplementedInterfaces();
 
