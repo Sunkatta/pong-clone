@@ -10,9 +10,9 @@ public class OnlinePlayerController : NetworkBehaviour
 
     private AnticipatedNetworkTransform anticipatedTransform;
     private float inputAxis;
-
-    float allowedMinY;
-    float allowedMaxY;
+    private float allowedMinY;
+    private float allowedMaxY;
+    private PlayerInputActions playerInputActions;
 
     [Inject]
     public void Construct(PlayerService playerService)
@@ -25,6 +25,8 @@ public class OnlinePlayerController : NetworkBehaviour
         this.anticipatedTransform = this.GetComponent<AnticipatedNetworkTransform>();
         this.anticipatedTransform.enabled = IsOwner;
 
+        this.playerInputActions = new PlayerInputActions();
+        this.playerInputActions.Player.Enable();
         this.playerService.PlayerPositionUpdated += OnPlayerMoved;
     }
 
@@ -45,7 +47,8 @@ public class OnlinePlayerController : NetworkBehaviour
 
     private void Update()
     {
-        this.inputAxis = Input.GetAxisRaw("Player1");
+        Vector2 inputVector = this.playerInputActions.Player.PrimaryMovement.ReadValue<Vector2>();
+        this.inputAxis = inputVector.y;
     }
 
     private void FixedUpdate()
@@ -60,7 +63,7 @@ public class OnlinePlayerController : NetworkBehaviour
             this.allowedMaxY = GameManager.Instance.GetPlayerLimits().TopLeftCornerPositionY;
         }
 
-        if (inputAxis == 0f)
+        if (this.inputAxis == 0f)
         {
             return;
         }
