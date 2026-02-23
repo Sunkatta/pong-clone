@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a689d91966dfb46499fb63f130d9b905, type: 3}
+  m_Script: {fileID: 15024, guid: 0000000000000000e000000000000000, type: 0}
   m_Name: PongMultiplayerTest
   m_EditorClassIdentifier: Unity.Multiplayer.PlayMode.Scenarios.Editor::Unity.Multiplayer.PlayMode.Scenarios.Editor.ScenarioConfig
   m_Description: 
@@ -20,23 +20,34 @@ MonoBehaviour:
     m_Nodes:
     - Main Editor|0_run
     - Main Editor|0_deploy
+    m_Role: 1
     m_PlayerTag: 
     m_InitialScene: {fileID: 102900000, guid: eec2aef02860db24e83f1b2f326be189, type: 3}
-  m_EditorInstances:
-  - Name: Player 2
-    <CorrespondingNodeId>k__BackingField: Player 2|1_run
+  m_EditorInstances: []
+  m_LocalInstances:
+  - Name: Instance
+    <CorrespondingNodeId>k__BackingField: Instance - Run
     m_Nodes:
-    - Player 2|1_run
-    - Player 2|1_deploy
-    m_PlayerTag: 
-    m_InitialScene: {fileID: 0}
-    m_AdvancedConfiguration:
-      StreamLogsToMainEditor: 0
-      LogsColor: {r: 0.3643, g: 0.581, b: 0.8679, a: 1}
-  m_LocalInstances: []
+    - Instance - Build
+    - Instance - Run
+    m_BuildProfile: {fileID: 11400000, guid: 6c31e0062bb0bca4eac4b99f57229a71, type: 2}
+    m_ServerSettings:
+      DeployMode: 0
+      SimulatorSettings:
+        AutoAllocate: 1
+      CliSettings:
+        UseDefaultArguments: 1
+        Port: 7777
+        QueryProtocol: 0
+        QueryPort: 20000
+    advancedConfiguration:
+      m_StreamLogsToMainEditor: 1
+      m_LogsColor: {r: 0.3643, g: 0.581, b: 0.8679, a: 1}
+      m_LocalArguments: -screen-fullscreen 0 -screen-width 1280 -screen-height 720
+      m_SimulatedArguments: 
+      m_DeviceID: 
+      m_DeviceName: 
   m_RemoteInstances: []
-  m_OverridePort: 0
-  m_Port: 0
   m_MainEditorInstanceObsolete:
     rid: -2
   references:

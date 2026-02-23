@@ -12,6 +12,7 @@ public class LocalPlayerController : MonoBehaviour
     public string Id { get; set; }
 
     private Rigidbody2D rb;
+    private PlayerInputActions playerInputActions;
     private float inputAxis;
 
     [Inject]
@@ -24,6 +25,8 @@ public class LocalPlayerController : MonoBehaviour
     private void Awake()
     {
         this.rb = this.GetComponent<Rigidbody2D>();
+        this.playerInputActions = new PlayerInputActions();
+        this.playerInputActions.Player.Enable();
     }
 
     private void OnEnable()
@@ -38,19 +41,19 @@ public class LocalPlayerController : MonoBehaviour
 
     private void Update()
     {
-        this.inputAxis = Type == PlayerType.Player1
-            ? Input.GetAxisRaw("Player1")
-            : Input.GetAxisRaw("Player2");
+        this.inputAxis = this.Type == PlayerType.Player1
+            ? this.playerInputActions.Player.PrimaryMovement.ReadValue<Vector2>().y
+            : this.playerInputActions.Player.SecondaryMovement.ReadValue<Vector2>().y;
     }
 
     private void FixedUpdate()
     {
-        if (inputAxis == 0f)
+        if (this.inputAxis == 0f)
         {
             return;
         }
 
-        float newY = this.rb.position.y + inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
+        float newY = this.rb.position.y + this.inputAxis * GameManager.Instance.PaddleSpeed * Time.fixedDeltaTime;
         var movePlayerCommand = new MovePlayerCommand(GameManager.Instance.CurrentGameId, Id, newY);
         this.movePlayerUseCase.Execute(movePlayerCommand);
     }
